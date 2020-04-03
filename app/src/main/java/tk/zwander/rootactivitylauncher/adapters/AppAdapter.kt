@@ -13,6 +13,7 @@ import kotlinx.android.synthetic.main.app_item.view.*
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
+import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.util.removeAllItemDecorations
 import java.util.*
@@ -105,6 +106,11 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
     fun setEnabledFilterMode(filterMode: EnabledFilterMode) {
         orig.forEach { it.activityAdapter.setEnabledFilterMode(filterMode) }
         orig.forEach { it.serviceAdapter.setEnabledFilterMode(filterMode) }
+    }
+
+    fun setExportedFilterMode(filterMode: ExportedFilterMode) {
+        orig.forEach { it.activityAdapter.setExportedFilterMode(filterMode) }
+        orig.forEach { it.serviceAdapter.setExportedFilterMode(filterMode) }
     }
 
     private fun filter(query: String): List<AppInfo> {

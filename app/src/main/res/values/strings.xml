@@ -9,9 +9,15 @@
     <string name="activities">Activities</string>
     <string name="services">Services</string>
 
+    <string name="enabled_filter">Enabled Filter</string>
+    <string name="exported_filter">Exported Filter</string>
+
     <string name="filter_disabled">Show Only Disabled</string>
     <string name="filter_enabled">Show Only Enabled</string>
     <string name="filter_all">Show All</string>
+
+    <string name="filter_exported">Show Only Exported</string>
+    <string name="filter_unexported">Show Only Unexported</string>
 
     <string name="requires_root">Requires Root</string>
 </resources>

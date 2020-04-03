@@ -17,6 +17,7 @@ import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ServiceInfo
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
+import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.util.constructComponentKey
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
@@ -78,7 +79,8 @@ class ServiceAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Servic
     }
 
     private var currentQuery: String = ""
-    private var filterMode = EnabledFilterMode.SHOW_ALL
+    private var enabledFilterMode = EnabledFilterMode.SHOW_ALL
+    private var exportedFilterMode = ExportedFilterMode.SHOW_ALL
 
     override fun getItemCount(): Int {
         return items.size()
@@ -106,7 +108,12 @@ class ServiceAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Servic
     }
 
     fun setEnabledFilterMode(filterMode: EnabledFilterMode) {
-        this.filterMode = filterMode
+        this.enabledFilterMode = filterMode
+        items.replaceAll(filter(currentQuery))
+    }
+
+    fun setExportedFilterMode(filterMode: ExportedFilterMode) {
+        this.exportedFilterMode = filterMode
         items.replaceAll(filter(currentQuery))
     }
 
@@ -125,9 +132,17 @@ class ServiceAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Servic
     }
 
     private fun matches(query: String, data: ServiceInfo): Boolean {
-        when (filterMode) {
+        when (enabledFilterMode) {
             EnabledFilterMode.SHOW_DISABLED -> if (data.info.enabled) return false
             EnabledFilterMode.SHOW_ENABLED -> if (!data.info.enabled) return false
+            else -> {
+                //no-op
+            }
+        }
+
+        when (exportedFilterMode) {
+            ExportedFilterMode.SHOW_EXPORTED -> if (!data.info.exported) return false
+            ExportedFilterMode.SHOW_UNEXPORTED -> if (data.info.exported) return false
             else -> {
                 //no-op
             }

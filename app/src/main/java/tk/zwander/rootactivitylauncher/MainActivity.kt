@@ -1,5 +1,6 @@
 package tk.zwander.rootactivitylauncher
 
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -14,10 +15,7 @@ import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.adapters.ActivityAdapter
 import tk.zwander.rootactivitylauncher.adapters.AppAdapter
 import tk.zwander.rootactivitylauncher.adapters.ServiceAdapter
-import tk.zwander.rootactivitylauncher.data.ActivityInfo
-import tk.zwander.rootactivitylauncher.data.AppInfo
-import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
-import tk.zwander.rootactivitylauncher.data.ServiceInfo
+import tk.zwander.rootactivitylauncher.data.*
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 
@@ -80,6 +78,21 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             R.id.filter_all -> {
                 item.isChecked = true
                 appAdapter.setEnabledFilterMode(EnabledFilterMode.SHOW_ALL)
+                true
+            }
+            R.id.filter_exported -> {
+                item.isChecked = true
+                appAdapter.setExportedFilterMode(ExportedFilterMode.SHOW_EXPORTED)
+                true
+            }
+            R.id.filter_unexported -> {
+                item.isChecked = true
+                appAdapter.setExportedFilterMode(ExportedFilterMode.SHOW_UNEXPORTED)
+                true
+            }
+            R.id.filter_all_ex -> {
+                item.isChecked = true
+                appAdapter.setExportedFilterMode(ExportedFilterMode.SHOW_ALL)
                 true
             }
             else -> return super.onOptionsItemSelected(item)
