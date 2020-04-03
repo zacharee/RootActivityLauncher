@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SortedList
 import com.squareup.picasso.Picasso
@@ -150,21 +151,31 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
                         .show()
                 }
 
-                enable.setOnClickListener {
-                    val d = items[adapterPosition]
-                    if (Shell.SU.available()) {
-                        Shell.Pool.SU.run("pm enable ${constructActivityKey(d.info.packageName, d.info.name)}")
-                    } else {
-                        Toast.makeText(context, R.string.requires_root, Toast.LENGTH_SHORT).show()
+                if (data.info.enabled) {
+                    disable.isVisible = true
+                    enable.isVisible = false
+                    disable.setOnClickListener {
+                        val d = items[adapterPosition]
+                        if (Shell.SU.available()) {
+                            Shell.Pool.SU.run("pm disable ${constructActivityKey(d.info.packageName, d.info.name)}")
+                            data.info.enabled = false
+                            notifyItemChanged(adapterPosition)
+                        } else {
+                            Toast.makeText(context, R.string.requires_root, Toast.LENGTH_SHORT).show()
+                        }
                     }
-                }
-
-                disable.setOnClickListener {
-                    val d = items[adapterPosition]
-                    if (Shell.SU.available()) {
-                        Shell.Pool.SU.run("pm disable ${constructActivityKey(d.info.packageName, d.info.name)}")
-                    } else {
-                        Toast.makeText(context, R.string.requires_root, Toast.LENGTH_SHORT).show()
+                } else {
+                    disable.isVisible = false
+                    enable.isVisible = true
+                    enable.setOnClickListener {
+                        val d = items[adapterPosition]
+                        if (Shell.SU.available()) {
+                            Shell.Pool.SU.run("pm enable ${constructActivityKey(d.info.packageName, d.info.name)}")
+                            data.info.enabled = true
+                            notifyItemChanged(adapterPosition)
+                        } else {
+                            Toast.makeText(context, R.string.requires_root, Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
 

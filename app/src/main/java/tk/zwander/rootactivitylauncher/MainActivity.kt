@@ -1,6 +1,7 @@
 package tk.zwander.rootactivitylauncher
 
 import android.content.pm.PackageManager
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
@@ -17,7 +18,8 @@ import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 
-class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(), SearchView.OnQueryTextListener {
+class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
+    SearchView.OnQueryTextListener {
     private val picasso by lazy {
         Picasso.Builder(this)
             .addRequestHandler(AppIconHandler(this))
@@ -84,7 +86,12 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(), SearchV
             progressView?.progress = 0
 
             apps.forEachIndexed { index, app ->
-                val activities = packageManager.getPackageInfo(app.packageName, PackageManager.GET_ACTIVITIES).activities
+                val activities = packageManager.getPackageInfo(
+                    app.packageName,
+                    PackageManager.GET_ACTIVITIES or
+                            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
+                            else PackageManager.GET_DISABLED_COMPONENTS
+                ).activities
                 val infos = ArrayList<ActivityInfo>()
 
                 if (activities != null && activities.isNotEmpty()) {
@@ -94,12 +101,14 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(), SearchV
 
                     val label = app.loadLabel(packageManager)
 
-                    appInfo.add(AppInfo(
-                        app,
-                        label,
-                        infos,
-                        ActivityAdapter(picasso)
-                    ))
+                    appInfo.add(
+                        AppInfo(
+                            app,
+                            label,
+                            infos,
+                            ActivityAdapter(picasso)
+                        )
+                    )
                 }
 
                 withContext(Dispatchers.Main) {
