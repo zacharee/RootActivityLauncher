@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SortedList
 import com.squareup.picasso.Picasso
@@ -149,6 +150,24 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
                         .show()
                 }
 
+                enable.setOnClickListener {
+                    val d = items[adapterPosition]
+                    if (Shell.SU.available()) {
+                        Shell.Pool.SU.run("pm enable ${constructActivityKey(d.info.packageName, d.info.name)}")
+                    } else {
+                        Toast.makeText(context, R.string.requires_root, Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                disable.setOnClickListener {
+                    val d = items[adapterPosition]
+                    if (Shell.SU.available()) {
+                        Shell.Pool.SU.run("pm disable ${constructActivityKey(d.info.packageName, d.info.name)}")
+                    } else {
+                        Toast.makeText(context, R.string.requires_root, Toast.LENGTH_SHORT).show()
+                    }
+                }
+
                 setOnClickListener {
                     val d = items[adapterPosition]
                     val extras = context.findExtrasForActivity(constructActivityKey(d.info.packageName, d.info.name))
@@ -171,6 +190,8 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
                             }
 
                             Shell.Pool.SU.run(command.toString())
+                        } else {
+                            Toast.makeText(context, R.string.requires_root, Toast.LENGTH_SHORT).show()
                         }
                     }
                 }

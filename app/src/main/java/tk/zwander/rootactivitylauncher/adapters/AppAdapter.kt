@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SortedList
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
@@ -149,6 +150,10 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
 
                 if (data.expanded) {
                     data.adapter.setItems(data.activities)
+                    if (data.activities.size > 1)
+                        activities.addItemDecoration(DividerItemDecoration(context, RecyclerView.VERTICAL))
+                    else if (activities.itemDecorationCount > 0)
+                        activities.removeItemDecorationAt(0)
                 }
 
                 setOnClickListener {
