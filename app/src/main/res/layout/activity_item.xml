@@ -15,6 +15,7 @@
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
+        android:gravity="center_vertical"
         android:layout_height="wrap_content">
 
         <tk.zwander.rootactivitylauncher.views.RecycledImageView
