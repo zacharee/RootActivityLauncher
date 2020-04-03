@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CompoundButton
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
@@ -14,6 +15,7 @@ import com.squareup.picasso.Picasso
 import eu.chainfire.libsuperuser.Shell
 import kotlinx.android.synthetic.main.activity_item.view.*
 import kotlinx.android.synthetic.main.app_item.view.*
+import kotlinx.android.synthetic.main.extras_dialog.view.*
 import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ActivityInfo
@@ -151,33 +153,26 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
                         .show()
                 }
 
-                if (data.info.enabled) {
-                    disable.isVisible = true
-                    enable.isVisible = false
-                    disable.setOnClickListener {
+                enabled.isChecked = data.info.enabled
+                enabled.setOnCheckedChangeListener(object : CompoundButton.OnCheckedChangeListener {
+                    override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
                         val d = items[adapterPosition]
                         if (Shell.SU.available()) {
-                            Shell.Pool.SU.run("pm disable ${constructActivityKey(d.info.packageName, d.info.name)}")
-                            data.info.enabled = false
-                            notifyItemChanged(adapterPosition)
+                            if (Shell.Pool.SU.run("pm ${if (isChecked) "enable" else "disable"} ${constructActivityKey(d.info.packageName, d.info.name)}") == 0) {
+                                data.info.enabled = isChecked
+                            } else {
+                                enabled.setOnCheckedChangeListener(null)
+                                enabled.isChecked = !isChecked
+                                enabled.setOnCheckedChangeListener(this)
+                            }
                         } else {
                             Toast.makeText(context, R.string.requires_root, Toast.LENGTH_SHORT).show()
+                            enabled.setOnCheckedChangeListener(null)
+                            enabled.isChecked = !isChecked
+                            enabled.setOnCheckedChangeListener(this)
                         }
                     }
-                } else {
-                    disable.isVisible = false
-                    enable.isVisible = true
-                    enable.setOnClickListener {
-                        val d = items[adapterPosition]
-                        if (Shell.SU.available()) {
-                            Shell.Pool.SU.run("pm enable ${constructActivityKey(d.info.packageName, d.info.name)}")
-                            data.info.enabled = true
-                            notifyItemChanged(adapterPosition)
-                        } else {
-                            Toast.makeText(context, R.string.requires_root, Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }
+                })
 
                 setOnClickListener {
                     val d = items[adapterPosition]

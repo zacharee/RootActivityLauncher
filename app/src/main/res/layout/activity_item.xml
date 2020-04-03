@@ -50,6 +50,12 @@
 
         </LinearLayout>
 
+        <Switch
+            android:id="@+id/enabled"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            />
+
     </LinearLayout>
 
     <LinearLayout
@@ -64,24 +70,6 @@
             android:layout_height="48dp"
             android:layout_weight="1"
             android:src="@drawable/ic_baseline_more_horiz_24"
-            android:background="?android:selectableItemBackground"
-            />
-
-        <ImageButton
-            android:id="@+id/disable"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:src="@drawable/ic_baseline_toggle_off_24"
-            android:background="?android:selectableItemBackground"
-            />
-
-        <ImageButton
-            android:id="@+id/enable"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:src="@drawable/ic_baseline_toggle_on_24"
             android:background="?android:selectableItemBackground"
             />
 
