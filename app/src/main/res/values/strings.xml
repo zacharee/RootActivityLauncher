@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Root Activity Launcher</string>
+    
+    <string name="extras">Extras</string>
+    <string name="hint_key">Key</string>
+    <string name="hint_value">Value</string>
+    <string name="add_extra">Add Extra</string>
+</resources>
