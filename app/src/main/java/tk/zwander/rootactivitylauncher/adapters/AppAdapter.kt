@@ -96,12 +96,14 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
     fun onQueryTextChange(newText: String?) {
         currentQuery = newText ?: ""
 
-        orig.forEach { it.adapter.onQueryTextChange(newText) }
+        orig.forEach { it.activityAdapter.onQueryTextChange(newText) }
+        orig.forEach { it.serviceAdapter.onQueryTextChange(newText) }
         items.replaceAll(filter(currentQuery))
     }
 
     fun setEnabledFilterMode(filterMode: EnabledFilterMode) {
-        orig.forEach { it.adapter.setEnabledFilterMode(filterMode) }
+        orig.forEach { it.activityAdapter.setEnabledFilterMode(filterMode) }
+        orig.forEach { it.serviceAdapter.setEnabledFilterMode(filterMode) }
     }
 
     private fun filter(query: String): List<AppInfo> {
@@ -139,9 +141,15 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
     inner class AppVH(view: View) : RecyclerView.ViewHolder(view) {
         fun bind(data: AppInfo) {
             itemView.apply {
-                activities.isVisible = data.expanded
-                activities.adapter = data.adapter
-                arrow.scaleY = if (data.expanded) 1f else -1f
+                activities.isVisible = data.activitiesExpanded
+                activities.adapter = data.activityAdapter
+
+                services.isVisible = data.servicesExpanded
+                services.adapter = data.serviceAdapter
+
+                activities_arrow.scaleY = if (data.activitiesExpanded) 1f else -1f
+                services_arrow.scaleY = if (data.servicesExpanded) 1f else -1f
+
                 app_name.text = data.label
                 app_pkg.text = data.info.packageName
 
@@ -150,19 +158,33 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
                     .centerInside()
                     .into(app_icon)
 
-                data.adapter.setItems(data.activities)
+                data.activityAdapter.setItems(data.activities)
+                data.serviceAdapter.setItems(data.services)
+
                 if (data.activities.size > 1)
                     activities.addItemDecoration(DividerItemDecoration(context, RecyclerView.VERTICAL))
                 else if (activities.itemDecorationCount > 0)
                     activities.removeItemDecorationAt(0)
 
-                setOnClickListener {
-                    val d = items[adapterPosition]
-                    d.expanded = !d.expanded
+                if (data.services.size > 1)
+                    services.addItemDecoration(DividerItemDecoration(context, RecyclerView.VERTICAL))
+                else if (services.itemDecorationCount > 0)
+                    services.removeItemDecorationAt(0)
 
-                    post {
-                        notifyItemChanged(adapterPosition)
-                    }
+                activities_expansion.isVisible = data.activities.isNotEmpty()
+                activities_expansion.setOnClickListener {
+                    val d = items[adapterPosition]
+                    d.activitiesExpanded = !d.activitiesExpanded
+
+                    notifyItemChanged(adapterPosition)
+                }
+
+                services_expansion.isVisible = data.services.isNotEmpty()
+                services_expansion.setOnClickListener {
+                    val d = items[adapterPosition]
+                    d.servicesExpanded = !d.servicesExpanded
+
+                    notifyItemChanged(adapterPosition)
                 }
             }
         }

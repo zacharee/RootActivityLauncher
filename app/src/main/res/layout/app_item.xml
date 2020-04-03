@@ -6,9 +6,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="4dp"
-    android:clickable="true"
-    android:focusable="true"
-    android:background="?selectableItemBackground"
     app:contentPadding="8dp">
 
     <LinearLayout
@@ -58,8 +55,36 @@
 
             </LinearLayout>
 
+        </LinearLayout>
+
+        <View
+            android:layout_width="wrap_content"
+            android:layout_height="8dp"
+            />
+
+        <LinearLayout
+            android:id="@+id/activities_expansion"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="?listPreferredItemHeightSmall"
+            android:padding="8dp"
+            android:gravity="center_vertical"
+            android:background="?selectableItemBackground"
+            android:focusable="true"
+            android:clickable="true">
+
+            <TextView
+                android:id="@+id/activities_title"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:textColor="?android:textColorPrimary"
+                android:textSize="18sp"
+                android:text="@string/activities"
+                />
+
             <ImageView
-                android:id="@+id/arrow"
+                android:id="@+id/activities_arrow"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:scaleY="-1"
@@ -72,12 +97,52 @@
             android:id="@+id/activities"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingStart="32dp"
+            android:layout_marginStart="32dp"
             android:visibility="gone"
-            android:layout_marginTop="8dp"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            tools:visibility="visible"
             tools:listitem="@layout/activity_item"
+            tools:visibility="visible"
+            />
+
+        <LinearLayout
+            android:id="@+id/services_expansion"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="?listPreferredItemHeightSmall"
+            android:gravity="center_vertical"
+            android:padding="8dp"
+            android:background="?selectableItemBackground"
+            android:focusable="true"
+            android:clickable="true">
+
+            <TextView
+                android:id="@+id/services_title"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:textColor="?android:textColorPrimary"
+                android:textSize="18sp"
+                android:text="@string/services"
+                />
+
+            <ImageView
+                android:id="@+id/services_arrow"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:scaleY="-1"
+                android:src="@drawable/ic_baseline_keyboard_arrow_up_24"
+                />
+
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/services"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/service_item"
+            tools:visibility="visible"
             />
 
     </LinearLayout>

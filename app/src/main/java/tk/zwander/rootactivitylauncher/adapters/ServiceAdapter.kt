@@ -8,17 +8,16 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SortedList
 import com.squareup.picasso.Picasso
 import eu.chainfire.libsuperuser.Shell
 import kotlinx.android.synthetic.main.activity_item.view.*
-import kotlinx.android.synthetic.main.app_item.view.*
-import kotlinx.android.synthetic.main.extras_dialog.view.*
 import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.R
-import tk.zwander.rootactivitylauncher.data.ActivityInfo
+import tk.zwander.rootactivitylauncher.data.ServiceInfo
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.util.constructActivityKey
@@ -28,9 +27,9 @@ import java.lang.StringBuilder
 import java.util.*
 import kotlin.collections.ArrayList
 
-class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<ActivityAdapter.ActivityVH>(), CoroutineScope by MainScope() {
-    val items = SortedList(ActivityInfo::class.java, object : SortedList.Callback<ActivityInfo>() {
-        override fun areItemsTheSame(item1: ActivityInfo?, item2: ActivityInfo?) =
+class ServiceAdapter(private val picasso: Picasso) : RecyclerView.Adapter<ServiceAdapter.ActivityVH>(), CoroutineScope by MainScope() {
+    val items = SortedList(ServiceInfo::class.java, object : SortedList.Callback<ServiceInfo>() {
+        override fun areItemsTheSame(item1: ServiceInfo?, item2: ServiceInfo?) =
             item1 == item2
 
         override fun onMoved(fromPosition: Int, toPosition: Int) {
@@ -49,27 +48,27 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
             notifyItemRangeRemoved(position, count)
         }
 
-        override fun compare(o1: ActivityInfo, o2: ActivityInfo) =
+        override fun compare(o1: ServiceInfo, o2: ServiceInfo) =
             o1.label.toString().compareTo(o2.label.toString())
 
-        override fun areContentsTheSame(oldItem: ActivityInfo, newItem: ActivityInfo) =
+        override fun areContentsTheSame(oldItem: ServiceInfo, newItem: ServiceInfo) =
             oldItem.info.packageName == newItem.info.packageName
 
     })
-    private val orig = object : ArrayList<ActivityInfo>() {
-        override fun add(element: ActivityInfo): Boolean {
+    private val orig = object : ArrayList<ServiceInfo>() {
+        override fun add(element: ServiceInfo): Boolean {
             if (matches(currentQuery, element)) {
                 items.add(element)
             }
             return super.add(element)
         }
 
-        override fun addAll(elements: Collection<ActivityInfo>): Boolean {
+        override fun addAll(elements: Collection<ServiceInfo>): Boolean {
             items.addAll(elements.filter { matches(currentQuery, it) })
             return super.addAll(elements)
         }
 
-        override fun remove(element: ActivityInfo): Boolean {
+        override fun remove(element: ServiceInfo): Boolean {
             items.remove(element)
             return super.remove(element)
         }
@@ -97,7 +96,7 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
         holder.bind(items[position])
     }
 
-    fun setItems(items: List<ActivityInfo>) {
+    fun setItems(items: List<ServiceInfo>) {
         orig.clear()
         orig.addAll(items)
     }
@@ -113,10 +112,10 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
         items.replaceAll(filter(currentQuery))
     }
 
-    private fun filter(query: String): List<ActivityInfo> {
+    private fun filter(query: String): List<ServiceInfo> {
         val lowerCaseQuery = query.toLowerCase(Locale.getDefault())
 
-        val filteredModelList = ArrayList<ActivityInfo>()
+        val filteredModelList = ArrayList<ServiceInfo>()
 
         for (i in 0 until orig.size) {
             val item = orig[i]
@@ -127,7 +126,7 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
         return filteredModelList
     }
 
-    private fun matches(query: String, data: ActivityInfo): Boolean {
+    private fun matches(query: String, data: ServiceInfo): Boolean {
         when (filterMode) {
             EnabledFilterMode.SHOW_DISABLED -> if (data.info.enabled) return false
             EnabledFilterMode.SHOW_ENABLED -> if (!data.info.enabled) return false
@@ -146,70 +145,68 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
     }
 
     inner class ActivityVH(view: View) : RecyclerView.ViewHolder(view) {
-        fun bind(data: ActivityInfo) = launch {
-            withContext(Dispatchers.Main) {
-                itemView.apply {
-                    activity_name.text = data.label
-                    activity_cmp.text = data.info.name
+        fun bind(data: ServiceInfo) = launch {
+            itemView.apply {
+                activity_name.text = data.label
+                activity_cmp.text = data.info.name
 
-                    picasso.load(ActivityIconHandler.createUri(data.info.packageName, data.info.name))
-                        .fit()
-                        .centerInside()
-                        .into(activity_icon)
+                picasso.load(ActivityIconHandler.createUri(data.info.packageName, data.info.name))
+                    .fit()
+                    .centerInside()
+                    .into(activity_icon)
 
-                    set_extras.setOnClickListener {
+                set_extras.setOnClickListener {
+                    val d = items[adapterPosition]
+                    ExtrasDialog(context, constructActivityKey(d.info.packageName, d.info.name))
+                        .show()
+                }
+
+                enabled.setOnCheckedChangeListener(null)
+                enabled.isChecked = data.info.enabled
+                enabled.setOnCheckedChangeListener(object : CompoundButton.OnCheckedChangeListener {
+                    override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
                         val d = items[adapterPosition]
-                        ExtrasDialog(context, constructActivityKey(d.info.packageName, d.info.name))
-                            .show()
-                    }
-
-                    enabled.setOnCheckedChangeListener(null)
-                    enabled.isChecked = data.info.enabled
-                    enabled.setOnCheckedChangeListener(object : CompoundButton.OnCheckedChangeListener {
-                        override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
-                            val d = items[adapterPosition]
-                            if (Shell.SU.available()) {
-                                if (Shell.Pool.SU.run("pm ${if (isChecked) "enable" else "disable"} ${constructActivityKey(d.info.packageName, d.info.name)}") == 0) {
-                                    data.info.enabled = isChecked
-                                } else {
-                                    enabled.setOnCheckedChangeListener(null)
-                                    enabled.isChecked = !isChecked
-                                    enabled.setOnCheckedChangeListener(this)
-                                }
+                        if (Shell.SU.available()) {
+                            if (Shell.Pool.SU.run("pm ${if (isChecked) "enable" else "disable"} ${constructActivityKey(d.info.packageName, d.info.name)}") == 0) {
+                                data.info.enabled = isChecked
                             } else {
-                                Toast.makeText(context, R.string.requires_root, Toast.LENGTH_SHORT).show()
                                 enabled.setOnCheckedChangeListener(null)
                                 enabled.isChecked = !isChecked
                                 enabled.setOnCheckedChangeListener(this)
                             }
+                        } else {
+                            Toast.makeText(context, R.string.requires_root, Toast.LENGTH_SHORT).show()
+                            enabled.setOnCheckedChangeListener(null)
+                            enabled.isChecked = !isChecked
+                            enabled.setOnCheckedChangeListener(this)
                         }
-                    })
+                    }
+                })
 
-                    setOnClickListener {
-                        val d = items[adapterPosition]
-                        val extras = context.findExtrasForActivity(constructActivityKey(d.info.packageName, d.info.name))
+                setOnClickListener {
+                    val d = items[adapterPosition]
+                    val extras = context.findExtrasForActivity(constructActivityKey(d.info.packageName, d.info.name))
 
-                        try {
-                            val intent = Intent(Intent.ACTION_MAIN)
-                            intent.component = ComponentName(d.info.packageName, d.info.name)
+                    try {
+                        val intent = Intent(Intent.ACTION_MAIN)
+                        intent.component = ComponentName(d.info.packageName, d.info.name)
+
+                        if (extras.isNotEmpty()) extras.forEach {
+                            intent.putExtra(it.key, it.value)
+                        }
+
+                        ContextCompat.startForegroundService(context, intent)
+                    } catch (e: SecurityException) {
+                        if (Shell.SU.available()) {
+                            val command = StringBuilder("am startservice ${d.info.packageName}/${d.info.name}")
 
                             if (extras.isNotEmpty()) extras.forEach {
-                                intent.putExtra(it.key, it.value)
+                                command.append(" -e \"${it.key}\" \"${it.value}\"")
                             }
 
-                            context.startActivity(intent)
-                        } catch (e: SecurityException) {
-                            if (Shell.SU.available()) {
-                                val command = StringBuilder("am start -n ${d.info.packageName}/${d.info.name}")
-
-                                if (extras.isNotEmpty()) extras.forEach {
-                                    command.append(" -e \"${it.key}\" \"${it.value}\"")
-                                }
-
-                                Shell.Pool.SU.run(command.toString())
-                            } else {
-                                Toast.makeText(context, R.string.requires_root, Toast.LENGTH_SHORT).show()
-                            }
+                            Shell.Pool.SU.run(command.toString())
+                        } else {
+                            Toast.makeText(context, R.string.requires_root, Toast.LENGTH_SHORT).show()
                         }
                     }
                 }

@@ -13,9 +13,11 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.adapters.ActivityAdapter
 import tk.zwander.rootactivitylauncher.adapters.AppAdapter
+import tk.zwander.rootactivitylauncher.adapters.ServiceAdapter
 import tk.zwander.rootactivitylauncher.data.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
+import tk.zwander.rootactivitylauncher.data.ServiceInfo
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 
@@ -111,17 +113,26 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             progressView?.progress = 0
 
             apps.forEachIndexed { index, app ->
-                val activities = packageManager.getPackageInfo(
+                val i = packageManager.getPackageInfo(
                     app.packageName,
                     PackageManager.GET_ACTIVITIES or
+                            PackageManager.GET_SERVICES or
                             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
                             else PackageManager.GET_DISABLED_COMPONENTS
-                ).activities
-                val infos = ArrayList<ActivityInfo>()
+                )
+                val activities = i.activities
+                val services = i.services
 
-                if (activities != null && activities.isNotEmpty()) {
-                    activities.forEach { act ->
-                        infos.add(ActivityInfo(act, act.loadLabel(packageManager)))
+                if ((activities != null && activities.isNotEmpty()) || (services != null && services.isNotEmpty())) {
+                    val activityInfos = ArrayList<ActivityInfo>()
+                    val serviceInfos = ArrayList<ServiceInfo>()
+
+                    activities?.forEach { act ->
+                        activityInfos.add(ActivityInfo(act, act.loadLabel(packageManager)))
+                    }
+
+                    services?.forEach { srv ->
+                        serviceInfos.add(ServiceInfo(srv, srv.loadLabel(packageManager)))
                     }
 
                     val label = app.loadLabel(packageManager)
@@ -130,8 +141,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                         AppInfo(
                             app,
                             label,
-                            infos,
-                            ActivityAdapter(picasso)
+                            activityInfos,
+                            serviceInfos,
+                            ActivityAdapter(picasso),
+                            ServiceAdapter(picasso)
                         )
                     )
                 }

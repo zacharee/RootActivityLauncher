@@ -6,6 +6,9 @@
     <string name="hint_value">Value</string>
     <string name="add_extra">Add Extra</string>
 
+    <string name="activities">Activities</string>
+    <string name="services">Services</string>
+
     <string name="filter_disabled">Show Only Disabled</string>
     <string name="filter_enabled">Show Only Enabled</string>
     <string name="filter_all">Show All</string>
