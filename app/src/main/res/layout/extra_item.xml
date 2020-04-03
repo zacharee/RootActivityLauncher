@@ -25,6 +25,11 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
+    <View
+        android:layout_width="8dp"
+        android:layout_height="match_parent"
+        />
+
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/value_wrapper"
         android:hint="@string/hint_value"
