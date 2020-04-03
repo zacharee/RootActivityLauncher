@@ -2,27 +2,23 @@ package tk.zwander.rootactivitylauncher.adapters
 
 import android.content.ComponentName
 import android.content.Intent
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
 import android.widget.Toast
-import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SortedList
 import com.squareup.picasso.Picasso
 import eu.chainfire.libsuperuser.Shell
 import kotlinx.android.synthetic.main.activity_item.view.*
-import kotlinx.android.synthetic.main.app_item.view.*
-import kotlinx.android.synthetic.main.extras_dialog.view.*
 import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
-import tk.zwander.rootactivitylauncher.util.constructActivityKey
-import tk.zwander.rootactivitylauncher.util.findExtrasForActivity
+import tk.zwander.rootactivitylauncher.util.constructComponentKey
+import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
 import java.lang.StringBuilder
 import java.util.*
@@ -159,7 +155,7 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
 
                     set_extras.setOnClickListener {
                         val d = items[adapterPosition]
-                        ExtrasDialog(context, constructActivityKey(d.info.packageName, d.info.name))
+                        ExtrasDialog(context, constructComponentKey(d.info.packageName, d.info.name))
                             .show()
                     }
 
@@ -169,7 +165,7 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
                         override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
                             val d = items[adapterPosition]
                             if (Shell.SU.available()) {
-                                if (Shell.Pool.SU.run("pm ${if (isChecked) "enable" else "disable"} ${constructActivityKey(d.info.packageName, d.info.name)}") == 0) {
+                                if (Shell.Pool.SU.run("pm ${if (isChecked) "enable" else "disable"} ${constructComponentKey(d.info.packageName, d.info.name)}") == 0) {
                                     data.info.enabled = isChecked
                                 } else {
                                     enabled.setOnCheckedChangeListener(null)
@@ -187,7 +183,7 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
 
                     setOnClickListener {
                         val d = items[adapterPosition]
-                        val extras = context.findExtrasForActivity(constructActivityKey(d.info.packageName, d.info.name))
+                        val extras = context.findExtrasForComponent(constructComponentKey(d.info.packageName, d.info.name))
 
                         try {
                             val intent = Intent(Intent.ACTION_MAIN)

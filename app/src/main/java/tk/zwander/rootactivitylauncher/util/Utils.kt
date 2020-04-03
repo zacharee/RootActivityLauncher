@@ -8,7 +8,7 @@ import tk.zwander.rootactivitylauncher.data.PrefManager
 val Context.prefs: PrefManager
     get() = PrefManager.getInstance(this)
 
-fun Context.findExtrasForActivity(activityName: String): List<ExtraInfo> {
+fun Context.findExtrasForComponent(activityName: String): List<ExtraInfo> {
     val extras = ArrayList<ExtraInfo>()
 
     prefs.extras[activityName]?.let { extras.addAll(it) }
@@ -16,11 +16,10 @@ fun Context.findExtrasForActivity(activityName: String): List<ExtraInfo> {
     return extras
 }
 
-fun Context.updateExtrasForActivity(activityName: String, extras: List<ExtraInfo>) {
+fun Context.updateExtrasForComponent(componentName: String, extras: List<ExtraInfo>) {
     val map = prefs.extras
 
-    map[activityName] = extras
-
+    map[componentName] = extras
     prefs.extras = map
 }
 
@@ -30,6 +29,6 @@ fun RecyclerView.removeAllItemDecorations() {
     }
 }
 
-fun constructActivityKey(packageName: String, activityName: String): String {
-    return "$packageName/$activityName"
+fun constructComponentKey(packageName: String, componentName: String): String {
+    return "$packageName/$componentName"
 }
