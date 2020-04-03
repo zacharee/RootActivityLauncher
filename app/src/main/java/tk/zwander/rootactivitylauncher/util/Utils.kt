@@ -1,6 +1,7 @@
 package tk.zwander.rootactivitylauncher.util
 
 import android.content.Context
+import androidx.recyclerview.widget.RecyclerView
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.PrefManager
 
@@ -21,6 +22,12 @@ fun Context.updateExtrasForActivity(activityName: String, extras: List<ExtraInfo
     map[activityName] = extras
 
     prefs.extras = map
+}
+
+fun RecyclerView.removeAllItemDecorations() {
+    for (i in itemDecorationCount downTo 1) {
+        removeItemDecorationAt(0)
+    }
 }
 
 fun constructActivityKey(packageName: String, activityName: String): String {

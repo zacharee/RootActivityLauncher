@@ -14,6 +14,7 @@ import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
+import tk.zwander.rootactivitylauncher.util.removeAllItemDecorations
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -161,15 +162,13 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
                 data.activityAdapter.setItems(data.activities)
                 data.serviceAdapter.setItems(data.services)
 
+                activities.removeAllItemDecorations()
                 if (data.activities.size > 1)
                     activities.addItemDecoration(DividerItemDecoration(context, RecyclerView.VERTICAL))
-                else if (activities.itemDecorationCount > 0)
-                    activities.removeItemDecorationAt(0)
 
+                services.removeAllItemDecorations()
                 if (data.services.size > 1)
                     services.addItemDecoration(DividerItemDecoration(context, RecyclerView.VERTICAL))
-                else if (services.itemDecorationCount > 0)
-                    services.removeItemDecorationAt(0)
 
                 activities_expansion.isVisible = data.activities.isNotEmpty()
                 activities_expansion.setOnClickListener {
