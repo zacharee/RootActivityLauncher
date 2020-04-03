@@ -8,11 +8,11 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SortedList
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
-import com.squareup.picasso.MemoryPolicy
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.app_item.view.*
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.AppInfo
+import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import java.util.*
 import kotlin.collections.ArrayList
@@ -71,7 +71,6 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
     }
 
     private var currentQuery: String = ""
-    private var showOnlyDisabled = false
 
     override fun getItemCount(): Int {
         return items.size()
@@ -101,8 +100,8 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
         items.replaceAll(filter(currentQuery))
     }
 
-    fun onShowOnlyDisabledChange(showOnlyDisabled: Boolean) {
-        orig.forEach { it.adapter.onShowOnlyDisabledChange(showOnlyDisabled) }
+    fun setEnabledFilterMode(filterMode: EnabledFilterMode) {
+        orig.forEach { it.adapter.setEnabledFilterMode(filterMode) }
     }
 
     private fun filter(query: String): List<AppInfo> {

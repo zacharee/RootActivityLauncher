@@ -19,6 +19,7 @@ import kotlinx.android.synthetic.main.extras_dialog.view.*
 import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ActivityInfo
+import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.util.constructActivityKey
 import tk.zwander.rootactivitylauncher.util.findExtrasForActivity
@@ -80,7 +81,7 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
     }
 
     private var currentQuery: String = ""
-    private var showOnlyDisabled = false
+    private var filterMode = EnabledFilterMode.SHOW_ALL
 
     override fun getItemCount(): Int {
         return items.size()
@@ -107,9 +108,9 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
         items.replaceAll(filter(currentQuery))
     }
 
-    fun onShowOnlyDisabledChange(showOnlyDisabled: Boolean) {
-        this.showOnlyDisabled = showOnlyDisabled
-        filter(currentQuery)
+    fun setEnabledFilterMode(filterMode: EnabledFilterMode) {
+        this.filterMode = filterMode
+        items.replaceAll(filter(currentQuery))
     }
 
     private fun filter(query: String): List<ActivityInfo> {
@@ -127,7 +128,13 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
     }
 
     private fun matches(query: String, data: ActivityInfo): Boolean {
-        if (showOnlyDisabled && data.info.enabled) return false
+        when (filterMode) {
+            EnabledFilterMode.SHOW_DISABLED -> if (data.info.enabled) return false
+            EnabledFilterMode.SHOW_ENABLED -> if (!data.info.enabled) return false
+            else -> {
+                //no-op
+            }
+        }
 
         if (query.isBlank()) return true
 
@@ -155,7 +162,6 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
                         .show()
                 }
 
-                enabled.isChecked = data.info.enabled
                 enabled.setOnCheckedChangeListener(object : CompoundButton.OnCheckedChangeListener {
                     override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
                         val d = items[adapterPosition]
@@ -175,6 +181,7 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
                         }
                     }
                 })
+                enabled.isChecked = data.info.enabled
 
                 setOnClickListener {
                     val d = items[adapterPosition]

@@ -16,11 +16,28 @@
         app:showAsAction="ifRoom"
         />
 
-    <item
-        android:id="@+id/filter_disabled"
-        android:title="@string/filter_disabled"
-        android:checkable="true"
-        app:showAsAction="never"
-        />
+    <group
+        android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/filter_disabled"
+            android:title="@string/filter_disabled"
+            app:showAsAction="never"
+            />
+
+        <item
+            android:id="@+id/filter_enabled"
+            android:title="@string/filter_enabled"
+            app:showAsAction="never"
+            />
+
+        <item
+            android:id="@+id/filter_all"
+            android:title="@string/filter_all"
+            android:checked="true"
+            app:showAsAction="never"
+            />
+
+    </group>
 
 </menu>

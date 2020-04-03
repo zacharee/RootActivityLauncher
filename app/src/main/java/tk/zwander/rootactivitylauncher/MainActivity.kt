@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.widget.SearchView
-import com.google.android.material.checkbox.MaterialCheckBox
 import com.hmomeni.progresscircula.ProgressCircula
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
@@ -16,6 +15,7 @@ import tk.zwander.rootactivitylauncher.adapters.ActivityAdapter
 import tk.zwander.rootactivitylauncher.adapters.AppAdapter
 import tk.zwander.rootactivitylauncher.data.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.AppInfo
+import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 
@@ -64,15 +64,24 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.filter_disabled) {
-            val checked = item.isChecked
-            item.isChecked = !checked
-
-            appAdapter.onShowOnlyDisabledChange(!checked)
-            return true
+        return when (item.itemId) {
+            R.id.filter_disabled -> {
+                item.isChecked = true
+                appAdapter.setEnabledFilterMode(EnabledFilterMode.SHOW_DISABLED)
+                true
+            }
+            R.id.filter_enabled -> {
+                item.isChecked = true
+                appAdapter.setEnabledFilterMode(EnabledFilterMode.SHOW_ENABLED)
+                true
+            }
+            R.id.filter_all -> {
+                item.isChecked = true
+                appAdapter.setEnabledFilterMode(EnabledFilterMode.SHOW_ALL)
+                true
+            }
+            else -> return super.onOptionsItemSelected(item)
         }
-
-        return super.onOptionsItemSelected(item)
     }
 
     override fun onQueryTextChange(newText: String?): Boolean {
