@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.widget.SearchView
+import com.google.android.material.checkbox.MaterialCheckBox
 import com.hmomeni.progresscircula.ProgressCircula
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
@@ -38,6 +39,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     private val searchView: SearchView?
         get() = (search?.actionView as SearchView?)
 
+    private var showOnlyDisabled: MenuItem? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -53,10 +56,23 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
         progress = menu.findItem(R.id.progress)
         search = menu.findItem(R.id.action_search)
+        showOnlyDisabled = menu.findItem(R.id.filter_disabled)
 
         searchView?.setOnQueryTextListener(this)
 
         return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.filter_disabled) {
+            val checked = item.isChecked
+            item.isChecked = !checked
+
+            appAdapter.onShowOnlyDisabledChange(!checked)
+            return true
+        }
+
+        return super.onOptionsItemSelected(item)
     }
 
     override fun onQueryTextChange(newText: String?): Boolean {

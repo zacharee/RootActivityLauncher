@@ -38,7 +38,6 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
 
         override fun onChanged(position: Int, count: Int) {
             notifyItemRangeChanged(position, count)
-
         }
 
         override fun onInserted(position: Int, count: Int) {
@@ -81,6 +80,7 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
     }
 
     private var currentQuery: String = ""
+    private var showOnlyDisabled = false
 
     override fun getItemCount(): Int {
         return items.size()
@@ -96,11 +96,6 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
         holder.bind(items[position])
     }
 
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
-        super.onDetachedFromRecyclerView(recyclerView)
-        cancel()
-    }
-
     fun setItems(items: List<ActivityInfo>) {
         orig.clear()
         orig.addAll(items)
@@ -110,6 +105,11 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
         currentQuery = newText ?: ""
 
         items.replaceAll(filter(currentQuery))
+    }
+
+    fun onShowOnlyDisabledChange(showOnlyDisabled: Boolean) {
+        this.showOnlyDisabled = showOnlyDisabled
+        filter(currentQuery)
     }
 
     private fun filter(query: String): List<ActivityInfo> {
@@ -127,6 +127,8 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
     }
 
     private fun matches(query: String, data: ActivityInfo): Boolean {
+        if (showOnlyDisabled && data.info.enabled) return false
+
         if (query.isBlank()) return true
 
         if (data.label.contains(query, true)

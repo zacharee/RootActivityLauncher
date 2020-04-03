@@ -71,6 +71,7 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
     }
 
     private var currentQuery: String = ""
+    private var showOnlyDisabled = false
 
     override fun getItemCount(): Int {
         return items.size()
@@ -98,6 +99,10 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
 
         orig.forEach { it.adapter.onQueryTextChange(newText) }
         items.replaceAll(filter(currentQuery))
+    }
+
+    fun onShowOnlyDisabledChange(showOnlyDisabled: Boolean) {
+        orig.forEach { it.adapter.onShowOnlyDisabledChange(showOnlyDisabled) }
     }
 
     private fun filter(query: String): List<AppInfo> {
@@ -135,8 +140,6 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
     inner class AppVH(view: View) : RecyclerView.ViewHolder(view) {
         fun bind(data: AppInfo) {
             itemView.apply {
-                data.adapter = ActivityAdapter(picasso)
-
                 activities.isVisible = data.expanded
                 activities.adapter = data.adapter
                 arrow.scaleY = if (data.expanded) 1f else -1f
@@ -148,13 +151,11 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
                     .centerInside()
                     .into(app_icon)
 
-                if (data.expanded) {
-                    data.adapter.setItems(data.activities)
-                    if (data.activities.size > 1)
-                        activities.addItemDecoration(DividerItemDecoration(context, RecyclerView.VERTICAL))
-                    else if (activities.itemDecorationCount > 0)
-                        activities.removeItemDecorationAt(0)
-                }
+                data.adapter.setItems(data.activities)
+                if (data.activities.size > 1)
+                    activities.addItemDecoration(DividerItemDecoration(context, RecyclerView.VERTICAL))
+                else if (activities.itemDecorationCount > 0)
+                    activities.removeItemDecorationAt(0)
 
                 setOnClickListener {
                     val d = items[adapterPosition]

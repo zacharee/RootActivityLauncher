@@ -5,6 +5,7 @@
     <string name="hint_key">Key</string>
     <string name="hint_value">Value</string>
     <string name="add_extra">Add Extra</string>
+    <string name="filter_disabled">Show Only Disabled</string>
 
     <string name="requires_root">Requires Root</string>
 </resources>
