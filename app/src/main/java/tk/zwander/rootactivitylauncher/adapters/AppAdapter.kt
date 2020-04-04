@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
-import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SortedList
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
@@ -32,7 +31,6 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
 
         override fun onChanged(position: Int, count: Int) {
             notifyItemRangeChanged(position, count)
-
         }
 
         override fun onInserted(position: Int, count: Int) {
@@ -47,7 +45,11 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
             o1.label.toString().compareTo(o2.label.toString(), ignoreCase = true)
 
         override fun areContentsTheSame(oldItem: AppInfo, newItem: AppInfo) =
-            oldItem.info.packageName == newItem.info.packageName
+            //This is a little hacky. In order to guarantee that the Activity/Service headers' visibility
+            //is properly updated on a new filter event is to have every item be rebound.
+            //A better approach might be to add flags to AppInfo for their visibilities, and override
+            //AppInfo#equals() to ignore those flags. Then compare them here.
+            false
 
     })
     private val orig = object : ArrayList<AppInfo>() {
@@ -85,6 +87,8 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
     }
 
     private var currentQuery: String = ""
+    private var enabledFilterMode = EnabledFilterMode.SHOW_ALL
+    private var exportedFilterMode = ExportedFilterMode.SHOW_ALL
 
     init {
         setHasStableIds(true)
@@ -124,42 +128,46 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
     }
 
     fun setEnabledFilterMode(filterMode: EnabledFilterMode) {
+        enabledFilterMode = filterMode
+
         orig.forEach { it.activityAdapter.setEnabledFilterMode(filterMode) }
         orig.forEach { it.serviceAdapter.setEnabledFilterMode(filterMode) }
+        items.replaceAll(filter(currentQuery))
     }
 
     fun setExportedFilterMode(filterMode: ExportedFilterMode) {
+        exportedFilterMode = filterMode
+
         orig.forEach { it.activityAdapter.setExportedFilterMode(filterMode) }
         orig.forEach { it.serviceAdapter.setExportedFilterMode(filterMode) }
+        items.replaceAll(filter(currentQuery))
     }
 
     private fun filter(query: String): List<AppInfo> {
-        val lowerCaseQuery = query.toLowerCase(Locale.getDefault())
-
         val filteredModelList = ArrayList<AppInfo>()
 
         for (i in 0 until orig.size) {
             val item = orig[i]
 
-            if (matches(lowerCaseQuery, item)) filteredModelList.add(item)
+            if (matches(query, item)) filteredModelList.add(item)
         }
 
         return filteredModelList
     }
 
     private fun matches(query: String, data: AppInfo): Boolean {
+        val activityFilterEmpty = data.activityAdapter.filter(currentQuery, data.activities).isEmpty()
+        val serviceFilterEmpty = data.serviceAdapter.filter(currentQuery, data.services).isEmpty()
+
+        if (activityFilterEmpty && serviceFilterEmpty) return false
+
         if (query.isBlank()) return true
 
         if (data.label.contains(query, true)
             || data.info.packageName.contains(query, true)
         ) return true
 
-        if (data.activities.any {
-                it.label.contains(query, true) || it.info.name.contains(
-                    query,
-                    true
-                )
-            })
+        if (!activityFilterEmpty || !serviceFilterEmpty)
             return true
 
         return false
@@ -190,11 +198,11 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
                 activities_title.setCompoundDrawablesRelative(null, null, if (data.activitiesExpanded) arrowUp else arrowDown, null)
                 services_title.setCompoundDrawablesRelative(null, null, if (data.servicesExpanded) arrowUp else arrowDown, null)
 
+                activities_title.isVisible = data.activityAdapter.filter(currentQuery, data.activities).isNotEmpty()
+                services_title.isVisible = data.serviceAdapter.filter(currentQuery, data.services).isNotEmpty()
+
                 if (prevPos != adapterPosition) {
                     prevPos = adapterPosition
-
-                    activities_title.isVisible = data.activities.isNotEmpty()
-                    services_title.isVisible = data.services.isNotEmpty()
 
                     picasso.load(AppIconHandler.createUri(data.info.packageName))
                         .fit()

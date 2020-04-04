@@ -18,7 +18,7 @@ abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass,
     internal val picasso: Picasso,
     dataClass: Class<DataClass>
 ) : RecyclerView.Adapter<VHClass>(), CoroutineScope by MainScope() {
-    internal val items: SortedList<DataClass> = SortedList(dataClass, object : SortedList.Callback<DataClass>() {
+    val items: SortedList<DataClass> = SortedList(dataClass, object : SortedList.Callback<DataClass>() {
         override fun areItemsTheSame(item1: DataClass?, item2: DataClass?) =
             item1 == item2
 
@@ -137,6 +137,18 @@ abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass,
             val item = orig[i]
 
             if (matches(lowerCaseQuery, item)) filteredModelList.add(item)
+        }
+
+        return filteredModelList
+    }
+
+    internal open fun filter(query: String, items: Collection<DataClass>): List<DataClass> {
+        val lowerCaseQuery = query.toLowerCase(Locale.getDefault())
+
+        val filteredModelList = ArrayList<DataClass>()
+
+        for (element in items) {
+            if (matches(lowerCaseQuery, element)) filteredModelList.add(element)
         }
 
         return filteredModelList
