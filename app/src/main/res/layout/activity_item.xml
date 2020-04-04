@@ -69,6 +69,7 @@
             android:layout_weight="1"
             android:src="@drawable/ic_baseline_more_horiz_24"
             android:background="?android:selectableItemBackground"
+            android:contentDescription="@string/set_extras"
             />
 
         <ImageButton
@@ -78,6 +79,7 @@
             android:layout_weight="1"
             android:src="@drawable/ic_baseline_open_in_new_24"
             android:background="?android:selectableItemBackground"
+            android:contentDescription="@string/launch"
             />
 
     </LinearLayout>
