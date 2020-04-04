@@ -44,11 +44,8 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
             o1.loadedLabel.toString().compareTo(o2.loadedLabel.toString(), ignoreCase = true)
 
         override fun areContentsTheSame(oldItem: AppInfo, newItem: AppInfo) =
-            //This is a little hacky. In order to guarantee that the Activity/Service headers' visibility
-            //is properly updated on a new filter event is to have every item be rebound.
-            //A better approach might be to add flags to AppInfo for their visibilities, and override
-            //AppInfo#equals() to ignore those flags. Then compare them here.
-            false
+            oldItem.activitiesExpanded == newItem.activitiesExpanded
+                    && oldItem.servicesExpanded == newItem.servicesExpanded
 
     })
     private val orig = object : ArrayList<AppInfo>() {
