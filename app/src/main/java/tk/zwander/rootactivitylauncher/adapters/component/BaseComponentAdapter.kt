@@ -49,6 +49,7 @@ abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass,
 
             override fun areContentsTheSame(oldItem: DataClass, newItem: DataClass) =
                 oldItem.info.packageName == newItem.info.packageName
+                        && oldItem.info.exported == newItem.info.exported
 
         })
     internal val orig =
@@ -68,6 +69,7 @@ abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass,
 
             override fun areContentsTheSame(oldItem: DataClass, newItem: DataClass): Boolean {
                 return oldItem.info.packageName == newItem.info.packageName
+                        && oldItem.info.exported == newItem.info.exported
             }
 
             override fun onMoved(fromPosition: Int, toPosition: Int) {}
