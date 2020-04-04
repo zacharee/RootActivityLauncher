@@ -5,6 +5,7 @@
     <string name="hint_key">Key</string>
     <string name="hint_value">Value</string>
     <string name="add_extra">Add Extra</string>
+    <string name="filter">Filter</string>
 
     <string name="set_extras">Set Extras</string>
     <string name="launch">Launch</string>

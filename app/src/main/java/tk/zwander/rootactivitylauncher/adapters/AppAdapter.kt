@@ -86,8 +86,26 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
     }
 
     private var currentQuery: String = ""
-    private var enabledFilterMode = EnabledFilterMode.SHOW_ALL
-    private var exportedFilterMode = ExportedFilterMode.SHOW_ALL
+    var enabledFilterMode = EnabledFilterMode.SHOW_ALL
+        set(value) {
+            if (field != value) {
+                field = value
+
+                orig.forEach { it.activityAdapter.setEnabledFilterMode(value) }
+                orig.forEach { it.serviceAdapter.setEnabledFilterMode(value) }
+                items.replaceAll(filter(currentQuery))
+            }
+        }
+    var exportedFilterMode = ExportedFilterMode.SHOW_ALL
+        set(value) {
+            if (field != value) {
+                field = value
+
+                orig.forEach { it.activityAdapter.setExportedFilterMode(value) }
+                orig.forEach { it.serviceAdapter.setExportedFilterMode(value) }
+                items.replaceAll(filter(currentQuery))
+            }
+        }
 
     init {
         setHasStableIds(true)
@@ -123,22 +141,6 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
 
         orig.forEach { it.activityAdapter.onQueryTextChange(newText) }
         orig.forEach { it.serviceAdapter.onQueryTextChange(newText) }
-        items.replaceAll(filter(currentQuery))
-    }
-
-    fun setEnabledFilterMode(filterMode: EnabledFilterMode) {
-        enabledFilterMode = filterMode
-
-        orig.forEach { it.activityAdapter.setEnabledFilterMode(filterMode) }
-        orig.forEach { it.serviceAdapter.setEnabledFilterMode(filterMode) }
-        items.replaceAll(filter(currentQuery))
-    }
-
-    fun setExportedFilterMode(filterMode: ExportedFilterMode) {
-        exportedFilterMode = filterMode
-
-        orig.forEach { it.activityAdapter.setExportedFilterMode(filterMode) }
-        orig.forEach { it.serviceAdapter.setExportedFilterMode(filterMode) }
         items.replaceAll(filter(currentQuery))
     }
 

@@ -23,6 +23,7 @@ import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.picasso.ServiceIconHandler
 import tk.zwander.rootactivitylauncher.util.lazyDeferred
+import tk.zwander.rootactivitylauncher.views.FilterDialog
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     SearchView.OnQueryTextListener {
@@ -45,7 +46,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     private val searchView: SearchView?
         get() = (search?.actionView as SearchView?)
 
-    private var showOnlyDisabled: MenuItem? = null
+    private var filter: MenuItem? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,7 +64,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
         progress = menu.findItem(R.id.progress)
         search = menu.findItem(R.id.action_search)
-        showOnlyDisabled = menu.findItem(R.id.filter_disabled)
+        filter = menu.findItem(R.id.action_filter)
 
         searchView?.setOnQueryTextListener(this)
 
@@ -72,37 +73,18 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.filter_disabled -> {
-                item.isChecked = true
-                appAdapter.setEnabledFilterMode(EnabledFilterMode.SHOW_DISABLED)
+            R.id.action_filter -> {
+                FilterDialog(
+                    this,
+                    appAdapter.enabledFilterMode,
+                    appAdapter.exportedFilterMode
+                ) { enabledMode, exportedMode ->
+                    appAdapter.enabledFilterMode = enabledMode
+                    appAdapter.exportedFilterMode = exportedMode
+                }.show()
                 true
             }
-            R.id.filter_enabled -> {
-                item.isChecked = true
-                appAdapter.setEnabledFilterMode(EnabledFilterMode.SHOW_ENABLED)
-                true
-            }
-            R.id.filter_all -> {
-                item.isChecked = true
-                appAdapter.setEnabledFilterMode(EnabledFilterMode.SHOW_ALL)
-                true
-            }
-            R.id.filter_exported -> {
-                item.isChecked = true
-                appAdapter.setExportedFilterMode(ExportedFilterMode.SHOW_EXPORTED)
-                true
-            }
-            R.id.filter_unexported -> {
-                item.isChecked = true
-                appAdapter.setExportedFilterMode(ExportedFilterMode.SHOW_UNEXPORTED)
-                true
-            }
-            R.id.filter_all_ex -> {
-                item.isChecked = true
-                appAdapter.setExportedFilterMode(ExportedFilterMode.SHOW_ALL)
-                true
-            }
-            else -> return super.onOptionsItemSelected(item)
+            else -> super.onOptionsItemSelected(item)
         }
     }
 
@@ -197,6 +179,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
         launch(Dispatchers.Main) {
             progress?.isVisible = false
+            search?.isVisible = true
+            filter?.isVisible = true
 
             appAdapter.setItems(appInfo)
         }

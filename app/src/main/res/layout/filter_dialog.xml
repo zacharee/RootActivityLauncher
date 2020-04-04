@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/enabled_filters"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/enabled_filter"
+            android:textSize="16sp"
+            android:textColor="?android:textColorPrimary"
+            />
+
+        <RadioGroup
+            android:id="@+id/enabled_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:checkedButton="@id/show_all_en">
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/filter_enabled"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/filter_enabled"
+                />
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/filter_disabled"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/filter_disabled"
+                />
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/show_all_en"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/filter_all"
+                />
+
+        </RadioGroup>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="16dp"
+            />
+
+        <TextView
+            android:id="@+id/exported_filters"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/exported_filter"
+            android:textSize="16sp"
+            android:textColor="?android:textColorPrimary"
+            />
+
+        <RadioGroup
+            android:id="@+id/exported_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:checkedButton="@id/show_all_ex">
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/filter_exported"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/filter_exported"
+                />
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/filter_unexported"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/filter_unexported"
+                />
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/show_all_ex"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/filter_all"
+                />
+
+        </RadioGroup>
+
+    </LinearLayout>
+
+</ScrollView>

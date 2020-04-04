@@ -14,66 +14,15 @@
         android:title="@android:string/search_go"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="ifRoom"
+        android:visible="false"
         />
 
     <item
-        android:title="@string/enabled_filter"
-        android:enabled="false"
+        android:id="@+id/action_filter"
+        android:title="@string/filter"
+        android:icon="@drawable/ic_baseline_filter_list_24"
+        app:showAsAction="ifRoom"
+        android:visible="false"
         />
-
-    <group
-        android:id="@+id/enabled_filters"
-        android:checkableBehavior="single">
-
-        <item
-            android:id="@+id/filter_enabled"
-            android:title="@string/filter_enabled"
-            app:showAsAction="never"
-            />
-
-        <item
-            android:id="@+id/filter_disabled"
-            android:title="@string/filter_disabled"
-            app:showAsAction="never"
-            />
-
-        <item
-            android:id="@+id/filter_all"
-            android:title="@string/filter_all"
-            android:checked="true"
-            app:showAsAction="never"
-            />
-
-    </group>
-
-    <item
-        android:title="@string/exported_filter"
-        android:enabled="false"
-        />
-
-    <group
-        android:id="@+id/exported_filters"
-        android:checkableBehavior="single">
-
-        <item
-            android:id="@+id/filter_exported"
-            android:title="@string/filter_exported"
-            app:showAsAction="never"
-            />
-
-        <item
-            android:id="@+id/filter_unexported"
-            android:title="@string/filter_unexported"
-            app:showAsAction="never"
-            />
-
-        <item
-            android:id="@+id/filter_all_ex"
-            android:title="@string/filter_all"
-            android:checked="true"
-            app:showAsAction="never"
-            />
-
-    </group>
 
 </menu>
