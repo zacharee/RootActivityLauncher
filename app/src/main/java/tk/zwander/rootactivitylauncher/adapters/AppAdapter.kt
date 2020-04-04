@@ -21,8 +21,9 @@ import kotlin.collections.ArrayList
 
 class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter.AppVH>(), FastScrollRecyclerView.SectionedAdapter {
     val items = SortedList(AppInfo::class.java, object : SortedList.Callback<AppInfo>() {
-        override fun areItemsTheSame(item1: AppInfo?, item2: AppInfo?) =
-            item1 == item2
+        override fun areItemsTheSame(item1: AppInfo, item2: AppInfo) =
+            item1.label == item2.label
+                    && item1.info.packageName == item2.info.packageName
 
         override fun onMoved(fromPosition: Int, toPosition: Int) {
             notifyItemMoved(fromPosition, toPosition)
