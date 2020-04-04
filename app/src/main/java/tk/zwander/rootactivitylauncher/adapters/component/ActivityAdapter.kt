@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
 import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.SortedList
 import com.squareup.picasso.Picasso
 import eu.chainfire.libsuperuser.Shell
@@ -83,6 +84,7 @@ class ActivityAdapter(picasso: Picasso) : BaseComponentAdapter<ActivityAdapter, 
                             if (Shell.SU.available()) {
                                 if (Shell.Pool.SU.run("pm ${if (isChecked) "enable" else "disable"} ${constructComponentKey(d.info.packageName, d.info.name)}") == 0) {
                                     data.info.enabled = isChecked
+                                    notifyItemChanged(adapterPosition)
                                 } else {
                                     enabled.setOnCheckedChangeListener(null)
                                     enabled.isChecked = !isChecked
@@ -97,6 +99,7 @@ class ActivityAdapter(picasso: Picasso) : BaseComponentAdapter<ActivityAdapter, 
                         }
                     })
 
+                    launch.isVisible = data.info.enabled
                     launch.setOnClickListener {
                         val d = items[adapterPosition]
                         val extras = context.findExtrasForComponent(constructComponentKey(d.info.packageName, d.info.name))

@@ -8,10 +8,15 @@ import android.view.ViewGroup
 import android.widget.CompoundButton
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.SortedList
 import com.squareup.picasso.Picasso
 import eu.chainfire.libsuperuser.Shell
+import kotlinx.android.synthetic.main.activity_item.view.*
 import kotlinx.android.synthetic.main.service_item.view.*
+import kotlinx.android.synthetic.main.service_item.view.enabled
+import kotlinx.android.synthetic.main.service_item.view.launch
+import kotlinx.android.synthetic.main.service_item.view.set_extras
 import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
@@ -81,6 +86,7 @@ class ServiceAdapter(picasso: Picasso) : BaseComponentAdapter<ServiceAdapter, Se
                         if (Shell.SU.available()) {
                             if (Shell.Pool.SU.run("pm ${if (isChecked) "enable" else "disable"} ${constructComponentKey(d.info.packageName, d.info.name)}") == 0) {
                                 data.info.enabled = isChecked
+                                notifyItemChanged(adapterPosition)
                             } else {
                                 enabled.setOnCheckedChangeListener(null)
                                 enabled.isChecked = !isChecked
@@ -95,6 +101,7 @@ class ServiceAdapter(picasso: Picasso) : BaseComponentAdapter<ServiceAdapter, Se
                     }
                 })
 
+                launch.isVisible = data.info.enabled
                 launch.setOnClickListener {
                     val d = items[adapterPosition]
                     val extras = context.findExtrasForComponent(constructComponentKey(d.info.packageName, d.info.name))
