@@ -2,24 +2,27 @@ package tk.zwander.rootactivitylauncher
 
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import com.hmomeni.progresscircula.ProgressCircula
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
-import tk.zwander.rootactivitylauncher.adapters.component.ActivityAdapter
 import tk.zwander.rootactivitylauncher.adapters.AppAdapter
+import tk.zwander.rootactivitylauncher.adapters.component.ActivityAdapter
 import tk.zwander.rootactivitylauncher.adapters.component.ServiceAdapter
-import tk.zwander.rootactivitylauncher.data.*
+import tk.zwander.rootactivitylauncher.data.AppInfo
+import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
+import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.picasso.ServiceIconHandler
+import tk.zwander.rootactivitylauncher.util.lazyDeferred
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     SearchView.OnQueryTextListener {
@@ -120,74 +123,82 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         picasso.shutdown()
     }
 
-    private fun loadData() = launch {
+    private fun loadData() = launch(Dispatchers.IO) {
         val appInfo = ArrayList<AppInfo>()
 
-        withContext(Dispatchers.IO) {
-            val apps = packageManager.getInstalledApplications(0)
-            val max = apps.size - 1
+        val apps = packageManager.getInstalledApplications(0)
+        val max = apps.size - 1
 
+        launch(Dispatchers.Main) {
             progressView?.progress = 0
+        }
 
-            apps.forEachIndexed { index, app ->
-                val i = packageManager.getPackageInfo(
-                    app.packageName,
-                    PackageManager.GET_ACTIVITIES or
-                            PackageManager.GET_SERVICES or
-                            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
-                            else PackageManager.GET_DISABLED_COMPONENTS
-                )
-                val activities = i.activities
-                val services = i.services
+        apps.forEachIndexed { index, app ->
+            val i = packageManager.getPackageInfo(
+                app.packageName,
+                PackageManager.GET_ACTIVITIES or
+                        PackageManager.GET_SERVICES or
+                        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
+                        else PackageManager.GET_DISABLED_COMPONENTS
+            )
+            val activities = i.activities
+            val services = i.services
 
-                if ((activities != null && activities.isNotEmpty()) || (services != null && services.isNotEmpty())) {
-                    val activityInfos = ArrayList<ActivityInfo>()
-                    val serviceInfos = ArrayList<ServiceInfo>()
+            if ((activities != null && activities.isNotEmpty()) || (services != null && services.isNotEmpty())) {
+                val activityInfos = ArrayList<ActivityInfo>()
+                val serviceInfos = ArrayList<ServiceInfo>()
 
-                    activities?.forEach { act ->
-                        activityInfos.add(
-                            ActivityInfo(
-                                act,
-                                act.loadLabel(packageManager)
-                            )
-                        )
+                activities?.forEach { act ->
+                    val label by lazyDeferred {
+                        act.loadLabel(packageManager)
                     }
-
-                    services?.forEach { srv ->
-                        serviceInfos.add(
-                            ServiceInfo(
-                                srv,
-                                srv.loadLabel(packageManager)
-                            )
-                        )
-                    }
-
-                    val label = app.loadLabel(packageManager)
-
-                    appInfo.add(
-                        AppInfo(
-                            app,
-                            label,
-                            activityInfos,
-                            serviceInfos,
-                            ActivityAdapter(
-                                picasso
-                            ),
-                            ServiceAdapter(
-                                picasso
-                            )
+                    activityInfos.add(
+                        ActivityInfo(
+                            act,
+                            label
                         )
                     )
                 }
 
-                withContext(Dispatchers.Main) {
-                    progressView?.progress = (index.toFloat() / max.toFloat() * 100f).toInt()
+                services?.forEach { srv ->
+                    val label by lazyDeferred {
+                        srv.loadLabel(packageManager)
+                    }
+                    serviceInfos.add(
+                        ServiceInfo(
+                            srv,
+                            label
+                        )
+                    )
                 }
+
+                val label = app.loadLabel(packageManager)
+
+                appInfo.add(
+                    AppInfo(
+                        app,
+                        label,
+                        activityInfos,
+                        serviceInfos,
+                        ActivityAdapter(
+                            picasso
+                        ),
+                        ServiceAdapter(
+                            picasso
+                        )
+                    )
+                )
+            }
+
+            launch(Dispatchers.Main) {
+                progressView?.progress = (index.toFloat() / max.toFloat() * 100f).toInt()
             }
         }
 
-        progress?.isVisible = false
+        launch(Dispatchers.Main) {
+            progress?.isVisible = false
 
-        appAdapter.setItems(appInfo)
+            appAdapter.setItems(appInfo)
+        }
     }
 }

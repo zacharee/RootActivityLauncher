@@ -4,9 +4,7 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SortedList
 import com.squareup.picasso.Picasso
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
@@ -18,76 +16,96 @@ abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass,
     internal val picasso: Picasso,
     dataClass: Class<DataClass>
 ) : RecyclerView.Adapter<VHClass>(), CoroutineScope by MainScope() {
-    val items: SortedList<DataClass> = SortedList(dataClass, object : SortedList.Callback<DataClass>() {
-        override fun areItemsTheSame(item1: DataClass?, item2: DataClass?) =
-            item1 == item2
+    val items: SortedList<DataClass> =
+        SortedList(dataClass, object : SortedList.Callback<DataClass>() {
+            override fun areItemsTheSame(item1: DataClass?, item2: DataClass?) =
+                item1 == item2
 
-        override fun onMoved(fromPosition: Int, toPosition: Int) {
-            notifyItemMoved(fromPosition, toPosition)
-        }
-
-        override fun onChanged(position: Int, count: Int) {
-            notifyItemRangeChanged(position, count)
-        }
-
-        override fun onInserted(position: Int, count: Int) {
-            notifyItemRangeInserted(position, count)
-        }
-
-        override fun onRemoved(position: Int, count: Int) {
-            notifyItemRangeRemoved(position, count)
-        }
-
-        override fun compare(o1: DataClass, o2: DataClass) =
-            o1.label.toString().compareTo(o2.label.toString())
-
-        override fun areContentsTheSame(oldItem: DataClass, newItem: DataClass) =
-            oldItem.info.packageName == newItem.info.packageName
-
-    })
-    internal val orig = object : SortedList<DataClass>(dataClass, object : SortedList.Callback<DataClass>() {
-        override fun areItemsTheSame(item1: DataClass, item2: DataClass): Boolean {
-            return item1 == item2
-        }
-        override fun compare(o1: DataClass, o2: DataClass): Int {
-            return o1.label.toString().compareTo(o2.label.toString(), true)
-        }
-        override fun areContentsTheSame(oldItem: DataClass, newItem: DataClass): Boolean {
-            return oldItem.info.packageName == newItem.info.packageName
-        }
-
-        override fun onMoved(fromPosition: Int, toPosition: Int) {}
-        override fun onChanged(position: Int, count: Int) {}
-        override fun onInserted(position: Int, count: Int) {}
-        override fun onRemoved(position: Int, count: Int) {}
-    }) {
-        override fun replaceAll(items: Array<out DataClass>, mayModifyInput: Boolean) {
-            this@BaseComponentAdapter.items.replaceAll(items.filter { matches(currentQuery, it) })
-            super.replaceAll(items, mayModifyInput)
-        }
-
-        override fun add(item: DataClass): Int {
-            if (matches(currentQuery, item)) {
-                items.add(item)
+            override fun onMoved(fromPosition: Int, toPosition: Int) {
+                notifyItemMoved(fromPosition, toPosition)
             }
-            return super.add(item)
-        }
 
-        override fun addAll(items: Array<out DataClass>, mayModifyInput: Boolean) {
-            this@BaseComponentAdapter.items.addAll(items.filter { matches(currentQuery, it) })
-            super.addAll(items, mayModifyInput)
-        }
+            override fun onChanged(position: Int, count: Int) {
+                notifyItemRangeChanged(position, count)
+            }
 
-        override fun remove(item: DataClass): Boolean {
-            items.remove(item)
-            return super.remove(item)
-        }
+            override fun onInserted(position: Int, count: Int) {
+                notifyItemRangeInserted(position, count)
+            }
 
-        override fun clear() {
-            items.clear()
-            super.clear()
+            override fun onRemoved(position: Int, count: Int) {
+                notifyItemRangeRemoved(position, count)
+            }
+
+            override fun compare(o1: DataClass, o2: DataClass): Int {
+                return runBlocking {
+                    withContext(Dispatchers.IO) {
+                        o1.loadedLabel.toString()
+                            .compareTo(o2.loadedLabel.toString(), true)
+                    }
+                }
+            }
+
+            override fun areContentsTheSame(oldItem: DataClass, newItem: DataClass) =
+                oldItem.info.packageName == newItem.info.packageName
+
+        })
+    internal val orig =
+        object : SortedList<DataClass>(dataClass, object : SortedList.Callback<DataClass>() {
+            override fun areItemsTheSame(item1: DataClass, item2: DataClass): Boolean {
+                return item1 == item2
+            }
+
+            override fun compare(o1: DataClass, o2: DataClass): Int {
+                return runBlocking {
+                    withContext(Dispatchers.IO) {
+                        o1.loadedLabel.toString()
+                            .compareTo(o2.loadedLabel.toString(), true)
+                    }
+                }
+            }
+
+            override fun areContentsTheSame(oldItem: DataClass, newItem: DataClass): Boolean {
+                return oldItem.info.packageName == newItem.info.packageName
+            }
+
+            override fun onMoved(fromPosition: Int, toPosition: Int) {}
+            override fun onChanged(position: Int, count: Int) {}
+            override fun onInserted(position: Int, count: Int) {}
+            override fun onRemoved(position: Int, count: Int) {}
+        }) {
+            override fun replaceAll(items: Array<out DataClass>, mayModifyInput: Boolean) {
+                this@BaseComponentAdapter.items.replaceAll(items.filter {
+                    matches(
+                        currentQuery,
+                        it
+                    )
+                })
+                super.replaceAll(items, mayModifyInput)
+            }
+
+            override fun add(item: DataClass): Int {
+                if (matches(currentQuery, item)) {
+                    items.add(item)
+                }
+                return super.add(item)
+            }
+
+            override fun addAll(items: Array<out DataClass>, mayModifyInput: Boolean) {
+                this@BaseComponentAdapter.items.addAll(items.filter { matches(currentQuery, it) })
+                super.addAll(items, mayModifyInput)
+            }
+
+            override fun remove(item: DataClass): Boolean {
+                items.remove(item)
+                return super.remove(item)
+            }
+
+            override fun clear() {
+                items.clear()
+                super.clear()
+            }
         }
-    }
 
     internal var currentQuery: String = ""
     internal var enabledFilterMode = EnabledFilterMode.SHOW_ALL
@@ -98,7 +116,9 @@ abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass,
     }
 
     override fun getItemId(position: Int): Long {
-        return items[position].run { constructComponentKey(info.packageName, info.name).hashCode().toLong() }
+        return items[position].run {
+            constructComponentKey(info.packageName, info.name).hashCode().toLong()
+        }
     }
 
     override fun getItemCount(): Int {
@@ -173,9 +193,8 @@ abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass,
 
         if (query.isBlank()) return true
 
-        if (data.label.contains(query, true)
-            || data.info.name.contains(query, true)
-        ) return true
+        if ((data.loadedLabel.contains(query, true)
+                    || data.info.name.contains(query, true))) return true
 
         return false
     }

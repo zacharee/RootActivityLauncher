@@ -36,7 +36,7 @@ class ServiceAdapter(picasso: Picasso) : BaseComponentAdapter<ServiceAdapter, Se
     inner class ServiceVH(view: View) : BaseComponentVH(view) {
         override fun bind(data: ServiceInfo) = launch {
             itemView.apply {
-                service_name.text = data.label
+                service_name.text = data.loadedLabel
                 service_cmp.text = data.info.name
 
                 picasso.load(ServiceIconHandler.createUri(data.info.packageName, data.info.name))

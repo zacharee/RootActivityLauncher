@@ -15,4 +15,7 @@ data class AppInfo(
     val serviceAdapter: ServiceAdapter,
     var activitiesExpanded: Boolean = false,
     var servicesExpanded: Boolean = false
-)
+) {
+    val loadedLabel: CharSequence
+        get() = label
+}

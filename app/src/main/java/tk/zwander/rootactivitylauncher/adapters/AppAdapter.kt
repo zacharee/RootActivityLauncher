@@ -17,7 +17,6 @@ import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.util.InnerDividerItemDecoration
-import java.util.*
 import kotlin.collections.ArrayList
 
 class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter.AppVH>(), FastScrollRecyclerView.SectionedAdapter {
@@ -42,7 +41,7 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
         }
 
         override fun compare(o1: AppInfo, o2: AppInfo) =
-            o1.label.toString().compareTo(o2.label.toString(), ignoreCase = true)
+            o1.loadedLabel.toString().compareTo(o2.loadedLabel.toString(), ignoreCase = true)
 
         override fun areContentsTheSame(oldItem: AppInfo, newItem: AppInfo) =
             //This is a little hacky. In order to guarantee that the Activity/Service headers' visibility
@@ -111,7 +110,7 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
     }
 
     override fun getSectionName(position: Int): String {
-        return items[position].label.substring(0, 1)
+        return items[position].loadedLabel.substring(0, 1)
     }
 
     fun setItems(items: List<AppInfo>) {
@@ -163,7 +162,7 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
 
         if (query.isBlank()) return true
 
-        if (data.label.contains(query, true)
+        if (data.loadedLabel.contains(query, true)
             || data.info.packageName.contains(query, true)
         ) return true
 
@@ -179,14 +178,10 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
         init {
             itemView.apply {
                 activities.setRecycledViewPool(activityViewPool)
-                activities.setItemViewCacheSize(3)
                 activities.addItemDecoration(innerDividerItemDecoration)
-                activities.setHasFixedSize(true)
 
                 services.setRecycledViewPool(serviceViewPool)
-                services.setItemViewCacheSize(3)
                 services.addItemDecoration(innerDividerItemDecoration)
-                services.setHasFixedSize(true)
             }
         }
 
@@ -201,6 +196,14 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
                 activities_title.isVisible = data.activityAdapter.filter(currentQuery, data.activities).isNotEmpty()
                 services_title.isVisible = data.serviceAdapter.filter(currentQuery, data.services).isNotEmpty()
 
+                if (activities.isVisible) {
+                    data.activityAdapter.setItems(data.activities)
+                }
+
+                if (services.isVisible) {
+                    data.serviceAdapter.setItems(data.services)
+                }
+
                 if (prevPos != adapterPosition) {
                     prevPos = adapterPosition
 
@@ -209,14 +212,11 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
                         .centerInside()
                         .into(app_icon)
 
-                    app_name.text = data.label
+                    app_name.text = data.loadedLabel
                     app_pkg.text = data.info.packageName
 
                     activities.adapter = data.activityAdapter
                     services.adapter = data.serviceAdapter
-
-                    data.activityAdapter.setItems(data.activities)
-                    data.serviceAdapter.setItems(data.services)
 
                     activities_title.setOnClickListener {
                         val d = items[adapterPosition]

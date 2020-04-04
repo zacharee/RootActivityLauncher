@@ -4,8 +4,10 @@ import android.content.Context
 import android.util.TypedValue
 import androidx.recyclerview.widget.RecyclerView
 import com.squareup.picasso.Picasso
+import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.PrefManager
+import kotlin.coroutines.CoroutineContext
 
 val Context.prefs: PrefManager
     get() = PrefManager.getInstance(this)
@@ -32,3 +34,17 @@ fun Context.dpToPx(dp: Number): Int {
 fun constructComponentKey(packageName: String, componentName: String): String {
     return "$packageName/$componentName"
 }
+
+fun <T> CoroutineScope.lazyDeferred(
+    context: CoroutineContext = Dispatchers.IO,
+    block: suspend CoroutineScope.() -> T
+): Lazy<Deferred<T>> {
+    return lazy {
+        async(context = context, start = CoroutineStart.LAZY) {
+            block(this)
+        }
+    }
+}
+
+@ExperimentalCoroutinesApi
+suspend fun <T> Deferred<T>.getOrAwaitResult() = if (isCompleted) getCompleted() else await()

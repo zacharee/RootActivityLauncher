@@ -8,15 +8,12 @@ import android.view.ViewGroup
 import android.widget.CompoundButton
 import android.widget.Toast
 import androidx.core.view.isVisible
-import androidx.recyclerview.widget.SortedList
 import com.squareup.picasso.Picasso
 import eu.chainfire.libsuperuser.Shell
 import kotlinx.android.synthetic.main.activity_item.view.*
 import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
-import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
-import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.util.constructComponentKey
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
@@ -33,7 +30,7 @@ class ActivityAdapter(picasso: Picasso) : BaseComponentAdapter<ActivityAdapter, 
     inner class ActivityVH(view: View) : BaseComponentVH(view) {
         override fun bind(data: ActivityInfo) = launch {
             itemView.apply {
-                activity_name.text = data.label
+                activity_name.text = data.loadedLabel
                 activity_cmp.text = data.info.name
 
                 picasso.load(ActivityIconHandler.createUri(data.info.packageName, data.info.name))
