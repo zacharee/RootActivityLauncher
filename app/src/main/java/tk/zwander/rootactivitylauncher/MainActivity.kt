@@ -15,8 +15,6 @@ import tk.zwander.rootactivitylauncher.adapters.AppAdapter
 import tk.zwander.rootactivitylauncher.adapters.component.ActivityAdapter
 import tk.zwander.rootactivitylauncher.adapters.component.ServiceAdapter
 import tk.zwander.rootactivitylauncher.data.AppInfo
-import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
-import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
