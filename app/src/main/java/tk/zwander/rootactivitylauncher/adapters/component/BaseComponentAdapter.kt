@@ -9,12 +9,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
-import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import java.util.*
 import kotlin.collections.ArrayList
 
-abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass, VHClass>, DataClass : BaseComponentInfo, VHClass : BaseComponentAdapter<Self, DataClass, VHClass>.BaseComponentVH>(internal val picasso: Picasso) : RecyclerView.Adapter<VHClass>(), CoroutineScope by MainScope() {
+abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass, VHClass>, DataClass : BaseComponentInfo, VHClass : BaseComponentAdapter<Self, DataClass, VHClass>.BaseComponentVH>(
+    internal val picasso: Picasso
+) : RecyclerView.Adapter<VHClass>(), CoroutineScope by MainScope() {
     internal abstract val items: SortedList<DataClass>
 
     internal val orig = object : ArrayList<DataClass>() {
