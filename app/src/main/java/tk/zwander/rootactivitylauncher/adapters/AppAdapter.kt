@@ -4,7 +4,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
-import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SortedList
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
@@ -15,6 +14,7 @@ import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
+import tk.zwander.rootactivitylauncher.util.InnerDividerItemDecoration
 import tk.zwander.rootactivitylauncher.util.removeAllItemDecorations
 import java.util.*
 import kotlin.collections.ArrayList
@@ -189,11 +189,11 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
 
                 activities.removeAllItemDecorations()
                 if (data.activities.size > 1)
-                    activities.addItemDecoration(DividerItemDecoration(context, RecyclerView.VERTICAL))
+                    activities.addItemDecoration(InnerDividerItemDecoration(context, RecyclerView.VERTICAL))
 
                 services.removeAllItemDecorations()
                 if (data.services.size > 1)
-                    services.addItemDecoration(DividerItemDecoration(context, RecyclerView.VERTICAL))
+                    services.addItemDecoration(InnerDividerItemDecoration(context, RecyclerView.VERTICAL))
 
                 activities_expansion.isVisible = data.activities.isNotEmpty()
                 activities_expansion.setOnClickListener {
