@@ -34,46 +34,31 @@ class ServiceAdapter(picasso: Picasso) : BaseComponentAdapter<ServiceAdapter, Se
     }
 
     inner class ServiceVH(view: View) : BaseComponentVH(view) {
-        override fun bind(data: ServiceInfo) = launch {
-            itemView.apply {
-                service_name.text = data.loadedLabel
-                service_cmp.text = data.info.name
-
-                picasso.load(ServiceIconHandler.createUri(data.info.packageName, data.info.name))
-                    .fit()
-                    .centerInside()
-                    .into(service_icon)
-
-                set_extras.setOnClickListener {
-                    val d = items[adapterPosition]
-                    ExtrasDialog(context, constructComponentKey(d.info.packageName, d.info.name))
-                        .show()
-                }
-
-                enabled.setOnCheckedChangeListener(null)
-                enabled.isChecked = data.info.enabled
-                enabled.setOnCheckedChangeListener(object : CompoundButton.OnCheckedChangeListener {
-                    override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
-                        val d = items[adapterPosition]
-                        if (Shell.SU.available()) {
-                            if (Shell.Pool.SU.run("pm ${if (isChecked) "enable" else "disable"} ${constructComponentKey(d.info.packageName, d.info.name)}") == 0) {
-                                data.info.enabled = isChecked
-                                notifyItemChanged(adapterPosition)
-                            } else {
-                                enabled.setOnCheckedChangeListener(null)
-                                enabled.isChecked = !isChecked
-                                enabled.setOnCheckedChangeListener(this)
-                            }
-                        } else {
-                            Toast.makeText(context, R.string.requires_root, Toast.LENGTH_SHORT).show()
-                            enabled.setOnCheckedChangeListener(null)
-                            enabled.isChecked = !isChecked
-                            enabled.setOnCheckedChangeListener(this)
-                        }
+        private val componentEnabledListener = object : CompoundButton.OnCheckedChangeListener {
+            override fun onCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
+                val d = items[adapterPosition]
+                if (Shell.SU.available()) {
+                    if (Shell.Pool.SU.run("pm ${if (isChecked) "enable" else "disable"} ${constructComponentKey(d.info.packageName, d.info.name)}") == 0) {
+                        d.info.enabled = isChecked
+                        notifyItemChanged(adapterPosition)
+                    } else {
+                        buttonView.setOnCheckedChangeListener(null)
+                        buttonView.isChecked = !isChecked
+                        buttonView.setOnCheckedChangeListener(this)
                     }
-                })
+                } else {
+                    Toast.makeText(itemView.context, R.string.requires_root, Toast.LENGTH_SHORT).show()
+                    buttonView.setOnCheckedChangeListener(null)
+                    buttonView.isChecked = !isChecked
+                    buttonView.setOnCheckedChangeListener(this)
+                }
+            }
+        }
 
-                launch.isVisible = data.info.enabled
+        private var prevPos = -1
+
+        init {
+            itemView.apply {
                 launch.setOnClickListener {
                     val d = items[adapterPosition]
                     val extras = context.findExtrasForComponent(constructComponentKey(d.info.packageName, d.info.name))
@@ -101,6 +86,35 @@ class ServiceAdapter(picasso: Picasso) : BaseComponentAdapter<ServiceAdapter, Se
                         }
                     }
                 }
+
+                set_extras.setOnClickListener {
+                    val d = items[adapterPosition]
+                    ExtrasDialog(context, constructComponentKey(d.info.packageName, d.info.name))
+                        .show()
+                }
+            }
+        }
+
+        override fun bind(data: ServiceInfo) = launch {
+            itemView.apply {
+                if (adapterPosition != prevPos) {
+                    prevPos = adapterPosition
+
+                    service_name.text = data.loadedLabel
+                    service_cmp.text = data.info.name
+
+                    picasso.load(ServiceIconHandler.createUri(data.info.packageName, data.info.name))
+                        .fit()
+                        .centerInside()
+                        .into(service_icon)
+                }
+
+                enabled.setOnCheckedChangeListener(null)
+
+                if (enabled.isChecked != data.info.enabled) enabled.isChecked = data.info.enabled
+                if (launch.isVisible != data.info.enabled) launch.isVisible = data.info.enabled
+
+                enabled.setOnCheckedChangeListener(componentEnabledListener)
             }
         }
     }
