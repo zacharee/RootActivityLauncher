@@ -6,6 +6,6 @@
     android:padding="16dp"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+    app:layoutManager=".util.PredictiveLinearLayoutManager"
     tools:listitem="@layout/extra_item"
     />

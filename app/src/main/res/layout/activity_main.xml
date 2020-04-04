@@ -21,7 +21,7 @@
             app:fastScrollPopupTextColor="?android:textColorPrimary"
             app:fastScrollThumbColor="?colorAccent"
             app:fastScrollThumbInactiveColor="?android:textColorSecondary"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layoutManager=".util.PredictiveLinearLayoutManager"
             tools:listitem="@layout/app_item"
             />
 

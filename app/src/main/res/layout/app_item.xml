@@ -83,7 +83,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
             android:visibility="gone"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layoutManager=".util.PredictiveLinearLayoutManager"
             tools:listitem="@layout/activity_item"
             tools:visibility="visible"
             />
@@ -109,7 +109,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
             android:visibility="gone"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layoutManager=".util.PredictiveLinearLayoutManager"
             tools:listitem="@layout/service_item"
             tools:visibility="visible"
             />

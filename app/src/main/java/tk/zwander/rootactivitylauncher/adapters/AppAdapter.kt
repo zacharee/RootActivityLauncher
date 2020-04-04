@@ -19,7 +19,8 @@ import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.util.InnerDividerItemDecoration
 import kotlin.collections.ArrayList
 
-class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter.AppVH>(), FastScrollRecyclerView.SectionedAdapter {
+class AppAdapter(context: Context, private val picasso: Picasso) :
+    RecyclerView.Adapter<AppAdapter.AppVH>(), FastScrollRecyclerView.SectionedAdapter {
     val items = SortedList(AppInfo::class.java, object : SortedList.Callback<AppInfo>() {
         override fun areItemsTheSame(item1: AppInfo, item2: AppInfo) =
             item1.label == item2.label
@@ -74,14 +75,19 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
     }
     private val activityViewPool = RecyclerView.RecycledViewPool()
     private val serviceViewPool = RecyclerView.RecycledViewPool()
-    private val innerDividerItemDecoration = InnerDividerItemDecoration(context, RecyclerView.VERTICAL)
+    private val innerDividerItemDecoration =
+        InnerDividerItemDecoration(context, RecyclerView.VERTICAL)
 
-    private val arrowUp = ContextCompat.getDrawable(context, R.drawable.ic_baseline_keyboard_arrow_up_24)?.mutate()?.apply {
-        setBounds(0, 0, intrinsicWidth, intrinsicHeight)
-    }
-    private val arrowDown = ContextCompat.getDrawable(context, R.drawable.ic_baseline_keyboard_arrow_down_24)?.mutate()?.apply {
-        setBounds(0, 0, intrinsicWidth, intrinsicHeight)
-    }
+    private val arrowUp =
+        ContextCompat.getDrawable(context, R.drawable.ic_baseline_keyboard_arrow_up_24)?.mutate()
+            ?.apply {
+                setBounds(0, 0, intrinsicWidth, intrinsicHeight)
+            }
+    private val arrowDown =
+        ContextCompat.getDrawable(context, R.drawable.ic_baseline_keyboard_arrow_down_24)?.mutate()
+            ?.apply {
+                setBounds(0, 0, intrinsicWidth, intrinsicHeight)
+            }
 
     private var currentQuery: String = ""
     var enabledFilterMode = EnabledFilterMode.SHOW_ALL
@@ -155,7 +161,8 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
     }
 
     private fun matches(query: String, data: AppInfo): Boolean {
-        val activityFilterEmpty = data.activityAdapter.filter(currentQuery, data.activities).isEmpty()
+        val activityFilterEmpty =
+            data.activityAdapter.filter(currentQuery, data.activities).isEmpty()
         val serviceFilterEmpty = data.serviceAdapter.filter(currentQuery, data.services).isEmpty()
 
         if (activityFilterEmpty && serviceFilterEmpty) return false
@@ -187,23 +194,6 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
 
         fun bind(data: AppInfo) {
             itemView.apply {
-                activities.isVisible = data.activitiesExpanded
-                services.isVisible = data.servicesExpanded
-
-                activities_title.setCompoundDrawablesRelative(null, null, if (data.activitiesExpanded) arrowUp else arrowDown, null)
-                services_title.setCompoundDrawablesRelative(null, null, if (data.servicesExpanded) arrowUp else arrowDown, null)
-
-                activities_title.isVisible = data.activityAdapter.filter(currentQuery, data.activities).isNotEmpty()
-                services_title.isVisible = data.serviceAdapter.filter(currentQuery, data.services).isNotEmpty()
-
-                if (activities.isVisible) {
-                    data.activityAdapter.setItems(data.activities)
-                }
-
-                if (services.isVisible) {
-                    data.serviceAdapter.setItems(data.services)
-                }
-
                 if (prevPos != adapterPosition) {
                     prevPos = adapterPosition
 
@@ -231,6 +221,35 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
 
                         notifyItemChanged(adapterPosition)
                     }
+                }
+
+                activities.isVisible = data.activitiesExpanded
+                services.isVisible = data.servicesExpanded
+
+                activities_title.setCompoundDrawablesRelative(
+                    null,
+                    null,
+                    if (data.activitiesExpanded) arrowUp else arrowDown,
+                    null
+                )
+                services_title.setCompoundDrawablesRelative(
+                    null,
+                    null,
+                    if (data.servicesExpanded) arrowUp else arrowDown,
+                    null
+                )
+
+                activities_title.isVisible =
+                    data.activityAdapter.filter(currentQuery, data.activities).isNotEmpty()
+                services_title.isVisible =
+                    data.serviceAdapter.filter(currentQuery, data.services).isNotEmpty()
+
+                if (activities.isVisible) {
+                    data.activityAdapter.setItems(data.activities)
+                }
+
+                if (services.isVisible) {
+                    data.serviceAdapter.setItems(data.services)
                 }
             }
         }

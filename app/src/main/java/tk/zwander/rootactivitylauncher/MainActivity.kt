@@ -53,7 +53,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         setSupportActionBar(bottom_bar)
 
         app_list.adapter = appAdapter
-        app_list.setItemViewCacheSize(20)
         loadData()
     }
 
