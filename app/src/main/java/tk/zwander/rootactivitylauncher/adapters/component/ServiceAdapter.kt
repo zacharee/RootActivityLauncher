@@ -1,4 +1,4 @@
-package tk.zwander.rootactivitylauncher.adapters
+package tk.zwander.rootactivitylauncher.adapters.component
 
 import android.content.ComponentName
 import android.content.Intent
@@ -8,26 +8,21 @@ import android.view.ViewGroup
 import android.widget.CompoundButton
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SortedList
 import com.squareup.picasso.Picasso
 import eu.chainfire.libsuperuser.Shell
-import kotlinx.android.synthetic.main.activity_item.view.*
+import kotlinx.android.synthetic.main.service_item.view.*
 import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.R
-import tk.zwander.rootactivitylauncher.data.ServiceInfo
-import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
-import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
+import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.util.constructComponentKey
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
 import java.lang.StringBuilder
-import java.util.*
-import kotlin.collections.ArrayList
 
-class ServiceAdapter(private val picasso: Picasso) : RecyclerView.Adapter<ServiceAdapter.ActivityVH>(), CoroutineScope by MainScope() {
-    val items = SortedList(ServiceInfo::class.java, object : SortedList.Callback<ServiceInfo>() {
+class ServiceAdapter(picasso: Picasso) : BaseComponentAdapter<ServiceAdapter, ServiceInfo, ServiceAdapter.ServiceVH>(picasso) {
+    override val items = SortedList(ServiceInfo::class.java, object : SortedList.Callback<ServiceInfo>() {
         override fun areItemsTheSame(item1: ServiceInfo?, item2: ServiceInfo?) =
             item1 == item2
 
@@ -54,119 +49,23 @@ class ServiceAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Servic
             oldItem.info.packageName == newItem.info.packageName
 
     })
-    private val orig = object : ArrayList<ServiceInfo>() {
-        override fun add(element: ServiceInfo): Boolean {
-            if (matches(currentQuery, element)) {
-                items.add(element)
-            }
-            return super.add(element)
-        }
 
-        override fun addAll(elements: Collection<ServiceInfo>): Boolean {
-            items.addAll(elements.filter { matches(currentQuery, it) })
-            return super.addAll(elements)
-        }
-
-        override fun remove(element: ServiceInfo): Boolean {
-            items.remove(element)
-            return super.remove(element)
-        }
-
-        override fun clear() {
-            items.clear()
-            super.clear()
-        }
-    }
-
-    private var currentQuery: String = ""
-    private var enabledFilterMode = EnabledFilterMode.SHOW_ALL
-    private var exportedFilterMode = ExportedFilterMode.SHOW_ALL
-
-    override fun getItemCount(): Int {
-        return items.size()
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ActivityVH {
-        return ActivityVH(
-            LayoutInflater.from(parent.context).inflate(R.layout.activity_item, parent, false)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ServiceVH {
+        return ServiceVH(
+            LayoutInflater.from(parent.context).inflate(R.layout.service_item, parent, false)
         )
     }
 
-    override fun onBindViewHolder(holder: ActivityVH, position: Int) {
-        holder.bind(items[position])
-    }
-
-    fun setItems(items: List<ServiceInfo>) {
-        orig.clear()
-        orig.addAll(items)
-    }
-
-    fun onQueryTextChange(newText: String?) {
-        currentQuery = newText ?: ""
-
-        items.replaceAll(filter(currentQuery))
-    }
-
-    fun setEnabledFilterMode(filterMode: EnabledFilterMode) {
-        this.enabledFilterMode = filterMode
-        items.replaceAll(filter(currentQuery))
-    }
-
-    fun setExportedFilterMode(filterMode: ExportedFilterMode) {
-        this.exportedFilterMode = filterMode
-        items.replaceAll(filter(currentQuery))
-    }
-
-    private fun filter(query: String): List<ServiceInfo> {
-        val lowerCaseQuery = query.toLowerCase(Locale.getDefault())
-
-        val filteredModelList = ArrayList<ServiceInfo>()
-
-        for (i in 0 until orig.size) {
-            val item = orig[i]
-
-            if (matches(lowerCaseQuery, item)) filteredModelList.add(item)
-        }
-
-        return filteredModelList
-    }
-
-    private fun matches(query: String, data: ServiceInfo): Boolean {
-        when (enabledFilterMode) {
-            EnabledFilterMode.SHOW_DISABLED -> if (data.info.enabled) return false
-            EnabledFilterMode.SHOW_ENABLED -> if (!data.info.enabled) return false
-            else -> {
-                //no-op
-            }
-        }
-
-        when (exportedFilterMode) {
-            ExportedFilterMode.SHOW_EXPORTED -> if (!data.info.exported) return false
-            ExportedFilterMode.SHOW_UNEXPORTED -> if (data.info.exported) return false
-            else -> {
-                //no-op
-            }
-        }
-
-        if (query.isBlank()) return true
-
-        if (data.label.contains(query, true)
-            || data.info.name.contains(query, true)
-        ) return true
-
-        return false
-    }
-
-    inner class ActivityVH(view: View) : RecyclerView.ViewHolder(view) {
-        fun bind(data: ServiceInfo) = launch {
+    inner class ServiceVH(view: View) : BaseComponentVH(view) {
+        override fun bind(data: ServiceInfo) = launch {
             itemView.apply {
-                activity_name.text = data.label
-                activity_cmp.text = data.info.name
+                service_name.text = data.label
+                service_cmp.text = data.info.name
 
                 picasso.load(ActivityIconHandler.createUri(data.info.packageName, data.info.name))
                     .fit()
                     .centerInside()
-                    .into(activity_icon)
+                    .into(service_icon)
 
                 set_extras.setOnClickListener {
                     val d = items[adapterPosition]

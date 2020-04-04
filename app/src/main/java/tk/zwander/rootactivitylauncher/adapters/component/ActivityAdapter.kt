@@ -1,4 +1,4 @@
-package tk.zwander.rootactivitylauncher.adapters
+package tk.zwander.rootactivitylauncher.adapters.component
 
 import android.content.ComponentName
 import android.content.Intent
@@ -7,14 +7,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
 import android.widget.Toast
-import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SortedList
 import com.squareup.picasso.Picasso
 import eu.chainfire.libsuperuser.Shell
 import kotlinx.android.synthetic.main.activity_item.view.*
 import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.R
-import tk.zwander.rootactivitylauncher.data.ActivityInfo
+import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
@@ -22,11 +21,9 @@ import tk.zwander.rootactivitylauncher.util.constructComponentKey
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
 import java.lang.StringBuilder
-import java.util.*
-import kotlin.collections.ArrayList
 
-class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<ActivityAdapter.ActivityVH>(), CoroutineScope by MainScope() {
-    val items = SortedList(ActivityInfo::class.java, object : SortedList.Callback<ActivityInfo>() {
+class ActivityAdapter(picasso: Picasso) : BaseComponentAdapter<ActivityAdapter, ActivityInfo, ActivityAdapter.ActivityVH>(picasso) {
+    override val items = SortedList(ActivityInfo::class.java, object : SortedList.Callback<ActivityInfo>() {
         override fun areItemsTheSame(item1: ActivityInfo?, item2: ActivityInfo?) =
             item1 == item2
 
@@ -53,37 +50,6 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
             oldItem.info.packageName == newItem.info.packageName
 
     })
-    private val orig = object : ArrayList<ActivityInfo>() {
-        override fun add(element: ActivityInfo): Boolean {
-            if (matches(currentQuery, element)) {
-                items.add(element)
-            }
-            return super.add(element)
-        }
-
-        override fun addAll(elements: Collection<ActivityInfo>): Boolean {
-            items.addAll(elements.filter { matches(currentQuery, it) })
-            return super.addAll(elements)
-        }
-
-        override fun remove(element: ActivityInfo): Boolean {
-            items.remove(element)
-            return super.remove(element)
-        }
-
-        override fun clear() {
-            items.clear()
-            super.clear()
-        }
-    }
-
-    private var currentQuery: String = ""
-    private var enabledFilterMode = EnabledFilterMode.SHOW_ALL
-    private var exportedFilterMode = ExportedFilterMode.SHOW_ALL
-
-    override fun getItemCount(): Int {
-        return items.size()
-    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ActivityVH {
         return ActivityVH(
@@ -91,73 +57,8 @@ class ActivityAdapter(private val picasso: Picasso) : RecyclerView.Adapter<Activ
         )
     }
 
-    override fun onBindViewHolder(holder: ActivityVH, position: Int) {
-        holder.bind(items[position])
-    }
-
-    fun setItems(items: List<ActivityInfo>) {
-        orig.clear()
-        orig.addAll(items)
-    }
-
-    fun onQueryTextChange(newText: String?) {
-        currentQuery = newText ?: ""
-
-        items.replaceAll(filter(currentQuery))
-    }
-
-    fun setEnabledFilterMode(filterMode: EnabledFilterMode) {
-        this.enabledFilterMode = filterMode
-        items.replaceAll(filter(currentQuery))
-    }
-
-    fun setExportedFilterMode(filterMode: ExportedFilterMode) {
-        this.exportedFilterMode = filterMode
-        items.replaceAll(filter(currentQuery))
-    }
-
-    private fun filter(query: String): List<ActivityInfo> {
-        val lowerCaseQuery = query.toLowerCase(Locale.getDefault())
-
-        val filteredModelList = ArrayList<ActivityInfo>()
-
-        for (i in 0 until orig.size) {
-            val item = orig[i]
-
-            if (matches(lowerCaseQuery, item)) filteredModelList.add(item)
-        }
-
-        return filteredModelList
-    }
-
-    private fun matches(query: String, data: ActivityInfo): Boolean {
-        when (enabledFilterMode) {
-            EnabledFilterMode.SHOW_DISABLED -> if (data.info.enabled) return false
-            EnabledFilterMode.SHOW_ENABLED -> if (!data.info.enabled) return false
-            else -> {
-                //no-op
-            }
-        }
-
-        when (exportedFilterMode) {
-            ExportedFilterMode.SHOW_EXPORTED -> if (!data.info.exported) return false
-            ExportedFilterMode.SHOW_UNEXPORTED -> if (data.info.exported) return false
-            else -> {
-                //no-op
-            }
-        }
-
-        if (query.isBlank()) return true
-
-        if (data.label.contains(query, true)
-            || data.info.name.contains(query, true)
-        ) return true
-
-        return false
-    }
-
-    inner class ActivityVH(view: View) : RecyclerView.ViewHolder(view) {
-        fun bind(data: ActivityInfo) = launch {
+    inner class ActivityVH(view: View) : BaseComponentVH(view) {
+        override fun bind(data: ActivityInfo) = launch {
             withContext(Dispatchers.Main) {
                 itemView.apply {
                     activity_name.text = data.label

@@ -1,6 +1,5 @@
 package tk.zwander.rootactivitylauncher
 
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -12,10 +11,12 @@ import com.hmomeni.progresscircula.ProgressCircula
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
-import tk.zwander.rootactivitylauncher.adapters.ActivityAdapter
+import tk.zwander.rootactivitylauncher.adapters.component.ActivityAdapter
 import tk.zwander.rootactivitylauncher.adapters.AppAdapter
-import tk.zwander.rootactivitylauncher.adapters.ServiceAdapter
+import tk.zwander.rootactivitylauncher.adapters.component.ServiceAdapter
 import tk.zwander.rootactivitylauncher.data.*
+import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
+import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 
@@ -141,11 +142,21 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                     val serviceInfos = ArrayList<ServiceInfo>()
 
                     activities?.forEach { act ->
-                        activityInfos.add(ActivityInfo(act, act.loadLabel(packageManager)))
+                        activityInfos.add(
+                            ActivityInfo(
+                                act,
+                                act.loadLabel(packageManager)
+                            )
+                        )
                     }
 
                     services?.forEach { srv ->
-                        serviceInfos.add(ServiceInfo(srv, srv.loadLabel(packageManager)))
+                        serviceInfos.add(
+                            ServiceInfo(
+                                srv,
+                                srv.loadLabel(packageManager)
+                            )
+                        )
                     }
 
                     val label = app.loadLabel(packageManager)
@@ -156,8 +167,12 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                             label,
                             activityInfos,
                             serviceInfos,
-                            ActivityAdapter(picasso),
-                            ServiceAdapter(picasso)
+                            ActivityAdapter(
+                                picasso
+                            ),
+                            ServiceAdapter(
+                                picasso
+                            )
                         )
                     )
                 }
