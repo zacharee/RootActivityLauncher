@@ -71,6 +71,8 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
             super.clear()
         }
     }
+    private val activityViewPool = RecyclerView.RecycledViewPool()
+    private val serviceViewPool = RecyclerView.RecycledViewPool()
 
     private var currentQuery: String = ""
 
@@ -146,13 +148,22 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
     }
 
     inner class AppVH(view: View) : RecyclerView.ViewHolder(view) {
+        init {
+            itemView.apply {
+                activities.setRecycledViewPool(activityViewPool)
+                services.setRecycledViewPool(serviceViewPool)
+            }
+        }
+
         fun bind(data: AppInfo) {
             itemView.apply {
                 activities.isVisible = data.activitiesExpanded
                 activities.adapter = data.activityAdapter
+                activities.setItemViewCacheSize(20)
 
                 services.isVisible = data.servicesExpanded
                 services.adapter = data.serviceAdapter
+                services.setItemViewCacheSize(20)
 
                 activities_arrow.scaleY = if (data.activitiesExpanded) 1f else -1f
                 services_arrow.scaleY = if (data.servicesExpanded) 1f else -1f
