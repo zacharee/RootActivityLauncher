@@ -15,7 +15,7 @@ import kotlinx.android.synthetic.main.service_item.view.*
 import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
-import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
+import tk.zwander.rootactivitylauncher.picasso.ServiceIconHandler
 import tk.zwander.rootactivitylauncher.util.constructComponentKey
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
@@ -62,7 +62,7 @@ class ServiceAdapter(picasso: Picasso) : BaseComponentAdapter<ServiceAdapter, Se
                 service_name.text = data.label
                 service_cmp.text = data.info.name
 
-                picasso.load(ActivityIconHandler.createUri(data.info.packageName, data.info.name))
+                picasso.load(ServiceIconHandler.createUri(data.info.packageName, data.info.name))
                     .fit()
                     .centerInside()
                     .into(service_icon)

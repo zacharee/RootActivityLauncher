@@ -19,6 +19,7 @@ import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
+import tk.zwander.rootactivitylauncher.picasso.ServiceIconHandler
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     SearchView.OnQueryTextListener {
@@ -26,6 +27,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         Picasso.Builder(this)
             .addRequestHandler(AppIconHandler(this))
             .addRequestHandler(ActivityIconHandler(this))
+            .addRequestHandler(ServiceIconHandler(this))
             .build()
     }
     private val appAdapter by lazy {
