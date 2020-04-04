@@ -76,6 +76,14 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
 
     private var currentQuery: String = ""
 
+    init {
+        setHasStableIds(true)
+    }
+
+    override fun getItemId(position: Int): Long {
+        return items[position].info.packageName.hashCode().toLong()
+    }
+
     override fun getItemCount(): Int {
         return items.size()
     }
@@ -151,7 +159,9 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
         init {
             itemView.apply {
                 activities.setRecycledViewPool(activityViewPool)
+                activities.setItemViewCacheSize(20)
                 services.setRecycledViewPool(serviceViewPool)
+                services.setItemViewCacheSize(20)
             }
         }
 
@@ -159,11 +169,9 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
             itemView.apply {
                 activities.isVisible = data.activitiesExpanded
                 activities.adapter = data.activityAdapter
-                activities.setItemViewCacheSize(20)
 
                 services.isVisible = data.servicesExpanded
                 services.adapter = data.serviceAdapter
-                services.setItemViewCacheSize(20)
 
                 activities_arrow.scaleY = if (data.activitiesExpanded) 1f else -1f
                 services_arrow.scaleY = if (data.servicesExpanded) 1f else -1f

@@ -10,6 +10,7 @@ import kotlinx.coroutines.MainScope
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
+import tk.zwander.rootactivitylauncher.util.constructComponentKey
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -45,6 +46,14 @@ abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass,
     internal var currentQuery: String = ""
     internal var enabledFilterMode = EnabledFilterMode.SHOW_ALL
     internal var exportedFilterMode = ExportedFilterMode.SHOW_ALL
+
+    init {
+        setHasStableIds(true)
+    }
+
+    override fun getItemId(position: Int): Long {
+        return items[position].run { constructComponentKey(info.packageName, info.name).hashCode().toLong() }
+    }
 
     override fun getItemCount(): Int {
         return items.size()
