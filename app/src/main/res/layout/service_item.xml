@@ -6,10 +6,7 @@
     android:padding="8dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:clickable="true"
-    android:focusable="true"
     android:gravity="center_vertical"
-    android:background="?selectableItemBackground"
     android:minHeight="?listPreferredItemHeightSmall">
 
     <LinearLayout
@@ -71,6 +68,15 @@
             android:layout_height="48dp"
             android:layout_weight="1"
             android:src="@drawable/ic_baseline_more_horiz_24"
+            android:background="?android:selectableItemBackground"
+            />
+
+        <ImageButton
+            android:id="@+id/launch"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:src="@drawable/ic_baseline_open_in_new_24"
             android:background="?android:selectableItemBackground"
             />
 

@@ -97,7 +97,7 @@ class ActivityAdapter(picasso: Picasso) : BaseComponentAdapter<ActivityAdapter, 
                         }
                     })
 
-                    setOnClickListener {
+                    launch.setOnClickListener {
                         val d = items[adapterPosition]
                         val extras = context.findExtrasForComponent(constructComponentKey(d.info.packageName, d.info.name))
 

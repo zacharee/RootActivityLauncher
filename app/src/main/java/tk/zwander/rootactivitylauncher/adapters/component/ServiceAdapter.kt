@@ -95,7 +95,7 @@ class ServiceAdapter(picasso: Picasso) : BaseComponentAdapter<ServiceAdapter, Se
                     }
                 })
 
-                setOnClickListener {
+                launch.setOnClickListener {
                     val d = items[adapterPosition]
                     val extras = context.findExtrasForComponent(constructComponentKey(d.info.packageName, d.info.name))
 
