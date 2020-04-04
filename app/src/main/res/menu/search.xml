@@ -22,6 +22,7 @@
         />
 
     <group
+        android:id="@+id/enabled_filters"
         android:checkableBehavior="single">
 
         <item
@@ -51,6 +52,7 @@
         />
 
     <group
+        android:id="@+id/exported_filters"
         android:checkableBehavior="single">
 
         <item
