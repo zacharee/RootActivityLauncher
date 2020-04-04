@@ -104,6 +104,7 @@ class ActivityAdapter(picasso: Picasso) : BaseComponentAdapter<ActivityAdapter, 
                         try {
                             val intent = Intent(Intent.ACTION_MAIN)
                             intent.component = ComponentName(d.info.packageName, d.info.name)
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
                             if (extras.isNotEmpty()) extras.forEach {
                                 intent.putExtra(it.key, it.value)
