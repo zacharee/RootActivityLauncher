@@ -62,36 +62,20 @@
             android:layout_height="8dp"
             />
 
-        <LinearLayout
-            android:id="@+id/activities_expansion"
-            android:orientation="horizontal"
+        <TextView
+            android:id="@+id/activities_title"
             android:layout_width="match_parent"
             android:layout_height="?listPreferredItemHeightSmall"
+            android:textColor="?android:textColorPrimary"
+            android:textSize="18sp"
+            android:drawableEnd="@drawable/ic_baseline_keyboard_arrow_up_24"
+            android:text="@string/activities"
             android:padding="8dp"
             android:gravity="center_vertical"
             android:background="?selectableItemBackground"
             android:focusable="true"
-            android:clickable="true">
-
-            <TextView
-                android:id="@+id/activities_title"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:textColor="?android:textColorPrimary"
-                android:textSize="18sp"
-                android:text="@string/activities"
-                />
-
-            <ImageView
-                android:id="@+id/activities_arrow"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:scaleY="-1"
-                android:src="@drawable/ic_baseline_keyboard_arrow_up_24"
-                />
-
-        </LinearLayout>
+            android:clickable="true"
+            />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/activities"
@@ -104,36 +88,20 @@
             tools:visibility="visible"
             />
 
-        <LinearLayout
-            android:id="@+id/services_expansion"
-            android:orientation="horizontal"
+        <TextView
+            android:id="@+id/services_title"
             android:layout_width="match_parent"
             android:layout_height="?listPreferredItemHeightSmall"
-            android:gravity="center_vertical"
             android:padding="8dp"
+            android:textColor="?android:textColorPrimary"
+            android:drawableEnd="@drawable/ic_baseline_keyboard_arrow_up_24"
+            android:textSize="18sp"
+            android:gravity="center_vertical"
+            android:text="@string/services"
             android:background="?selectableItemBackground"
             android:focusable="true"
-            android:clickable="true">
-
-            <TextView
-                android:id="@+id/services_title"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:textColor="?android:textColorPrimary"
-                android:textSize="18sp"
-                android:text="@string/services"
-                />
-
-            <ImageView
-                android:id="@+id/services_arrow"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:scaleY="-1"
-                android:src="@drawable/ic_baseline_keyboard_arrow_up_24"
-                />
-
-        </LinearLayout>
+            android:clickable="true"
+            />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/services"

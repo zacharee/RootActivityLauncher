@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -75,6 +76,13 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
     private val activityViewPool = RecyclerView.RecycledViewPool()
     private val serviceViewPool = RecyclerView.RecycledViewPool()
     private val innerDividerItemDecoration = InnerDividerItemDecoration(context, RecyclerView.VERTICAL)
+
+    private val arrowUp = ContextCompat.getDrawable(context, R.drawable.ic_baseline_keyboard_arrow_up_24)?.mutate()?.apply {
+        setBounds(0, 0, intrinsicWidth, intrinsicHeight)
+    }
+    private val arrowDown = ContextCompat.getDrawable(context, R.drawable.ic_baseline_keyboard_arrow_down_24)?.mutate()?.apply {
+        setBounds(0, 0, intrinsicWidth, intrinsicHeight)
+    }
 
     private var currentQuery: String = ""
 
@@ -179,14 +187,14 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
                 activities.isVisible = data.activitiesExpanded
                 services.isVisible = data.servicesExpanded
 
-                activities_arrow.scaleY = if (data.activitiesExpanded) 1f else -1f
-                services_arrow.scaleY = if (data.servicesExpanded) 1f else -1f
+                activities_title.setCompoundDrawablesRelative(null, null, if (data.activitiesExpanded) arrowUp else arrowDown, null)
+                services_title.setCompoundDrawablesRelative(null, null, if (data.servicesExpanded) arrowUp else arrowDown, null)
 
                 if (prevPos != adapterPosition) {
                     prevPos = adapterPosition
 
-                    activities_expansion.isVisible = data.activities.isNotEmpty()
-                    services_expansion.isVisible = data.services.isNotEmpty()
+                    activities_title.isVisible = data.activities.isNotEmpty()
+                    services_title.isVisible = data.services.isNotEmpty()
 
                     picasso.load(AppIconHandler.createUri(data.info.packageName))
                         .fit()
@@ -202,14 +210,14 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
                     data.activityAdapter.setItems(data.activities)
                     data.serviceAdapter.setItems(data.services)
 
-                    activities_expansion.setOnClickListener {
+                    activities_title.setOnClickListener {
                         val d = items[adapterPosition]
                         d.activitiesExpanded = !d.activitiesExpanded
 
                         notifyItemChanged(adapterPosition)
                     }
 
-                    services_expansion.setOnClickListener {
+                    services_title.setOnClickListener {
                         val d = items[adapterPosition]
                         d.servicesExpanded = !d.servicesExpanded
 
