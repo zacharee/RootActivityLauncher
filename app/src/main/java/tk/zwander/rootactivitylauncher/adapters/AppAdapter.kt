@@ -1,11 +1,11 @@
 package tk.zwander.rootactivitylauncher.adapters
 
 import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SortedList
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
@@ -163,12 +163,14 @@ class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.
         init {
             itemView.apply {
                 activities.setRecycledViewPool(activityViewPool)
-                activities.setItemViewCacheSize(20)
+                activities.setItemViewCacheSize(3)
                 activities.addItemDecoration(innerDividerItemDecoration)
+                activities.setHasFixedSize(true)
 
                 services.setRecycledViewPool(serviceViewPool)
-                services.setItemViewCacheSize(20)
+                services.setItemViewCacheSize(3)
                 services.addItemDecoration(innerDividerItemDecoration)
+                services.setHasFixedSize(true)
             }
         }
 

@@ -1,6 +1,7 @@
 package tk.zwander.rootactivitylauncher.util
 
 import android.content.Context
+import android.util.TypedValue
 import androidx.recyclerview.widget.RecyclerView
 import com.squareup.picasso.Picasso
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
@@ -22,6 +23,10 @@ fun Context.updateExtrasForComponent(componentName: String, extras: List<ExtraIn
 
     map[componentName] = extras
     prefs.extras = map
+}
+
+fun Context.dpToPx(dp: Number): Int {
+    return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), resources.displayMetrics).toInt()
 }
 
 fun constructComponentKey(packageName: String, componentName: String): String {
