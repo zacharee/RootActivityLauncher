@@ -1,5 +1,7 @@
 package tk.zwander.rootactivitylauncher.adapters
 
+import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,11 +17,10 @@ import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.util.InnerDividerItemDecoration
-import tk.zwander.rootactivitylauncher.util.removeAllItemDecorations
 import java.util.*
 import kotlin.collections.ArrayList
 
-class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter.AppVH>(), FastScrollRecyclerView.SectionedAdapter {
+class AppAdapter(context: Context, private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter.AppVH>(), FastScrollRecyclerView.SectionedAdapter {
     val items = SortedList(AppInfo::class.java, object : SortedList.Callback<AppInfo>() {
         override fun areItemsTheSame(item1: AppInfo?, item2: AppInfo?) =
             item1 == item2
@@ -73,6 +74,7 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
     }
     private val activityViewPool = RecyclerView.RecycledViewPool()
     private val serviceViewPool = RecyclerView.RecycledViewPool()
+    private val innerDividerItemDecoration = InnerDividerItemDecoration(context, RecyclerView.VERTICAL)
 
     private var currentQuery: String = ""
 
@@ -156,59 +158,61 @@ class AppAdapter(private val picasso: Picasso) : RecyclerView.Adapter<AppAdapter
     }
 
     inner class AppVH(view: View) : RecyclerView.ViewHolder(view) {
+        private var prevPos = -1
+
         init {
             itemView.apply {
                 activities.setRecycledViewPool(activityViewPool)
                 activities.setItemViewCacheSize(20)
+                activities.addItemDecoration(innerDividerItemDecoration)
+
                 services.setRecycledViewPool(serviceViewPool)
                 services.setItemViewCacheSize(20)
+                services.addItemDecoration(innerDividerItemDecoration)
             }
         }
 
         fun bind(data: AppInfo) {
             itemView.apply {
                 activities.isVisible = data.activitiesExpanded
-                activities.adapter = data.activityAdapter
-
                 services.isVisible = data.servicesExpanded
-                services.adapter = data.serviceAdapter
 
                 activities_arrow.scaleY = if (data.activitiesExpanded) 1f else -1f
                 services_arrow.scaleY = if (data.servicesExpanded) 1f else -1f
 
-                app_name.text = data.label
-                app_pkg.text = data.info.packageName
+                if (prevPos != adapterPosition) {
+                    prevPos = adapterPosition
 
-                picasso.load(AppIconHandler.createUri(data.info.packageName))
-                    .fit()
-                    .centerInside()
-                    .into(app_icon)
+                    activities_expansion.isVisible = data.activities.isNotEmpty()
+                    services_expansion.isVisible = data.services.isNotEmpty()
 
-                data.activityAdapter.setItems(data.activities)
-                data.serviceAdapter.setItems(data.services)
+                    picasso.load(AppIconHandler.createUri(data.info.packageName))
+                        .fit()
+                        .centerInside()
+                        .into(app_icon)
 
-                activities.removeAllItemDecorations()
-                if (data.activities.size > 1)
-                    activities.addItemDecoration(InnerDividerItemDecoration(context, RecyclerView.VERTICAL))
+                    app_name.text = data.label
+                    app_pkg.text = data.info.packageName
 
-                services.removeAllItemDecorations()
-                if (data.services.size > 1)
-                    services.addItemDecoration(InnerDividerItemDecoration(context, RecyclerView.VERTICAL))
+                    activities.adapter = data.activityAdapter
+                    services.adapter = data.serviceAdapter
 
-                activities_expansion.isVisible = data.activities.isNotEmpty()
-                activities_expansion.setOnClickListener {
-                    val d = items[adapterPosition]
-                    d.activitiesExpanded = !d.activitiesExpanded
+                    data.activityAdapter.setItems(data.activities)
+                    data.serviceAdapter.setItems(data.services)
 
-                    notifyItemChanged(adapterPosition)
-                }
+                    activities_expansion.setOnClickListener {
+                        val d = items[adapterPosition]
+                        d.activitiesExpanded = !d.activitiesExpanded
 
-                services_expansion.isVisible = data.services.isNotEmpty()
-                services_expansion.setOnClickListener {
-                    val d = items[adapterPosition]
-                    d.servicesExpanded = !d.servicesExpanded
+                        notifyItemChanged(adapterPosition)
+                    }
 
-                    notifyItemChanged(adapterPosition)
+                    services_expansion.setOnClickListener {
+                        val d = items[adapterPosition]
+                        d.servicesExpanded = !d.servicesExpanded
+
+                        notifyItemChanged(adapterPosition)
+                    }
                 }
             }
         }

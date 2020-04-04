@@ -23,35 +23,7 @@ import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
 import java.lang.StringBuilder
 
-class ActivityAdapter(picasso: Picasso) : BaseComponentAdapter<ActivityAdapter, ActivityInfo, ActivityAdapter.ActivityVH>(picasso) {
-    override val items = SortedList(ActivityInfo::class.java, object : SortedList.Callback<ActivityInfo>() {
-        override fun areItemsTheSame(item1: ActivityInfo?, item2: ActivityInfo?) =
-            item1 == item2
-
-        override fun onMoved(fromPosition: Int, toPosition: Int) {
-            notifyItemMoved(fromPosition, toPosition)
-        }
-
-        override fun onChanged(position: Int, count: Int) {
-            notifyItemRangeChanged(position, count)
-        }
-
-        override fun onInserted(position: Int, count: Int) {
-            notifyItemRangeInserted(position, count)
-        }
-
-        override fun onRemoved(position: Int, count: Int) {
-            notifyItemRangeRemoved(position, count)
-        }
-
-        override fun compare(o1: ActivityInfo, o2: ActivityInfo) =
-            o1.label.toString().compareTo(o2.label.toString())
-
-        override fun areContentsTheSame(oldItem: ActivityInfo, newItem: ActivityInfo) =
-            oldItem.info.packageName == newItem.info.packageName
-
-    })
-
+class ActivityAdapter(picasso: Picasso) : BaseComponentAdapter<ActivityAdapter, ActivityInfo, ActivityAdapter.ActivityVH>(picasso, ActivityInfo::class.java) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ActivityVH {
         return ActivityVH(
             LayoutInflater.from(parent.context).inflate(R.layout.activity_item, parent, false)

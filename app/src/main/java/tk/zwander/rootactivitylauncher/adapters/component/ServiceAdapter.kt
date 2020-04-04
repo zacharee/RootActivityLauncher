@@ -26,35 +26,7 @@ import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
 import java.lang.StringBuilder
 
-class ServiceAdapter(picasso: Picasso) : BaseComponentAdapter<ServiceAdapter, ServiceInfo, ServiceAdapter.ServiceVH>(picasso) {
-    override val items = SortedList(ServiceInfo::class.java, object : SortedList.Callback<ServiceInfo>() {
-        override fun areItemsTheSame(item1: ServiceInfo?, item2: ServiceInfo?) =
-            item1 == item2
-
-        override fun onMoved(fromPosition: Int, toPosition: Int) {
-            notifyItemMoved(fromPosition, toPosition)
-        }
-
-        override fun onChanged(position: Int, count: Int) {
-            notifyItemRangeChanged(position, count)
-        }
-
-        override fun onInserted(position: Int, count: Int) {
-            notifyItemRangeInserted(position, count)
-        }
-
-        override fun onRemoved(position: Int, count: Int) {
-            notifyItemRangeRemoved(position, count)
-        }
-
-        override fun compare(o1: ServiceInfo, o2: ServiceInfo) =
-            o1.label.toString().compareTo(o2.label.toString())
-
-        override fun areContentsTheSame(oldItem: ServiceInfo, newItem: ServiceInfo) =
-            oldItem.info.packageName == newItem.info.packageName
-
-    })
-
+class ServiceAdapter(picasso: Picasso) : BaseComponentAdapter<ServiceAdapter, ServiceInfo, ServiceAdapter.ServiceVH>(picasso, ServiceInfo::class.java) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ServiceVH {
         return ServiceVH(
             LayoutInflater.from(parent.context).inflate(R.layout.service_item, parent, false)

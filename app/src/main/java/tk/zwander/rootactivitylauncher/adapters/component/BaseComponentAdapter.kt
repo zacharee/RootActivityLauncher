@@ -15,26 +15,72 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass, VHClass>, DataClass : BaseComponentInfo, VHClass : BaseComponentAdapter<Self, DataClass, VHClass>.BaseComponentVH>(
-    internal val picasso: Picasso
+    internal val picasso: Picasso,
+    dataClass: Class<DataClass>
 ) : RecyclerView.Adapter<VHClass>(), CoroutineScope by MainScope() {
-    internal abstract val items: SortedList<DataClass>
+    internal val items: SortedList<DataClass> = SortedList(dataClass, object : SortedList.Callback<DataClass>() {
+        override fun areItemsTheSame(item1: DataClass?, item2: DataClass?) =
+            item1 == item2
 
-    internal val orig = object : ArrayList<DataClass>() {
-        override fun add(element: DataClass): Boolean {
-            if (matches(currentQuery, element)) {
-                items.add(element)
+        override fun onMoved(fromPosition: Int, toPosition: Int) {
+            notifyItemMoved(fromPosition, toPosition)
+        }
+
+        override fun onChanged(position: Int, count: Int) {
+            notifyItemRangeChanged(position, count)
+        }
+
+        override fun onInserted(position: Int, count: Int) {
+            notifyItemRangeInserted(position, count)
+        }
+
+        override fun onRemoved(position: Int, count: Int) {
+            notifyItemRangeRemoved(position, count)
+        }
+
+        override fun compare(o1: DataClass, o2: DataClass) =
+            o1.label.toString().compareTo(o2.label.toString())
+
+        override fun areContentsTheSame(oldItem: DataClass, newItem: DataClass) =
+            oldItem.info.packageName == newItem.info.packageName
+
+    })
+    internal val orig = object : SortedList<DataClass>(dataClass, object : SortedList.Callback<DataClass>() {
+        override fun areItemsTheSame(item1: DataClass, item2: DataClass): Boolean {
+            return item1 == item2
+        }
+        override fun compare(o1: DataClass, o2: DataClass): Int {
+            return o1.label.toString().compareTo(o2.label.toString(), true)
+        }
+        override fun areContentsTheSame(oldItem: DataClass, newItem: DataClass): Boolean {
+            return oldItem.info.packageName == newItem.info.packageName
+        }
+
+        override fun onMoved(fromPosition: Int, toPosition: Int) {}
+        override fun onChanged(position: Int, count: Int) {}
+        override fun onInserted(position: Int, count: Int) {}
+        override fun onRemoved(position: Int, count: Int) {}
+    }) {
+        override fun replaceAll(items: Array<out DataClass>, mayModifyInput: Boolean) {
+            this@BaseComponentAdapter.items.replaceAll(items.filter { matches(currentQuery, it) })
+            super.replaceAll(items, mayModifyInput)
+        }
+
+        override fun add(item: DataClass): Int {
+            if (matches(currentQuery, item)) {
+                items.add(item)
             }
-            return super.add(element)
+            return super.add(item)
         }
 
-        override fun addAll(elements: Collection<DataClass>): Boolean {
-            items.addAll(elements.filter { matches(currentQuery, it) })
-            return super.addAll(elements)
+        override fun addAll(items: Array<out DataClass>, mayModifyInput: Boolean) {
+            this@BaseComponentAdapter.items.addAll(items.filter { matches(currentQuery, it) })
+            super.addAll(items, mayModifyInput)
         }
 
-        override fun remove(element: DataClass): Boolean {
-            items.remove(element)
-            return super.remove(element)
+        override fun remove(item: DataClass): Boolean {
+            items.remove(item)
+            return super.remove(item)
         }
 
         override fun clear() {
@@ -75,13 +121,11 @@ abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass,
 
     fun onQueryTextChange(newText: String?) {
         currentQuery = newText ?: ""
-
         items.replaceAll(filter(currentQuery))
     }
 
     fun setItems(items: List<DataClass>) {
-        orig.clear()
-        orig.addAll(items)
+        orig.replaceAll(items)
     }
 
     internal open fun filter(query: String): List<DataClass> {
@@ -89,7 +133,7 @@ abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass,
 
         val filteredModelList = ArrayList<DataClass>()
 
-        for (i in 0 until orig.size) {
+        for (i in 0 until orig.size()) {
             val item = orig[i]
 
             if (matches(lowerCaseQuery, item)) filteredModelList.add(item)

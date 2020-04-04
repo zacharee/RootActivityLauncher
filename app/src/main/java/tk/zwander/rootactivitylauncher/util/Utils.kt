@@ -2,6 +2,7 @@ package tk.zwander.rootactivitylauncher.util
 
 import android.content.Context
 import androidx.recyclerview.widget.RecyclerView
+import com.squareup.picasso.Picasso
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.PrefManager
 
@@ -21,12 +22,6 @@ fun Context.updateExtrasForComponent(componentName: String, extras: List<ExtraIn
 
     map[componentName] = extras
     prefs.extras = map
-}
-
-fun RecyclerView.removeAllItemDecorations() {
-    for (i in itemDecorationCount downTo 1) {
-        removeItemDecorationAt(0)
-    }
 }
 
 fun constructComponentKey(packageName: String, componentName: String): String {

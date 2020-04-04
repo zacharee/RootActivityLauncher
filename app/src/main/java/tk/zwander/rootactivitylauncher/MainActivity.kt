@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             .build()
     }
     private val appAdapter by lazy {
-        AppAdapter(picasso)
+        AppAdapter(this, picasso)
     }
 
     private var progress: MenuItem? = null
