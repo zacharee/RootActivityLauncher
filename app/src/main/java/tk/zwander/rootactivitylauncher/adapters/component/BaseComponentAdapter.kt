@@ -18,8 +18,9 @@ abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass,
 ) : RecyclerView.Adapter<VHClass>(), CoroutineScope by MainScope() {
     val items: SortedList<DataClass> =
         SortedList(dataClass, object : SortedList.Callback<DataClass>() {
-            override fun areItemsTheSame(item1: DataClass?, item2: DataClass?) =
-                item1 == item2
+            override fun areItemsTheSame(item1: DataClass, item2: DataClass) =
+                constructComponentKey(item1.info.packageName, item1.info.name) ==
+                        constructComponentKey(item2.info.packageName, item2.info.name)
 
             override fun onMoved(fromPosition: Int, toPosition: Int) {
                 notifyItemMoved(fromPosition, toPosition)
