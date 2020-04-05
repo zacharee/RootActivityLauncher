@@ -3,6 +3,7 @@ package tk.zwander.rootactivitylauncher.util
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageItemInfo
 import android.os.Parcelable
 import android.util.Log
 import android.util.TypedValue
@@ -117,6 +118,10 @@ fun Context.createShortcut(
         info,
         null
     )
+}
+
+fun constructComponentKey(component: PackageItemInfo): String {
+    return constructComponentKey(component.packageName, component.name)
 }
 
 fun constructComponentKey(packageName: String, componentName: String): String {

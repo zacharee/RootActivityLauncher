@@ -7,6 +7,7 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.hmomeni.progresscircula.ProgressCircula
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
@@ -20,10 +21,11 @@ import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.picasso.ServiceIconHandler
+import tk.zwander.rootactivitylauncher.util.prefs
 import tk.zwander.rootactivitylauncher.views.FilterDialog
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
-    SearchView.OnQueryTextListener {
+    SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
     private val picasso by lazy {
         Picasso.Builder(this)
             .addRequestHandler(AppIconHandler(this))
@@ -44,6 +46,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         get() = (search?.actionView as SearchView?)
 
     private var filter: MenuItem? = null
+    private var currentDataJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,7 +55,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         setSupportActionBar(bottom_bar)
 
         app_list.adapter = appAdapter
-        loadData()
+        refresh.setOnRefreshListener(this)
+        currentDataJob = loadData()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -94,6 +98,13 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         return false
     }
 
+    override fun onRefresh() {
+        refresh.isRefreshing = true
+        if (currentDataJob?.isActive == true) currentDataJob?.cancel()
+        currentDataJob = loadData()
+        refresh.isRefreshing = false
+    }
+
     override fun onDestroy() {
         super.onDestroy()
 
@@ -102,39 +113,35 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     }
 
     private fun loadData() = launch(Dispatchers.IO) {
-        val appInfo = ArrayList<AppInfo>()
-
-        val apps = packageManager.getInstalledApplications(0)
-        val max = apps.size - 1
-
-        launch(Dispatchers.Main) {
+        withContext(Dispatchers.Main) {
+            appAdapter.setItems(ArrayList())
+            progress?.isVisible = true
+            search?.isVisible = false
+            filter?.isVisible = false
             progressView?.progress = 0
         }
 
+        val appInfo = ArrayList<AppInfo>()
+
+        val apps = packageManager.getInstalledPackages(
+            PackageManager.GET_ACTIVITIES or
+                    PackageManager.GET_SERVICES or
+                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
+                    else PackageManager.GET_DISABLED_COMPONENTS)
+        val max = apps.size - 1
+
         apps.forEachIndexed { index, app ->
-            val i = packageManager.getPackageInfo(
-                app.packageName,
-                PackageManager.GET_ACTIVITIES or
-                        PackageManager.GET_SERVICES or
-                        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
-                        else PackageManager.GET_DISABLED_COMPONENTS
-            )
-            val activities = i.activities
-            val services = i.services
+            val activities = app.activities
+            val services = app.services
 
             if ((activities != null && activities.isNotEmpty()) || (services != null && services.isNotEmpty())) {
                 val activityInfos = ArrayList<ActivityInfo>()
                 val serviceInfos = ArrayList<ServiceInfo>()
 
-                val appLabel = app.loadLabel(packageManager)
+                val appLabel = app.applicationInfo.loadLabel(packageManager)
 
                 activities?.forEach { act ->
-                    val label = async {
-                        runCatching {
-                            val label = act.loadLabel(packageManager)
-                            if (label.isBlank()) appLabel else label
-                        }.getOrNull() ?: appLabel
-                    }
+                    val label = prefs.getOrLoadComponentLabel(app, act).run { if (isBlank()) appLabel else this }
                     activityInfos.add(
                         ActivityInfo(
                             act,
@@ -144,12 +151,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 }
 
                 services?.forEach { srv ->
-                    val label = async {
-                        runCatching {
-                            val label = srv.loadLabel(packageManager)
-                            if (label.isBlank()) appLabel else label
-                        }.getOrNull() ?: appLabel
-                    }
+                    val label = prefs.getOrLoadComponentLabel(app, srv).run { if (isBlank()) appLabel else this }
                     serviceInfos.add(
                         ServiceInfo(
                             srv,
@@ -160,7 +162,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
                 appInfo.add(
                     AppInfo(
-                        app,
+                        app.applicationInfo,
                         appLabel,
                         activityInfos,
                         serviceInfos,

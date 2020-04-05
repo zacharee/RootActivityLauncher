@@ -5,5 +5,5 @@ import kotlinx.coroutines.Deferred
 
 data class ActivityInfo(
     override val info: ActivityInfo,
-    override val label: Deferred<CharSequence>
+    override val label: CharSequence
 ) : BaseComponentInfo(info, label)

@@ -5,5 +5,5 @@ import kotlinx.coroutines.Deferred
 
 data class ServiceInfo(
     override val info: ServiceInfo,
-    override val label: Deferred<CharSequence>
+    override val label: CharSequence
 ) : BaseComponentInfo(info, label)
