@@ -6,8 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
-import android.widget.ImageView
-import android.widget.Switch
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
@@ -57,6 +55,7 @@ abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass,
             override fun compare(o1: DataClass, o2: DataClass): Int {
                 return runBlocking {
                     withContext(Dispatchers.IO) {
+                        val time = System.currentTimeMillis()
                         o1.loadedLabel.toString()
                             .compareTo(o2.loadedLabel.toString(), true)
                     }
@@ -71,7 +70,8 @@ abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass,
     internal val orig =
         object : SortedList<DataClass>(dataClass, object : SortedList.Callback<DataClass>() {
             override fun areItemsTheSame(item1: DataClass, item2: DataClass): Boolean {
-                return item1 == item2
+                return constructComponentKey(item1.info.packageName, item1.info.name) ==
+                        constructComponentKey(item2.info.packageName, item2.info.name)
             }
 
             override fun compare(o1: DataClass, o2: DataClass): Int {
