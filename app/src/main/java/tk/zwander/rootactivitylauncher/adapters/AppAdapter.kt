@@ -239,11 +239,6 @@ class AppAdapter(context: Context, private val picasso: Picasso) :
                     null
                 )
 
-                activities_title.isVisible =
-                    data.activityAdapter.filter(currentQuery, data.activities).isNotEmpty()
-                services_title.isVisible =
-                    data.serviceAdapter.filter(currentQuery, data.services).isNotEmpty()
-
                 if (activities.isVisible) {
                     data.activityAdapter.setItems(data.activities)
                 }
@@ -251,6 +246,11 @@ class AppAdapter(context: Context, private val picasso: Picasso) :
                 if (services.isVisible) {
                     data.serviceAdapter.setItems(data.services)
                 }
+
+                activities_title.isVisible =
+                    data.activityAdapter.filter(currentQuery, data.activities).isNotEmpty()
+                services_title.isVisible =
+                    data.serviceAdapter.filter(currentQuery, data.services).isNotEmpty()
             }
         }
     }

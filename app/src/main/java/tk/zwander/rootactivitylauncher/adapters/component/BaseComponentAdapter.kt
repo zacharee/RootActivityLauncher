@@ -23,10 +23,12 @@ import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.util.constructComponentKey
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
-import java.util.*
 import kotlin.collections.ArrayList
 
-abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass, VHClass>, DataClass : BaseComponentInfo, VHClass : BaseComponentAdapter<Self, DataClass, VHClass>.BaseComponentVH>(
+abstract class BaseComponentAdapter<
+        Self : BaseComponentAdapter<Self, DataClass, VHClass>,
+        DataClass : BaseComponentInfo,
+        VHClass : BaseComponentAdapter<Self, DataClass, VHClass>.BaseComponentVH>(
     internal val picasso: Picasso,
     dataClass: Class<DataClass>
 ) : RecyclerView.Adapter<VHClass>(), CoroutineScope by MainScope() {
@@ -55,7 +57,6 @@ abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass,
             override fun compare(o1: DataClass, o2: DataClass): Int {
                 return runBlocking {
                     withContext(Dispatchers.IO) {
-                        val time = System.currentTimeMillis()
                         o1.loadedLabel.toString()
                             .compareTo(o2.loadedLabel.toString(), true)
                     }
@@ -67,64 +68,7 @@ abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass,
                         && oldItem.info.exported == newItem.info.exported
 
         })
-    internal val orig =
-        object : SortedList<DataClass>(dataClass, object : SortedList.Callback<DataClass>() {
-            override fun areItemsTheSame(item1: DataClass, item2: DataClass): Boolean {
-                return constructComponentKey(item1.info.packageName, item1.info.name) ==
-                        constructComponentKey(item2.info.packageName, item2.info.name)
-            }
-
-            override fun compare(o1: DataClass, o2: DataClass): Int {
-                return runBlocking {
-                    withContext(Dispatchers.IO) {
-                        o1.loadedLabel.toString()
-                            .compareTo(o2.loadedLabel.toString(), true)
-                    }
-                }
-            }
-
-            override fun areContentsTheSame(oldItem: DataClass, newItem: DataClass): Boolean {
-                return oldItem.info.packageName == newItem.info.packageName
-                        && oldItem.info.exported == newItem.info.exported
-            }
-
-            override fun onMoved(fromPosition: Int, toPosition: Int) {}
-            override fun onChanged(position: Int, count: Int) {}
-            override fun onInserted(position: Int, count: Int) {}
-            override fun onRemoved(position: Int, count: Int) {}
-        }) {
-            override fun replaceAll(items: Array<out DataClass>, mayModifyInput: Boolean) {
-                this@BaseComponentAdapter.items.replaceAll(items.filter {
-                    matches(
-                        currentQuery,
-                        it
-                    )
-                })
-                super.replaceAll(items, mayModifyInput)
-            }
-
-            override fun add(item: DataClass): Int {
-                if (matches(currentQuery, item)) {
-                    items.add(item)
-                }
-                return super.add(item)
-            }
-
-            override fun addAll(items: Array<out DataClass>, mayModifyInput: Boolean) {
-                this@BaseComponentAdapter.items.addAll(items.filter { matches(currentQuery, it) })
-                super.addAll(items, mayModifyInput)
-            }
-
-            override fun remove(item: DataClass): Boolean {
-                items.remove(item)
-                return super.remove(item)
-            }
-
-            override fun clear() {
-                items.clear()
-                super.clear()
-            }
-        }
+    internal val orig = ArrayList<DataClass>()
 
     internal var currentQuery: String = ""
     internal var enabledFilterMode = EnabledFilterMode.SHOW_ALL
@@ -173,33 +117,25 @@ abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass,
     }
 
     fun setItems(items: List<DataClass>) {
-        orig.replaceAll(items)
+        orig.clear()
+        orig.addAll(items)
+        this.items.replaceAll(filter(currentQuery))
     }
 
     internal open fun filter(query: String): List<DataClass> {
-        val lowerCaseQuery = query.toLowerCase(Locale.getDefault())
-
         val filteredModelList = ArrayList<DataClass>()
 
-        for (i in 0 until orig.size()) {
+        for (i in 0 until orig.size) {
             val item = orig[i]
 
-            if (matches(lowerCaseQuery, item)) filteredModelList.add(item)
+            if (matches(query, item)) filteredModelList.add(item)
         }
 
         return filteredModelList
     }
 
     internal open fun filter(query: String, items: Collection<DataClass>): List<DataClass> {
-        val lowerCaseQuery = query.toLowerCase(Locale.getDefault())
-
-        val filteredModelList = ArrayList<DataClass>()
-
-        for (element in items) {
-            if (matches(lowerCaseQuery, element)) filteredModelList.add(element)
-        }
-
-        return filteredModelList
+        return items.filter { matches(query, it) }
     }
 
     internal open fun matches(query: String, data: DataClass): Boolean {
@@ -316,7 +252,8 @@ abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass,
             }
         }
 
-        open fun onLaunch(data: DataClass, context: Context, extras: List<ExtraInfo>): Job = launch {}
+        open fun onLaunch(data: DataClass, context: Context, extras: List<ExtraInfo>): Job =
+            launch {}
 
         abstract fun getPicassoUri(data: DataClass): Uri?
     }
