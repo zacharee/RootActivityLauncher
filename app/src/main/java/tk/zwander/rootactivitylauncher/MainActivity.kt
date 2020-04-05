@@ -20,7 +20,6 @@ import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.picasso.ServiceIconHandler
-import tk.zwander.rootactivitylauncher.util.lazyDeferred
 import tk.zwander.rootactivitylauncher.views.FilterDialog
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
@@ -130,8 +129,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 val appLabel = app.loadLabel(packageManager)
 
                 activities?.forEach { act ->
-                    val label by lazyDeferred {
-                        act.loadLabel(packageManager).run { if (isBlank()) appLabel else this }
+                    val label = async {
+                        runCatching {
+                            val label = act.loadLabel(packageManager)
+                            if (label.isBlank()) appLabel else label
+                        }.getOrNull() ?: appLabel
                     }
                     activityInfos.add(
                         ActivityInfo(
@@ -142,8 +144,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 }
 
                 services?.forEach { srv ->
-                    val label by lazyDeferred {
-                        srv.loadLabel(packageManager).run { if (isBlank()) appLabel else this }
+                    val label = async {
+                        runCatching {
+                            val label = srv.loadLabel(packageManager)
+                            if (label.isBlank()) appLabel else label
+                        }.getOrNull() ?: appLabel
                     }
                     serviceInfos.add(
                         ServiceInfo(
