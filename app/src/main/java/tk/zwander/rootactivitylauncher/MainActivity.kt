@@ -127,9 +127,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 val activityInfos = ArrayList<ActivityInfo>()
                 val serviceInfos = ArrayList<ServiceInfo>()
 
+                val appLabel = app.loadLabel(packageManager)
+
                 activities?.forEach { act ->
                     val label by lazyDeferred {
-                        act.loadLabel(packageManager)
+                        act.loadLabel(packageManager).run { if (isBlank()) appLabel else this }
                     }
                     activityInfos.add(
                         ActivityInfo(
@@ -141,7 +143,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
                 services?.forEach { srv ->
                     val label by lazyDeferred {
-                        srv.loadLabel(packageManager)
+                        srv.loadLabel(packageManager).run { if (isBlank()) appLabel else this }
                     }
                     serviceInfos.add(
                         ServiceInfo(
@@ -151,12 +153,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                     )
                 }
 
-                val label = app.loadLabel(packageManager)
-
                 appInfo.add(
                     AppInfo(
                         app,
-                        label,
+                        appLabel,
                         activityInfos,
                         serviceInfos,
                         ActivityAdapter(
