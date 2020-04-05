@@ -1,12 +1,15 @@
 package tk.zwander.rootactivitylauncher.adapters.component
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
 import android.widget.Toast
+import androidx.core.graphics.drawable.IconCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SortedList
@@ -19,8 +22,10 @@ import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
+import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.util.constructComponentKey
+import tk.zwander.rootactivitylauncher.util.createShortcut
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
 import kotlin.collections.ArrayList
@@ -165,6 +170,8 @@ abstract class BaseComponentAdapter<
     }
 
     abstract inner class BaseComponentVH(view: View) : RecyclerView.ViewHolder(view) {
+        abstract internal val componentType: ComponentType
+
         internal val currentExtras: List<ExtraInfo>
             get() = itemView.context.findExtrasForComponent(currentComponentKey)
         internal val currentComponentKey: String
@@ -219,6 +226,17 @@ abstract class BaseComponentAdapter<
                 }
                 launch.setOnClickListener {
                     onLaunch(items[adapterPosition], context, currentExtras)
+                }
+                shortcut.setOnClickListener {
+                    val d = items[adapterPosition]
+                    context.createShortcut(
+                        d.loadedLabel,
+                        IconCompat.createWithBitmap(
+                            icon.drawable.toBitmap()
+                        ),
+                        currentComponentKey,
+                        componentType
+                    )
                 }
             }
         }

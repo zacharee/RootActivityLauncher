@@ -76,6 +76,16 @@
             />
 
         <ImageButton
+            android:id="@+id/shortcut"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:src="@drawable/ic_baseline_link_24"
+            android:background="?android:selectableItemBackground"
+            android:contentDescription="@string/create_shortcut"
+            />
+
+        <ImageButton
             android:id="@+id/launch"
             android:layout_width="48dp"
             android:layout_height="48dp"
