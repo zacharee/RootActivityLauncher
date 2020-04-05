@@ -162,9 +162,9 @@ abstract class BaseComponentAdapter<
 
         if (query.isBlank()) return true
 
-        if ((data.loadedLabel.contains(query, true)
-                    || data.info.name.contains(query, true))
-        ) return true
+        if (data.info.name.contains(query, true)
+            || (data.loadedLabel.contains(query, true)))
+            return true
 
         return false
     }
