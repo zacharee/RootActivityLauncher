@@ -178,21 +178,33 @@ abstract class BaseComponentAdapter<
         internal val componentEnabledListener = object : CompoundButton.OnCheckedChangeListener {
             override fun onCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
                 val d = items[adapterPosition]
-                if (Shell.SU.available()) {
-                    if (Shell.Pool.SU.run("pm ${if (isChecked) "enable" else "disable"} $currentComponentKey") == 0) {
-                        d.info.enabled = isChecked
-                        notifyItemChanged(adapterPosition)
+                val l = this
+
+                launch(Dispatchers.Main) {
+                    val hasRoot = withContext(Dispatchers.IO) {
+                        Shell.SU.available()
+                    }
+
+                    if (hasRoot) {
+                        val result = withContext(Dispatchers.IO) {
+                            Shell.Pool.SU.run("pm ${if (isChecked) "enable" else "disable"} $currentComponentKey") == 0
+                        }
+
+                        if (result) {
+                            d.info.enabled = isChecked
+                            updateLaunchVisibility(d)
+                        } else {
+                            buttonView.setOnCheckedChangeListener(null)
+                            buttonView.isChecked = !isChecked
+                            buttonView.setOnCheckedChangeListener(l)
+                        }
                     } else {
+                        Toast.makeText(itemView.context, R.string.requires_root, Toast.LENGTH_SHORT)
+                            .show()
                         buttonView.setOnCheckedChangeListener(null)
                         buttonView.isChecked = !isChecked
-                        buttonView.setOnCheckedChangeListener(this)
+                        buttonView.setOnCheckedChangeListener(l)
                     }
-                } else {
-                    Toast.makeText(itemView.context, R.string.requires_root, Toast.LENGTH_SHORT)
-                        .show()
-                    buttonView.setOnCheckedChangeListener(null)
-                    buttonView.isChecked = !isChecked
-                    buttonView.setOnCheckedChangeListener(this)
                 }
             }
         }
@@ -235,7 +247,7 @@ abstract class BaseComponentAdapter<
 
                 enabled.setOnCheckedChangeListener(null)
                 if (enabled.isChecked != data.info.enabled) enabled.isChecked = data.info.enabled
-                if (launch.isVisible != data.info.enabled) launch.isVisible = data.info.enabled
+                updateLaunchVisibility(data)
                 enabled.setOnCheckedChangeListener(componentEnabledListener)
             }
         }
@@ -256,5 +268,11 @@ abstract class BaseComponentAdapter<
             launch {}
 
         abstract fun getPicassoUri(data: DataClass): Uri?
+
+        private fun updateLaunchVisibility(data: DataClass) {
+            itemView.apply {
+                if (launch.isVisible != data.info.enabled) launch.isVisible = data.info.enabled
+            }
+        }
     }
 }
