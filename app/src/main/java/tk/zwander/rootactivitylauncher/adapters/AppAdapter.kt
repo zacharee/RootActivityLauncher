@@ -73,8 +73,6 @@ class AppAdapter(context: Context, private val picasso: Picasso) :
             super.clear()
         }
     }
-    private val activityViewPool = RecyclerView.RecycledViewPool()
-    private val serviceViewPool = RecyclerView.RecycledViewPool()
     private val innerDividerItemDecoration =
         InnerDividerItemDecoration(context, RecyclerView.VERTICAL)
 
@@ -184,10 +182,8 @@ class AppAdapter(context: Context, private val picasso: Picasso) :
 
         init {
             itemView.apply {
-                activities.setRecycledViewPool(activityViewPool)
                 activities.addItemDecoration(innerDividerItemDecoration)
 
-                services.setRecycledViewPool(serviceViewPool)
                 services.addItemDecoration(innerDividerItemDecoration)
             }
         }
