@@ -1,14 +1,30 @@
 package tk.zwander.rootactivitylauncher.adapters.component
 
+import android.content.Context
+import android.net.Uri
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import android.widget.CompoundButton
+import android.widget.ImageView
+import android.widget.Switch
+import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SortedList
 import com.squareup.picasso.Picasso
+import eu.chainfire.libsuperuser.Shell
+import kotlinx.android.synthetic.main.component_item.view.*
 import kotlinx.coroutines.*
+import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
+import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
+import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.util.constructComponentKey
+import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
+import tk.zwander.rootactivitylauncher.views.ExtrasDialog
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -128,6 +144,15 @@ abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass,
         return items.size()
     }
 
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VHClass {
+        return onCreateViewHolder(
+            LayoutInflater.from(parent.context).inflate(R.layout.component_item, parent, false),
+            viewType
+        )
+    }
+
+    abstract fun onCreateViewHolder(view: View, viewType: Int): VHClass
+
     override fun onBindViewHolder(holder: VHClass, position: Int) {
         holder.bind(items[position])
     }
@@ -197,12 +222,102 @@ abstract class BaseComponentAdapter<Self : BaseComponentAdapter<Self, DataClass,
         if (query.isBlank()) return true
 
         if ((data.loadedLabel.contains(query, true)
-                    || data.info.name.contains(query, true))) return true
+                    || data.info.name.contains(query, true))
+        ) return true
 
         return false
     }
 
     abstract inner class BaseComponentVH(view: View) : RecyclerView.ViewHolder(view) {
-        abstract fun bind(data: DataClass): Job
+        internal val currentExtras: List<ExtraInfo>
+            get() = itemView.context.findExtrasForComponent(currentComponentKey)
+        internal val currentComponentKey: String
+            get() = items[adapterPosition].run {
+                constructComponentKey(
+                    info.packageName,
+                    info.name
+                )
+            }
+
+        internal val componentEnabledListener = object : CompoundButton.OnCheckedChangeListener {
+            override fun onCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
+                val d = items[adapterPosition]
+                if (Shell.SU.available()) {
+                    if (Shell.Pool.SU.run("pm ${if (isChecked) "enable" else "disable"} $currentComponentKey") == 0) {
+                        d.info.enabled = isChecked
+                        notifyItemChanged(adapterPosition)
+                    } else {
+                        buttonView.setOnCheckedChangeListener(null)
+                        buttonView.isChecked = !isChecked
+                        buttonView.setOnCheckedChangeListener(this)
+                    }
+                } else {
+                    Toast.makeText(itemView.context, R.string.requires_root, Toast.LENGTH_SHORT)
+                        .show()
+                    buttonView.setOnCheckedChangeListener(null)
+                    buttonView.isChecked = !isChecked
+                    buttonView.setOnCheckedChangeListener(this)
+                }
+            }
+        }
+
+        internal var prevPos = -1
+
+        init {
+            itemView.apply {
+                set_extras.setOnClickListener {
+                    ExtrasDialog(context, currentComponentKey)
+                        .show()
+                }
+                launch.setOnClickListener {
+                    onLaunch(items[adapterPosition], context, currentExtras)
+                }
+            }
+        }
+
+        fun bind(data: DataClass): Job = launch {
+            if (adapterPosition != prevPos) {
+                prevPos = adapterPosition
+
+                onNewPosition(data)
+            }
+
+            onBind(data)
+        }
+
+        open fun onBind(data: DataClass): Job = launch {
+            itemView.apply {
+                name.text = data.loadedLabel
+                cmp.text = data.info.name
+
+                getPicassoUri(data)?.apply {
+                    picasso.load(this)
+                        .fit()
+                        .centerInside()
+                        .into(icon)
+                }
+
+                enabled.setOnCheckedChangeListener(null)
+                if (enabled.isChecked != data.info.enabled) enabled.isChecked = data.info.enabled
+                if (launch.isVisible != data.info.enabled) launch.isVisible = data.info.enabled
+                enabled.setOnCheckedChangeListener(componentEnabledListener)
+            }
+        }
+
+        open fun onNewPosition(data: DataClass): Job = launch {
+            itemView.apply {
+                name.text = data.loadedLabel
+                cmp.text = data.info.name
+
+                picasso.load(ActivityIconHandler.createUri(data.info.packageName, data.info.name))
+                    .fit()
+                    .centerInside()
+                    .into(icon)
+            }
+        }
+
+        open fun onLaunch(data: DataClass, context: Context, extras: List<ExtraInfo>): Job = launch {}
+
+        abstract fun getPicassoUri(data: DataClass): Uri?
     }
 }

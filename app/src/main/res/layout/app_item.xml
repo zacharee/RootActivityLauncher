@@ -84,7 +84,7 @@
             android:layout_marginStart="32dp"
             android:visibility="gone"
             app:layoutManager=".util.PredictiveLinearLayoutManager"
-            tools:listitem="@layout/activity_item"
+            tools:listitem="@layout/component_item"
             tools:visibility="visible"
             />
 
@@ -110,7 +110,7 @@
             android:layout_marginStart="32dp"
             android:visibility="gone"
             app:layoutManager=".util.PredictiveLinearLayoutManager"
-            tools:listitem="@layout/service_item"
+            tools:listitem="@layout/component_item"
             tools:visibility="visible"
             />
 
