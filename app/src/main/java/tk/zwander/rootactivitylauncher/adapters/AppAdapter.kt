@@ -138,6 +138,10 @@ class AppAdapter(context: Context, private val picasso: Picasso) :
         orig.addAll(items)
     }
 
+    fun clearItems() {
+        orig.clear()
+    }
+
     fun addItem(item: AppInfo) {
         orig.add(item)
         if (matches(currentQuery, item)) items.add(item)

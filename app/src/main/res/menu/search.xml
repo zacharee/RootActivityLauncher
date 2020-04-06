@@ -22,6 +22,7 @@
         android:title="@string/scroll_top"
         android:icon="@drawable/scroll_to_top"
         app:showAsAction="always"
+        android:visible="false"
         />
 
     <item
@@ -29,6 +30,7 @@
         android:title="@string/scroll_bottom"
         android:icon="@drawable/scroll_to_bottom"
         app:showAsAction="always"
+        android:visible="false"
         />
 
     <item

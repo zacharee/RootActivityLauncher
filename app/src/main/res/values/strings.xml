@@ -27,4 +27,5 @@
     <string name="filter_unexported">Show Only Unexported</string>
 
     <string name="requires_root">Requires Root</string>
+    <string name="loading">Loading…</string>
 </resources>

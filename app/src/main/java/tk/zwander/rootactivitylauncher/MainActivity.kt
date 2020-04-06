@@ -4,10 +4,12 @@ import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.SearchView
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -106,16 +108,14 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             override fun onMenuModeChange(menu: MenuBuilder?) {}
         })
 
-        scrollToTop.isVisible = appListLayoutManager.findFirstCompletelyVisibleItemPosition() > 0
-        scrollToBottom.isVisible = appListLayoutManager.findLastCompletelyVisibleItemPosition() < appAdapter.itemCount - 1
+        updateScrollButtonState()
 
         searchView?.setOnQueryTextListener(this)
 
         app_list.adapter = appAdapter
         app_list.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                scrollToTop?.isVisible = appListLayoutManager.findFirstCompletelyVisibleItemPosition() > 0
-                scrollToBottom?.isVisible = appListLayoutManager.findLastCompletelyVisibleItemPosition() < appAdapter.itemCount - 1
+                updateScrollButtonState()
             }
         })
         refresh.setOnRefreshListener(this)
@@ -146,14 +146,28 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         picasso.shutdown()
     }
 
+    private fun updateProgress(progress: Int) {
+        progressView?.progress = progress
+        scrim_progress.progress = progress
+    }
+
+    private fun updateScrollButtonState() {
+        val isActive = currentDataJob?.isActive == true
+        scrollToTop?.isVisible = appListLayoutManager.findFirstCompletelyVisibleItemPosition() > 0 && !isActive
+        scrollToBottom?.isVisible = appListLayoutManager.findLastCompletelyVisibleItemPosition() < appAdapter.itemCount - 1 && !isActive
+    }
+
     private fun loadData(): Job {
         return launch(Dispatchers.IO) {
             withContext(Dispatchers.Main) {
-                appAdapter.setItems(ArrayList())
+                updateProgress(0)
+                appAdapter.clearItems()
+                scrim.isVisible = true
                 progress.isVisible = true
                 search.isVisible = false
                 filter.isVisible = false
-                progressView?.progress = 0
+                scrollToTop.isVisible = false
+                scrollToBottom.isVisible = false
             }
 
             val apps = packageManager.getInstalledPackages(
@@ -211,12 +225,13 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                                         picasso
                                     )
                                 ))
+                                app_list.scrollToPosition(0)
                             }
                         }
 
                         launch(Dispatchers.Main) {
                             val p = (progressIndex++.toFloat() / max.toFloat() * 100f).toInt()
-                            progressView?.progress = p
+                            updateProgress(p)
                         }
                     }
                 )
@@ -226,8 +241,13 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
             launch(Dispatchers.Main) {
                 progress.isVisible = false
+                scrim.isVisible = false
                 search.isVisible = true
                 filter.isVisible = true
+
+                scrim.postDelayed({
+                    updateScrollButtonState()
+                }, 10)
             }
         }
     }
