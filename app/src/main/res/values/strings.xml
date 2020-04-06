@@ -6,6 +6,8 @@
     <string name="hint_value">Value</string>
     <string name="add_extra">Add Extra</string>
     <string name="filter">Filter</string>
+    <string name="scroll_top">Scroll to Top</string>
+    <string name="scroll_bottom">Scroll to Bottom</string>
 
     <string name="set_extras">Set Extras</string>
     <string name="launch">Launch</string>

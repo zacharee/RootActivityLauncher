@@ -56,16 +56,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
         setSupportActionBar(bottom_bar)
 
-        bottom_bar.setOnLongClickListener {
-            val vis = (app_list.layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition()
-            if (vis > 20) {
-                app_list.scrollToPosition(0)
-            } else {
-                app_list.smoothScrollToPosition(0)
-            }
-            true
-        }
-
         app_list.adapter = appAdapter
         refresh.setOnRefreshListener(this)
         currentDataJob = loadData()
@@ -94,6 +84,24 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                     appAdapter.enabledFilterMode = enabledMode
                     appAdapter.exportedFilterMode = exportedMode
                 }.show()
+                true
+            }
+            R.id.scroll_top -> {
+                val vis = (app_list.layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition()
+                if (vis > 20) {
+                    app_list.scrollToPosition(0)
+                } else {
+                    app_list.smoothScrollToPosition(0)
+                }
+                true
+            }
+            R.id.scroll_bottom -> {
+                val vis = (app_list.layoutManager as LinearLayoutManager).findLastCompletelyVisibleItemPosition()
+                if (appAdapter.itemCount - vis > 20) {
+                    app_list.scrollToPosition(appAdapter.itemCount - 1)
+                } else {
+                    app_list.smoothScrollToPosition(appAdapter.itemCount - 1)
+                }
                 true
             }
             else -> super.onOptionsItemSelected(item)

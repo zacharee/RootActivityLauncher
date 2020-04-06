@@ -13,15 +13,29 @@
         android:id="@+id/action_search"
         android:title="@android:string/search_go"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
-        app:showAsAction="ifRoom"
+        app:showAsAction="always"
         android:visible="false"
+        />
+
+    <item
+        android:id="@+id/scroll_top"
+        android:title="@string/scroll_top"
+        android:icon="@drawable/scroll_to_top"
+        app:showAsAction="always"
+        />
+
+    <item
+        android:id="@+id/scroll_bottom"
+        android:title="@string/scroll_bottom"
+        android:icon="@drawable/scroll_to_bottom"
+        app:showAsAction="always"
         />
 
     <item
         android:id="@+id/action_filter"
         android:title="@string/filter"
         android:icon="@drawable/ic_baseline_filter_list_24"
-        app:showAsAction="ifRoom"
+        app:showAsAction="always"
         android:visible="false"
         />
 
