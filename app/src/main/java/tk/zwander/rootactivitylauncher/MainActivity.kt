@@ -122,13 +122,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         currentDataJob = loadData()
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
     override fun onQueryTextChange(newText: String?): Boolean {
         appAdapter.onQueryTextChange(newText)
         app_list.scrollToPosition(0)
