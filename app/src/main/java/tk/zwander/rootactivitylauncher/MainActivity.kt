@@ -8,6 +8,7 @@ import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.hmomeni.progresscircula.ProgressCircula
 import com.squareup.picasso.Picasso
@@ -38,6 +39,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     private val appAdapter by lazy {
         AppAdapter(this, picasso)
     }
+    private val appListLayoutManager: LinearLayoutManager
+        get() = app_list.layoutManager as LinearLayoutManager
 
     private var progress: MenuItem? = null
     private val progressView: ProgressCircula?
@@ -48,6 +51,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         get() = (search?.actionView as SearchView?)
 
     private var filter: MenuItem? = null
+    private var scrollToTop: MenuItem? = null
+    private var scrollToBottom: MenuItem? = null
+
     private var currentDataJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,6 +63,12 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         setSupportActionBar(bottom_bar)
 
         app_list.adapter = appAdapter
+        app_list.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                scrollToTop?.isVisible = appListLayoutManager.findFirstCompletelyVisibleItemPosition() > 0
+                scrollToBottom?.isVisible = appListLayoutManager.findLastCompletelyVisibleItemPosition() < appAdapter.itemCount - 1
+            }
+        })
         refresh.setOnRefreshListener(this)
         currentDataJob = loadData()
     }
@@ -67,6 +79,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         progress = menu.findItem(R.id.progress)
         search = menu.findItem(R.id.action_search)
         filter = menu.findItem(R.id.action_filter)
+        scrollToTop = menu.findItem(R.id.scroll_top)
+        scrollToBottom = menu.findItem(R.id.scroll_bottom)
+
+        scrollToTop?.isVisible = appListLayoutManager.findFirstCompletelyVisibleItemPosition() > 0
+        scrollToBottom?.isVisible = appListLayoutManager.findLastCompletelyVisibleItemPosition() < appAdapter.itemCount - 1
 
         searchView?.setOnQueryTextListener(this)
 
