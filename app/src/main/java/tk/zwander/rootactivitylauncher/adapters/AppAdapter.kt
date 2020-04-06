@@ -133,9 +133,14 @@ class AppAdapter(context: Context, private val picasso: Picasso) :
         return items[position].loadedLabel.substring(0, 1)
     }
 
-    fun setItems(items: List<AppInfo>) {
+    fun setItems(items: Collection<AppInfo>) {
         orig.clear()
         orig.addAll(items)
+    }
+
+    fun addItem(item: AppInfo) {
+        orig.add(item)
+        if (matches(currentQuery, item)) items.add(item)
     }
 
     fun onQueryTextChange(newText: String?) {

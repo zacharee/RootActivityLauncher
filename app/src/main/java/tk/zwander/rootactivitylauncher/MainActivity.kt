@@ -23,6 +23,8 @@ import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.picasso.ServiceIconHandler
 import tk.zwander.rootactivitylauncher.util.prefs
 import tk.zwander.rootactivitylauncher.views.FilterDialog
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
@@ -112,81 +114,81 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         picasso.shutdown()
     }
 
-    private fun loadData() = launch(Dispatchers.IO) {
-        withContext(Dispatchers.Main) {
-            appAdapter.setItems(ArrayList())
-            progress?.isVisible = true
-            search?.isVisible = false
-            filter?.isVisible = false
-            progressView?.progress = 0
-        }
+    private fun loadData(): Job {
+        return launch(Dispatchers.IO) {
+            withContext(Dispatchers.Main) {
+                appAdapter.setItems(ArrayList())
+                progress?.isVisible = true
+                search?.isVisible = false
+                filter?.isVisible = false
+                progressView?.progress = 0
+            }
 
-        val appInfo = ArrayList<AppInfo>()
+            val apps = ArrayList(
+                packageManager.getInstalledPackages(
+                    PackageManager.GET_ACTIVITIES or
+                            PackageManager.GET_SERVICES or
+                            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
+                            else PackageManager.GET_DISABLED_COMPONENTS)
+            )
+            val max = apps.size - 1
 
-        val apps = packageManager.getInstalledPackages(
-            PackageManager.GET_ACTIVITIES or
-                    PackageManager.GET_SERVICES or
-                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
-                    else PackageManager.GET_DISABLED_COMPONENTS)
-        val max = apps.size - 1
+            apps.forEachIndexed { index, app ->
+                val activities = app.activities
+                val services = app.services
 
-        apps.forEachIndexed { index, app ->
-            val activities = app.activities
-            val services = app.services
+                if (((activities != null && activities.isNotEmpty()) || (services != null && services.isNotEmpty()))) {
+                    val activityInfos = ArrayList<ActivityInfo>()
+                    val serviceInfos = ArrayList<ServiceInfo>()
 
-            if ((activities != null && activities.isNotEmpty()) || (services != null && services.isNotEmpty())) {
-                val activityInfos = ArrayList<ActivityInfo>()
-                val serviceInfos = ArrayList<ServiceInfo>()
+                    val appLabel = prefs.getOrLoadAppLabel(app)
 
-                val appLabel = app.applicationInfo.loadLabel(packageManager)
-
-                activities?.forEach { act ->
-                    val label = prefs.getOrLoadComponentLabel(app, act).run { if (isBlank()) appLabel else this }
-                    activityInfos.add(
-                        ActivityInfo(
-                            act,
-                            label
+                    activities?.forEach { act ->
+                        val label = prefs.getOrLoadComponentLabel(app, act).run { if (isBlank()) appLabel else this }
+                        activityInfos.add(
+                            ActivityInfo(
+                                act,
+                                label
+                            )
                         )
-                    )
+                    }
+
+                    services?.forEach { srv ->
+                        val label = prefs.getOrLoadComponentLabel(app, srv).run { if (isBlank()) appLabel else this }
+                        serviceInfos.add(
+                            ServiceInfo(
+                                srv,
+                                label
+                            )
+                        )
+                    }
+
+                    launch(Dispatchers.Main) {
+                        appAdapter.addItem(AppInfo(
+                            app.applicationInfo,
+                            appLabel,
+                            activityInfos,
+                            serviceInfos,
+                            ActivityAdapter(
+                                picasso
+                            ),
+                            ServiceAdapter(
+                                picasso
+                            )
+                        ))
+                    }
                 }
 
-                services?.forEach { srv ->
-                    val label = prefs.getOrLoadComponentLabel(app, srv).run { if (isBlank()) appLabel else this }
-                    serviceInfos.add(
-                        ServiceInfo(
-                            srv,
-                            label
-                        )
-                    )
+                launch(Dispatchers.Main) {
+                    progressView?.progress = (index.toFloat() / max.toFloat() * 100f).toInt()
                 }
-
-                appInfo.add(
-                    AppInfo(
-                        app.applicationInfo,
-                        appLabel,
-                        activityInfos,
-                        serviceInfos,
-                        ActivityAdapter(
-                            picasso
-                        ),
-                        ServiceAdapter(
-                            picasso
-                        )
-                    )
-                )
             }
 
             launch(Dispatchers.Main) {
-                progressView?.progress = (index.toFloat() / max.toFloat() * 100f).toInt()
+                progress?.isVisible = false
+                search?.isVisible = true
+                filter?.isVisible = true
             }
-        }
-
-        launch(Dispatchers.Main) {
-            progress?.isVisible = false
-            search?.isVisible = true
-            filter?.isVisible = true
-
-            appAdapter.setItems(appInfo)
         }
     }
 }

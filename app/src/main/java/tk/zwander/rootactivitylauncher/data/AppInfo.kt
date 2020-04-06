@@ -20,4 +20,13 @@ data class AppInfo(
 
     var activitiesExpanded: Boolean = false
     var servicesExpanded: Boolean = false
+
+    override fun equals(other: Any?): Boolean {
+        return other is AppInfo
+                && info.packageName == other.info.packageName
+    }
+
+    override fun hashCode(): Int {
+        return info.packageName.hashCode()
+    }
 }
