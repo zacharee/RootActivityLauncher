@@ -1,11 +1,14 @@
 package tk.zwander.rootactivitylauncher
 
+import android.animation.LayoutTransition
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -27,6 +30,8 @@ import tk.zwander.rootactivitylauncher.util.prefs
 import tk.zwander.rootactivitylauncher.views.FilterDialog
 import kotlin.collections.ArrayList
 
+
+@SuppressLint("RestrictedApi")
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
     private val picasso by lazy {
@@ -41,18 +46,19 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     }
     private val appListLayoutManager: LinearLayoutManager
         get() = app_list.layoutManager as LinearLayoutManager
+    val menu by lazy { action_menu_view.menu as MenuBuilder }
 
-    private var progress: MenuItem? = null
+    private val progress by lazy { menu.findItem(R.id.progress) }
     private val progressView: ProgressCircula?
         get() = (progress?.actionView as ProgressCircula?)
 
-    private var search: MenuItem? = null
+    private val search by lazy { menu.findItem(R.id.action_search) }
     private val searchView: SearchView?
         get() = (search?.actionView as SearchView?)
 
-    private var filter: MenuItem? = null
-    private var scrollToTop: MenuItem? = null
-    private var scrollToBottom: MenuItem? = null
+    private val filter by lazy { menu.findItem(R.id.action_filter) }
+    private val scrollToTop by lazy { menu.findItem(R.id.scroll_top) }
+    private val scrollToBottom by lazy { menu.findItem(R.id.scroll_bottom) }
 
     private var currentDataJob: Job? = null
 
@@ -61,6 +67,51 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         setContentView(R.layout.activity_main)
 
         setSupportActionBar(bottom_bar)
+
+        menuInflater.inflate(R.menu.search, menu)
+        menu.setCallback(object : MenuBuilder.Callback {
+            override fun onMenuItemSelected(menu: MenuBuilder?, item: MenuItem?): Boolean {
+                return when (item?.itemId) {
+                    R.id.action_filter -> {
+                        FilterDialog(
+                            this@MainActivity,
+                            appAdapter.enabledFilterMode,
+                            appAdapter.exportedFilterMode
+                        ) { enabledMode, exportedMode ->
+                            appAdapter.enabledFilterMode = enabledMode
+                            appAdapter.exportedFilterMode = exportedMode
+                        }.show()
+                        true
+                    }
+                    R.id.scroll_top -> {
+                        val vis = (app_list.layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition()
+                        if (vis > 20) {
+                            app_list.scrollToPosition(0)
+                        } else {
+                            app_list.smoothScrollToPosition(0)
+                        }
+                        true
+                    }
+                    R.id.scroll_bottom -> {
+                        val vis = (app_list.layoutManager as LinearLayoutManager).findLastCompletelyVisibleItemPosition()
+                        if (appAdapter.itemCount - vis > 20) {
+                            app_list.scrollToPosition(appAdapter.itemCount - 1)
+                        } else {
+                            app_list.smoothScrollToPosition(appAdapter.itemCount - 1)
+                        }
+                        true
+                    }
+                    else -> false
+                }
+            }
+
+            override fun onMenuModeChange(menu: MenuBuilder?) {}
+        })
+
+        scrollToTop.isVisible = appListLayoutManager.findFirstCompletelyVisibleItemPosition() > 0
+        scrollToBottom.isVisible = appListLayoutManager.findLastCompletelyVisibleItemPosition() < appAdapter.itemCount - 1
+
+        searchView?.setOnQueryTextListener(this)
 
         app_list.adapter = appAdapter
         app_list.addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -73,54 +124,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         currentDataJob = loadData()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.search, menu)
-
-        progress = menu.findItem(R.id.progress)
-        search = menu.findItem(R.id.action_search)
-        filter = menu.findItem(R.id.action_filter)
-        scrollToTop = menu.findItem(R.id.scroll_top)
-        scrollToBottom = menu.findItem(R.id.scroll_bottom)
-
-        scrollToTop?.isVisible = appListLayoutManager.findFirstCompletelyVisibleItemPosition() > 0
-        scrollToBottom?.isVisible = appListLayoutManager.findLastCompletelyVisibleItemPosition() < appAdapter.itemCount - 1
-
-        searchView?.setOnQueryTextListener(this)
-
-        return super.onCreateOptionsMenu(menu)
-    }
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_filter -> {
-                FilterDialog(
-                    this,
-                    appAdapter.enabledFilterMode,
-                    appAdapter.exportedFilterMode
-                ) { enabledMode, exportedMode ->
-                    appAdapter.enabledFilterMode = enabledMode
-                    appAdapter.exportedFilterMode = exportedMode
-                }.show()
-                true
-            }
-            R.id.scroll_top -> {
-                val vis = (app_list.layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition()
-                if (vis > 20) {
-                    app_list.scrollToPosition(0)
-                } else {
-                    app_list.smoothScrollToPosition(0)
-                }
-                true
-            }
-            R.id.scroll_bottom -> {
-                val vis = (app_list.layoutManager as LinearLayoutManager).findLastCompletelyVisibleItemPosition()
-                if (appAdapter.itemCount - vis > 20) {
-                    app_list.scrollToPosition(appAdapter.itemCount - 1)
-                } else {
-                    app_list.smoothScrollToPosition(appAdapter.itemCount - 1)
-                }
-                true
-            }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -153,9 +159,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         return launch(Dispatchers.IO) {
             withContext(Dispatchers.Main) {
                 appAdapter.setItems(ArrayList())
-                progress?.isVisible = true
-                search?.isVisible = false
-                filter?.isVisible = false
+                progress.isVisible = true
+                search.isVisible = false
+                filter.isVisible = false
                 progressView?.progress = 0
             }
 
@@ -220,9 +226,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             }
 
             launch(Dispatchers.Main) {
-                progress?.isVisible = false
-                search?.isVisible = true
-                filter?.isVisible = true
+                progress.isVisible = false
+                search.isVisible = true
+                filter.isVisible = true
             }
         }
     }
