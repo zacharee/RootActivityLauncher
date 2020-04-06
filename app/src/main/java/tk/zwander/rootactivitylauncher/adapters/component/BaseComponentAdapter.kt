@@ -28,6 +28,7 @@ import tk.zwander.rootactivitylauncher.util.constructComponentKey
 import tk.zwander.rootactivitylauncher.util.createShortcut
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
+import java.util.*
 import kotlin.collections.ArrayList
 
 abstract class BaseComponentAdapter<
@@ -128,19 +129,11 @@ abstract class BaseComponentAdapter<
     }
 
     internal open fun filter(query: String): List<DataClass> {
-        val filteredModelList = ArrayList<DataClass>()
-
-        for (i in 0 until orig.size) {
-            val item = orig[i]
-
-            if (matches(query, item)) filteredModelList.add(item)
-        }
-
-        return filteredModelList
+        return orig.filterTo(LinkedList()) { matches(query, it) }
     }
 
     internal open fun filter(query: String, items: Collection<DataClass>): List<DataClass> {
-        return items.filter { matches(query, it) }
+        return items.filterTo(LinkedList()) { matches(query, it) }
     }
 
     internal open fun matches(query: String, data: DataClass): Boolean {

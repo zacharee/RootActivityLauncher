@@ -17,6 +17,7 @@ import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.util.InnerDividerItemDecoration
+import java.util.*
 import kotlin.collections.ArrayList
 
 class AppAdapter(context: Context, private val picasso: Picasso) :
@@ -59,7 +60,7 @@ class AppAdapter(context: Context, private val picasso: Picasso) :
         }
 
         override fun addAll(elements: Collection<AppInfo>): Boolean {
-            items.addAll(elements.filter { matches(currentQuery, it) })
+            items.addAll(elements.filterTo(LinkedList<AppInfo>()) { matches(currentQuery, it) })
             return super.addAll(elements)
         }
 
@@ -156,7 +157,7 @@ class AppAdapter(context: Context, private val picasso: Picasso) :
     }
 
     private fun filter(query: String): List<AppInfo> {
-        val filteredModelList = ArrayList<AppInfo>()
+        val filteredModelList = LinkedList<AppInfo>()
 
         for (i in 0 until orig.size) {
             val item = orig[i]
