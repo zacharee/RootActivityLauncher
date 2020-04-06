@@ -7,6 +7,7 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.hmomeni.progresscircula.ProgressCircula
 import com.squareup.picasso.Picasso
@@ -24,7 +25,6 @@ import tk.zwander.rootactivitylauncher.picasso.ServiceIconHandler
 import tk.zwander.rootactivitylauncher.util.prefs
 import tk.zwander.rootactivitylauncher.views.FilterDialog
 import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
@@ -55,6 +55,16 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         setContentView(R.layout.activity_main)
 
         setSupportActionBar(bottom_bar)
+
+        bottom_bar.setOnLongClickListener {
+            val vis = (app_list.layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition()
+            if (vis > 20) {
+                app_list.scrollToPosition(0)
+            } else {
+                app_list.smoothScrollToPosition(0)
+            }
+            true
+        }
 
         app_list.adapter = appAdapter
         refresh.setOnRefreshListener(this)
