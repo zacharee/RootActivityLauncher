@@ -45,9 +45,9 @@ class AppAdapter(context: Context, private val picasso: Picasso) :
         override fun compare(o1: AppInfo, o2: AppInfo) =
             o1.loadedLabel.toString().compareTo(o2.loadedLabel.toString(), ignoreCase = true)
 
-        override fun areContentsTheSame(oldItem: AppInfo, newItem: AppInfo) =
-            oldItem.activitiesExpanded == newItem.activitiesExpanded
-                    && oldItem.servicesExpanded == newItem.servicesExpanded
+        override fun areContentsTheSame(oldItem: AppInfo, newItem: AppInfo): Boolean {
+            return false
+        }
 
     })
     private val orig = object : ArrayList<AppInfo>() {
@@ -188,7 +188,6 @@ class AppAdapter(context: Context, private val picasso: Picasso) :
         init {
             itemView.apply {
                 activities.addItemDecoration(innerDividerItemDecoration)
-
                 services.addItemDecoration(innerDividerItemDecoration)
             }
         }
@@ -250,8 +249,10 @@ class AppAdapter(context: Context, private val picasso: Picasso) :
 
                 activities_title.isVisible =
                     data.activityAdapter.filter(currentQuery, data.activities).isNotEmpty()
+                data.activiesShown = activities_title.isVisible
                 services_title.isVisible =
                     data.serviceAdapter.filter(currentQuery, data.services).isNotEmpty()
+                data.servicesShown = services_title.isVisible
             }
         }
     }

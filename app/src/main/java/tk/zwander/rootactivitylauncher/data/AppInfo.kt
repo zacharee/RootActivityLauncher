@@ -20,6 +20,8 @@ data class AppInfo(
 
     var activitiesExpanded: Boolean = false
     var servicesExpanded: Boolean = false
+    var activiesShown: Boolean = false
+    var servicesShown: Boolean = false
 
     override fun equals(other: Any?): Boolean {
         return other is AppInfo
