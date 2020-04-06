@@ -1,11 +1,9 @@
 package tk.zwander.rootactivitylauncher
 
-import android.animation.LayoutTransition
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.menu.MenuBuilder
@@ -165,65 +163,73 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 progressView?.progress = 0
             }
 
-            val apps = ArrayList(
-                packageManager.getInstalledPackages(
-                    PackageManager.GET_ACTIVITIES or
-                            PackageManager.GET_SERVICES or
-                            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
-                            else PackageManager.GET_DISABLED_COMPONENTS)
-            )
+            val apps = packageManager.getInstalledPackages(
+                PackageManager.GET_ACTIVITIES or
+                        PackageManager.GET_SERVICES or
+                        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
+                        else PackageManager.GET_DISABLED_COMPONENTS)
             val max = apps.size - 1
 
+            val jobs = ArrayList<Deferred<*>>(apps.size)
+            var progressIndex = 0
+
             apps.forEachIndexed { index, app ->
-                val activities = app.activities
-                val services = app.services
+                jobs.add(
+                    async {
+                        val activities = app.activities
+                        val services = app.services
 
-                if (((activities != null && activities.isNotEmpty()) || (services != null && services.isNotEmpty()))) {
-                    val activityInfos = ArrayList<ActivityInfo>()
-                    val serviceInfos = ArrayList<ServiceInfo>()
+                        if (((activities != null && activities.isNotEmpty()) || (services != null && services.isNotEmpty()))) {
+                            val activityInfos = ArrayList<ActivityInfo>(activities?.size ?: 0)
+                            val serviceInfos = ArrayList<ServiceInfo>(services?.size ?: 0)
 
-                    val appLabel = prefs.getOrLoadAppLabel(app)
+                            val appLabel = prefs.getOrLoadAppLabel(app)
 
-                    activities?.forEach { act ->
-                        val label = prefs.getOrLoadComponentLabel(app, act).run { if (isBlank()) appLabel else this }
-                        activityInfos.add(
-                            ActivityInfo(
-                                act,
-                                label
-                            )
-                        )
+                            activities?.forEachIndexed { index, act ->
+                                val label = prefs.getOrLoadComponentLabel(app, act).run { if (isBlank()) appLabel else this }
+                                activityInfos.add(
+                                    ActivityInfo(
+                                        act,
+                                        label
+                                    )
+                                )
+                            }
+
+                            services?.forEachIndexed { index, srv ->
+                                val label = prefs.getOrLoadComponentLabel(app, srv).run { if (isBlank()) appLabel else this }
+                                serviceInfos.add(
+                                    ServiceInfo(
+                                        srv,
+                                        label
+                                    )
+                                )
+                            }
+
+                            launch(Dispatchers.Main) {
+                                appAdapter.addItem(AppInfo(
+                                    app.applicationInfo,
+                                    appLabel,
+                                    activityInfos,
+                                    serviceInfos,
+                                    ActivityAdapter(
+                                        picasso
+                                    ),
+                                    ServiceAdapter(
+                                        picasso
+                                    )
+                                ))
+                            }
+                        }
+
+                        launch(Dispatchers.Main) {
+                            val p = (progressIndex++.toFloat() / max.toFloat() * 100f).toInt()
+                            progressView?.progress = p
+                        }
                     }
-
-                    services?.forEach { srv ->
-                        val label = prefs.getOrLoadComponentLabel(app, srv).run { if (isBlank()) appLabel else this }
-                        serviceInfos.add(
-                            ServiceInfo(
-                                srv,
-                                label
-                            )
-                        )
-                    }
-
-                    launch(Dispatchers.Main) {
-                        appAdapter.addItem(AppInfo(
-                            app.applicationInfo,
-                            appLabel,
-                            activityInfos,
-                            serviceInfos,
-                            ActivityAdapter(
-                                picasso
-                            ),
-                            ServiceAdapter(
-                                picasso
-                            )
-                        ))
-                    }
-                }
-
-                launch(Dispatchers.Main) {
-                    progressView?.progress = (index.toFloat() / max.toFloat() * 100f).toInt()
-                }
+                )
             }
+
+            jobs.awaitAll()
 
             launch(Dispatchers.Main) {
                 progress.isVisible = false
