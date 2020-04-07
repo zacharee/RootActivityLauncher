@@ -174,7 +174,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             val jobs = ArrayList<Deferred<*>>(apps.size)
             var progressIndex = 0
 
-            apps.forEachIndexed { index, app ->
+            apps.forEach { app ->
                 jobs.add(
                     async {
                         val activities = app.activities
@@ -186,7 +186,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
                             val appLabel = prefs.getOrLoadAppLabel(app)
 
-                            activities?.forEachIndexed { index, act ->
+                            activities?.forEach { act ->
                                 val label = prefs.getOrLoadComponentLabel(app, act).run { if (isBlank()) appLabel else this }
                                 activityInfos.add(
                                     ActivityInfo(
@@ -196,7 +196,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                                 )
                             }
 
-                            services?.forEachIndexed { index, srv ->
+                            services?.forEach { srv ->
                                 val label = prefs.getOrLoadComponentLabel(app, srv).run { if (isBlank()) appLabel else this }
                                 serviceInfos.add(
                                     ServiceInfo(
