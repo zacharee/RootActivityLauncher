@@ -27,6 +27,7 @@ import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.picasso.ServiceIconHandler
+import tk.zwander.rootactivitylauncher.util.picasso
 import tk.zwander.rootactivitylauncher.util.prefs
 import tk.zwander.rootactivitylauncher.views.FilterDialog
 import kotlin.collections.ArrayList
@@ -35,19 +36,12 @@ import kotlin.collections.ArrayList
 @SuppressLint("RestrictedApi")
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
-    private val picasso by lazy {
-        Picasso.Builder(this)
-            .addRequestHandler(AppIconHandler(this))
-            .addRequestHandler(ActivityIconHandler(this))
-            .addRequestHandler(ServiceIconHandler(this))
-            .build()
-    }
     private val appAdapter by lazy {
-        AppAdapter(this, picasso)
+        AppAdapter(this)
     }
     private val appListLayoutManager: LinearLayoutManager
         get() = app_list.layoutManager as LinearLayoutManager
-    val menu by lazy { action_menu_view.menu as MenuBuilder }
+    private val menu by lazy { action_menu_view.menu as MenuBuilder }
 
     private val progress by lazy { menu.findItem(R.id.progress) }
     private val progressView: ProgressCircula?
@@ -144,7 +138,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         super.onDestroy()
 
         cancel()
-        picasso.shutdown()
     }
 
     private fun updateProgress(progress: Int) {
@@ -219,12 +212,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                                     appLabel,
                                     activityInfos,
                                     serviceInfos,
-                                    ActivityAdapter(
-                                        picasso
-                                    ),
-                                    ServiceAdapter(
-                                        picasso
-                                    )
+                                    ActivityAdapter(),
+                                    ServiceAdapter()
                                 ))
                                 app_list.scrollToPosition(0)
                             }

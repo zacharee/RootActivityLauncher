@@ -4,14 +4,13 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageItemInfo
-import android.os.Parcelable
-import android.util.Log
 import android.util.TypedValue
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
+import com.squareup.picasso.Picasso
 import eu.chainfire.libsuperuser.Shell
 import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.R
@@ -24,6 +23,9 @@ import kotlin.coroutines.CoroutineContext
 
 val Context.prefs: PrefManager
     get() = PrefManager.getInstance(this)
+
+val picasso: Picasso
+    get() = Picasso.get()
 
 fun Context.findExtrasForComponent(activityName: String): List<ExtraInfo> {
     val extras = ArrayList<ExtraInfo>()

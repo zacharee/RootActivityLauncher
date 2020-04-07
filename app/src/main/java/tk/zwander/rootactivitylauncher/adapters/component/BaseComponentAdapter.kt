@@ -27,6 +27,7 @@ import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.util.constructComponentKey
 import tk.zwander.rootactivitylauncher.util.createShortcut
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
+import tk.zwander.rootactivitylauncher.util.picasso
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
 import java.util.*
 import kotlin.collections.ArrayList
@@ -35,7 +36,6 @@ abstract class BaseComponentAdapter<
         Self : BaseComponentAdapter<Self, DataClass, VHClass>,
         DataClass : BaseComponentInfo,
         VHClass : BaseComponentAdapter<Self, DataClass, VHClass>.BaseComponentVH>(
-    internal val picasso: Picasso,
     dataClass: Class<DataClass>
 ) : RecyclerView.Adapter<VHClass>(), CoroutineScope by MainScope() {
     val items: SortedList<DataClass> =
@@ -156,7 +156,8 @@ abstract class BaseComponentAdapter<
         if (query.isBlank()) return true
 
         if (data.info.name.contains(query, true)
-            || (data.loadedLabel.contains(query, true)))
+            || (data.loadedLabel.contains(query, true))
+        )
             return true
 
         return false

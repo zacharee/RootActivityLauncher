@@ -17,11 +17,11 @@ import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.util.InnerDividerItemDecoration
+import tk.zwander.rootactivitylauncher.util.picasso
 import java.util.*
 import kotlin.collections.ArrayList
 
-class AppAdapter(context: Context, private val picasso: Picasso) :
-    RecyclerView.Adapter<AppAdapter.AppVH>(), FastScrollRecyclerView.SectionedAdapter {
+class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), FastScrollRecyclerView.SectionedAdapter {
     val items = SortedList(AppInfo::class.java, object : SortedList.Callback<AppInfo>() {
         override fun areItemsTheSame(item1: AppInfo, item2: AppInfo) =
             item1.label == item2.label

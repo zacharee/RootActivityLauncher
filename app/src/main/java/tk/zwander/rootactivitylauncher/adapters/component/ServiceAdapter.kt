@@ -18,7 +18,7 @@ import tk.zwander.rootactivitylauncher.picasso.ServiceIconHandler
 import tk.zwander.rootactivitylauncher.util.launchService
 import java.lang.StringBuilder
 
-class ServiceAdapter(picasso: Picasso) : BaseComponentAdapter<ServiceAdapter, ServiceInfo, ServiceAdapter.ServiceVH>(picasso, ServiceInfo::class.java) {
+class ServiceAdapter : BaseComponentAdapter<ServiceAdapter, ServiceInfo, ServiceAdapter.ServiceVH>(ServiceInfo::class.java) {
     override fun onCreateViewHolder(view: View, viewType: Int): ServiceVH {
         return ServiceVH(view)
     }
