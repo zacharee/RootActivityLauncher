@@ -36,6 +36,8 @@
         android:orientation="horizontal"
         android:background="#88000000"
         android:gravity="center"
+        android:focusable="true"
+        android:clickable="true"
         android:layout_marginBottom="?actionBarSize">
 
         <com.hmomeni.progresscircula.ProgressCircula
