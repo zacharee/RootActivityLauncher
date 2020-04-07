@@ -30,6 +30,7 @@ import tk.zwander.rootactivitylauncher.picasso.ServiceIconHandler
 import tk.zwander.rootactivitylauncher.util.picasso
 import tk.zwander.rootactivitylauncher.util.prefs
 import tk.zwander.rootactivitylauncher.views.FilterDialog
+import java.util.*
 import kotlin.collections.ArrayList
 
 
@@ -155,7 +156,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         return launch(Dispatchers.IO) {
             withContext(Dispatchers.Main) {
                 updateProgress(0)
-                appAdapter.clearItems()
+//                appAdapter.clearItems()
                 scrim.isVisible = true
                 progress.isVisible = true
                 search.isVisible = false
@@ -173,6 +174,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
             val jobs = ArrayList<Deferred<*>>(apps.size)
             var progressIndex = 0
+
+            val loaded = LinkedList<AppInfo>()
 
             apps.forEach { app ->
                 jobs.add(
@@ -207,7 +210,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                             }
 
                             launch(Dispatchers.Main) {
-                                appAdapter.addItem(AppInfo(
+                                loaded.add(AppInfo(
                                     app.applicationInfo,
                                     appLabel,
                                     activityInfos,
@@ -228,6 +231,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             jobs.awaitAll()
 
             launch(Dispatchers.Main) {
+                appAdapter.setItems(loaded)
                 progress.isVisible = false
                 scrim.isVisible = false
                 search.isVisible = true

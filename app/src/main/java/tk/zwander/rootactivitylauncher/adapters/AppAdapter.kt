@@ -9,7 +9,6 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SortedList
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
-import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.app_item.view.*
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.AppInfo
@@ -18,14 +17,12 @@ import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.util.InnerDividerItemDecoration
 import tk.zwander.rootactivitylauncher.util.picasso
-import java.util.*
-import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), FastScrollRecyclerView.SectionedAdapter {
     val items = SortedList(AppInfo::class.java, object : SortedList.Callback<AppInfo>() {
         override fun areItemsTheSame(item1: AppInfo, item2: AppInfo) =
-            item1.label == item2.label
-                    && item1.info.packageName == item2.info.packageName
+            item1.info.packageName == item2.info.packageName
 
         override fun onMoved(fromPosition: Int, toPosition: Int) {
             notifyItemMoved(fromPosition, toPosition)
@@ -51,29 +48,7 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), F
         }
 
     })
-    private val orig = object : ArrayList<AppInfo>() {
-        override fun add(element: AppInfo): Boolean {
-            if (matches(currentQuery, element)) {
-                items.add(element)
-            }
-            return super.add(element)
-        }
-
-        override fun addAll(elements: Collection<AppInfo>): Boolean {
-            items.addAll(elements.filterTo(LinkedList<AppInfo>()) { matches(currentQuery, it) })
-            return super.addAll(elements)
-        }
-
-        override fun remove(element: AppInfo): Boolean {
-            items.remove(element)
-            return super.remove(element)
-        }
-
-        override fun clear() {
-            items.clear()
-            super.clear()
-        }
-    }
+    private val orig = HashMap<String, AppInfo>()
     private val innerDividerItemDecoration =
         InnerDividerItemDecoration(context, RecyclerView.VERTICAL)
 
@@ -94,8 +69,8 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), F
             if (field != value) {
                 field = value
 
-                orig.forEach { it.activityAdapter.setEnabledFilterMode(value) }
-                orig.forEach { it.serviceAdapter.setEnabledFilterMode(value) }
+                orig.values.forEach { it.activityAdapter.setEnabledFilterMode(value) }
+                orig.values.forEach { it.serviceAdapter.setEnabledFilterMode(value) }
                 items.replaceAll(filter(currentQuery))
             }
         }
@@ -104,8 +79,8 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), F
             if (field != value) {
                 field = value
 
-                orig.forEach { it.activityAdapter.setExportedFilterMode(value) }
-                orig.forEach { it.serviceAdapter.setExportedFilterMode(value) }
+                orig.values.forEach { it.activityAdapter.setExportedFilterMode(value) }
+                orig.values.forEach { it.serviceAdapter.setExportedFilterMode(value) }
                 items.replaceAll(filter(currentQuery))
             }
         }
@@ -136,7 +111,11 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), F
 
     fun setItems(items: Collection<AppInfo>) {
         orig.clear()
-        orig.addAll(items)
+        items.forEach {
+            orig[it.info.packageName] = it
+        }
+
+        this.items.replaceAll(items.filter { matches(currentQuery, it) })
     }
 
     fun clearItems() {
@@ -144,28 +123,20 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), F
     }
 
     fun addItem(item: AppInfo) {
-        orig.add(item)
+        orig[item.info.packageName] = item
         if (matches(currentQuery, item)) items.add(item)
     }
 
     fun onQueryTextChange(newText: String?) {
         currentQuery = newText ?: ""
 
-        orig.forEach { it.activityAdapter.onQueryTextChange(newText) }
-        orig.forEach { it.serviceAdapter.onQueryTextChange(newText) }
+        orig.values.forEach { it.activityAdapter.onQueryTextChange(newText) }
+        orig.values.forEach { it.serviceAdapter.onQueryTextChange(newText) }
         items.replaceAll(filter(currentQuery))
     }
 
     private fun filter(query: String): List<AppInfo> {
-        val filteredModelList = LinkedList<AppInfo>()
-
-        for (i in 0 until orig.size) {
-            val item = orig[i]
-
-            if (matches(query, item)) filteredModelList.add(item)
-        }
-
-        return filteredModelList
+        return orig.values.filter { matches(query, it) }
     }
 
     private fun matches(query: String, data: AppInfo): Boolean {
