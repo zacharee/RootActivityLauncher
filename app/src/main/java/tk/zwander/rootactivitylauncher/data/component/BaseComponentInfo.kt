@@ -6,7 +6,4 @@ import kotlinx.coroutines.runBlocking
 open class BaseComponentInfo(
     open val info: ComponentInfo,
     open val label: CharSequence
-) {
-    val loadedLabel: CharSequence
-        get() = label
-}
+)

@@ -15,10 +15,6 @@ data class AppInfo(
     val activityAdapter = ActivityAdapter()
     val serviceAdapter = ServiceAdapter()
 
-    //It'd be nice to be able to use lazyDeferred here too, but it causes laggy scrolling
-    val loadedLabel: CharSequence
-        get() = label
-
     var activitiesExpanded: Boolean = false
     var servicesExpanded: Boolean = false
     var activiesShown: Boolean = false

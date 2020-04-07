@@ -44,7 +44,7 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), F
         }
 
         override fun compare(o1: AppInfo, o2: AppInfo) =
-            o1.loadedLabel.toString().compareTo(o2.loadedLabel.toString(), ignoreCase = true)
+            o1.label.toString().compareTo(o2.label.toString(), ignoreCase = true)
 
         override fun areContentsTheSame(oldItem: AppInfo, newItem: AppInfo): Boolean {
             return false
@@ -131,7 +131,7 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), F
     }
 
     override fun getSectionName(position: Int): String {
-        return items[position].loadedLabel.substring(0, 1)
+        return items[position].label.substring(0, 1)
     }
 
     fun setItems(items: Collection<AppInfo>) {
@@ -177,7 +177,7 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), F
 
         if (query.isBlank()) return true
 
-        if (data.loadedLabel.contains(query, true)
+        if (data.label.contains(query, true)
             || data.info.packageName.contains(query, true)
         ) return true
 
@@ -207,7 +207,7 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), F
                         .centerInside()
                         .into(app_icon)
 
-                    app_name.text = data.loadedLabel
+                    app_name.text = data.label
                     app_pkg.text = data.info.packageName
 
                     activities.adapter = data.activityAdapter

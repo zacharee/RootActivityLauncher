@@ -63,8 +63,8 @@ abstract class BaseComponentAdapter<
             override fun compare(o1: DataClass, o2: DataClass): Int {
                 return runBlocking {
                     withContext(Dispatchers.IO) {
-                        o1.loadedLabel.toString()
-                            .compareTo(o2.loadedLabel.toString(), true)
+                        o1.label.toString()
+                            .compareTo(o2.label.toString(), true)
                     }
                 }
             }
@@ -156,7 +156,7 @@ abstract class BaseComponentAdapter<
         if (query.isBlank()) return true
 
         if (data.info.name.contains(query, true)
-            || (data.loadedLabel.contains(query, true))
+            || (data.label.contains(query, true))
         )
             return true
 
@@ -224,7 +224,7 @@ abstract class BaseComponentAdapter<
                 shortcut.setOnClickListener {
                     val d = items[adapterPosition]
                     context.createShortcut(
-                        d.loadedLabel,
+                        d.label,
                         IconCompat.createWithBitmap(
                             icon.drawable.toBitmap()
                         ),
@@ -247,7 +247,7 @@ abstract class BaseComponentAdapter<
 
         open fun onBind(data: DataClass): Job = launch {
             itemView.apply {
-                name.text = data.loadedLabel
+                name.text = data.label
                 cmp.text = data.info.name
 
                 getPicassoUri(data)?.apply {
@@ -266,7 +266,7 @@ abstract class BaseComponentAdapter<
 
         open fun onNewPosition(data: DataClass): Job = launch {
             itemView.apply {
-                name.text = data.loadedLabel
+                name.text = data.label
                 cmp.text = data.info.name
 
                 picasso.load(ActivityIconHandler.createUri(data.info.packageName, data.info.name))
