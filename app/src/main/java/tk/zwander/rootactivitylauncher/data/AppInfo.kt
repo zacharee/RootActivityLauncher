@@ -10,10 +10,11 @@ data class AppInfo(
     val info: ApplicationInfo,
     val label: CharSequence,
     val activities: List<ActivityInfo>,
-    val services: List<ServiceInfo>,
-    val activityAdapter: ActivityAdapter,
-    val serviceAdapter: ServiceAdapter
+    val services: List<ServiceInfo>
 ) {
+    val activityAdapter = ActivityAdapter()
+    val serviceAdapter = ServiceAdapter()
+
     //It'd be nice to be able to use lazyDeferred here too, but it causes laggy scrolling
     val loadedLabel: CharSequence
         get() = label
