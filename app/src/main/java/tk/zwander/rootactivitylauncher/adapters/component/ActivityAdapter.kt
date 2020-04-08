@@ -22,7 +22,7 @@ class ActivityAdapter : BaseComponentAdapter<ActivityAdapter, ActivityInfo, Acti
             return ActivityIconHandler.createUri(data.info.packageName, data.info.name)
         }
 
-        override fun onLaunch(data: ActivityInfo, context: Context, extras: List<ExtraInfo>): Job = launch {
+        override fun onLaunch(data: ActivityInfo, context: Context, extras: List<ExtraInfo>) {
             context.launchActivity(extras, currentComponentKey)
         }
     }

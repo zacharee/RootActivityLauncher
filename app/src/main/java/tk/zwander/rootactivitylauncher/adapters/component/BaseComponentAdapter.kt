@@ -136,7 +136,7 @@ abstract class BaseComponentAdapter<
             }
         }
 
-        fun bind(data: DataClass): Job = launch {
+        fun bind(data: DataClass) {
             if (adapterPosition != prevPos) {
                 prevPos = adapterPosition
 
@@ -146,7 +146,7 @@ abstract class BaseComponentAdapter<
             onBind(data)
         }
 
-        open fun onBind(data: DataClass): Job = launch {
+        open fun onBind(data: DataClass) {
             itemView.apply {
                 name.text = data.label
                 cmp.text = data.info.name
@@ -165,7 +165,7 @@ abstract class BaseComponentAdapter<
             }
         }
 
-        open fun onNewPosition(data: DataClass): Job = launch {
+        open fun onNewPosition(data: DataClass) {
             itemView.apply {
                 name.text = data.label
                 cmp.text = data.info.name
@@ -177,8 +177,7 @@ abstract class BaseComponentAdapter<
             }
         }
 
-        open fun onLaunch(data: DataClass, context: Context, extras: List<ExtraInfo>): Job =
-            launch {}
+        open fun onLaunch(data: DataClass, context: Context, extras: List<ExtraInfo>) {}
 
         abstract fun getPicassoUri(data: DataClass): Uri?
 
