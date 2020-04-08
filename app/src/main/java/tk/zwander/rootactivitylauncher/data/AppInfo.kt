@@ -1,15 +1,12 @@
 package tk.zwander.rootactivitylauncher.data
 
 import android.content.pm.ApplicationInfo
-import android.content.pm.PackageItemInfo
 import tk.zwander.rootactivitylauncher.adapters.component.ActivityAdapter
 import tk.zwander.rootactivitylauncher.adapters.component.ServiceAdapter
 import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 data class AppInfo(
     val info: ApplicationInfo,
@@ -20,8 +17,8 @@ data class AppInfo(
     val activityAdapter = ActivityAdapter()
     val serviceAdapter = ServiceAdapter()
 
-    val filteredActivities = ArrayList<ActivityInfo>()
-    val filteredServices = ArrayList<ServiceInfo>()
+    val filteredActivities = TreeSet<ActivityInfo>()
+    val filteredServices = TreeSet<ServiceInfo>()
 
     var activitiesExpanded: Boolean = false
     var servicesExpanded: Boolean = false

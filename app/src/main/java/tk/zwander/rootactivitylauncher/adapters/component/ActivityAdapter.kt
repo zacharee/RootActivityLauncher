@@ -10,7 +10,7 @@ import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.util.launchActivity
 
-class ActivityAdapter : BaseComponentAdapter<ActivityAdapter, ActivityInfo, ActivityAdapter.ActivityVH>(ActivityInfo::class.java) {
+class ActivityAdapter : BaseComponentAdapter<ActivityAdapter, ActivityInfo, ActivityAdapter.ActivityVH>() {
     override fun onCreateViewHolder(view: View, viewType: Int): ActivityVH {
         return ActivityVH(view)
     }

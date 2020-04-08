@@ -1,7 +1,6 @@
 package tk.zwander.rootactivitylauncher.adapters.component
 
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
@@ -11,15 +10,13 @@ import android.widget.Toast
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.AsyncListDiffer
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.SortedList
-import com.squareup.picasso.Picasso
 import eu.chainfire.libsuperuser.Shell
 import kotlinx.android.synthetic.main.component_item.view.*
 import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.R
-import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
-import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
@@ -29,64 +26,25 @@ import tk.zwander.rootactivitylauncher.util.createShortcut
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
 import tk.zwander.rootactivitylauncher.util.picasso
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
-import java.util.*
-import kotlin.collections.ArrayList
 
 abstract class BaseComponentAdapter<
         Self : BaseComponentAdapter<Self, DataClass, VHClass>,
         DataClass : BaseComponentInfo,
-        VHClass : BaseComponentAdapter<Self, DataClass, VHClass>.BaseComponentVH>(
-    dataClass: Class<DataClass>
-) : RecyclerView.Adapter<VHClass>(), CoroutineScope by MainScope() {
-    val items: SortedList<DataClass> =
-        SortedList(dataClass, object : SortedList.Callback<DataClass>() {
-            override fun areItemsTheSame(item1: DataClass, item2: DataClass) =
-                constructComponentKey(item1.info.packageName, item1.info.name) ==
-                        constructComponentKey(item2.info.packageName, item2.info.name)
-
-            override fun onMoved(fromPosition: Int, toPosition: Int) {
-                notifyItemMoved(fromPosition, toPosition)
-            }
-
-            override fun onChanged(position: Int, count: Int) {
-                notifyItemRangeChanged(position, count)
-            }
-
-            override fun onInserted(position: Int, count: Int) {
-                notifyItemRangeInserted(position, count)
-            }
-
-            override fun onRemoved(position: Int, count: Int) {
-                notifyItemRangeRemoved(position, count)
-            }
-
-            override fun compare(o1: DataClass, o2: DataClass): Int {
-                return runBlocking {
-                    withContext(Dispatchers.IO) {
-                        o1.label.toString()
-                            .compareTo(o2.label.toString(), true)
-                    }
-                }
-            }
-
-            override fun areContentsTheSame(oldItem: DataClass, newItem: DataClass) =
-                oldItem.info.packageName == newItem.info.packageName
-                        && oldItem.info.exported == newItem.info.exported
-
-        })
-
-    init {
-        setHasStableIds(true)
-    }
-
-    override fun getItemId(position: Int): Long {
-        return items[position].run {
-            constructComponentKey(info.packageName, info.name).hashCode().toLong()
+        VHClass : BaseComponentAdapter<Self, DataClass, VHClass>.BaseComponentVH> :
+    RecyclerView.Adapter<VHClass>(), CoroutineScope by MainScope() {
+    val async = AsyncListDiffer(this, object : DiffUtil.ItemCallback<DataClass>() {
+        override fun areContentsTheSame(oldItem: DataClass, newItem: DataClass): Boolean {
+            return false
         }
-    }
+
+        override fun areItemsTheSame(oldItem: DataClass, newItem: DataClass): Boolean {
+            return constructComponentKey(oldItem.info) ==
+                    constructComponentKey(newItem.info)
+        }
+    })
 
     override fun getItemCount(): Int {
-        return items.size()
+        return async.currentList.size
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VHClass {
@@ -99,20 +57,20 @@ abstract class BaseComponentAdapter<
     abstract fun onCreateViewHolder(view: View, viewType: Int): VHClass
 
     override fun onBindViewHolder(holder: VHClass, position: Int) {
-        holder.bind(items[position])
+        holder.bind(async.currentList[position])
     }
 
-    fun setItems(items: List<DataClass>) {
-        this.items.replaceAll(items)
+    fun setItems(items: Collection<DataClass>) {
+        async.submitList(items.toList())
     }
 
     abstract inner class BaseComponentVH(view: View) : RecyclerView.ViewHolder(view) {
-        abstract internal val componentType: ComponentType
+        internal abstract val componentType: ComponentType
 
         internal val currentExtras: List<ExtraInfo>
             get() = itemView.context.findExtrasForComponent(currentComponentKey)
         internal val currentComponentKey: String
-            get() = items[adapterPosition].run {
+            get() = async.currentList[adapterPosition].run {
                 constructComponentKey(
                     info.packageName,
                     info.name
@@ -121,7 +79,7 @@ abstract class BaseComponentAdapter<
 
         internal val componentEnabledListener = object : CompoundButton.OnCheckedChangeListener {
             override fun onCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
-                val d = items[adapterPosition]
+                val d = async.currentList[adapterPosition]
                 val l = this
 
                 launch(Dispatchers.Main) {
@@ -162,10 +120,10 @@ abstract class BaseComponentAdapter<
                         .show()
                 }
                 launch.setOnClickListener {
-                    onLaunch(items[adapterPosition], context, currentExtras)
+                    onLaunch(async.currentList[adapterPosition], context, currentExtras)
                 }
                 shortcut.setOnClickListener {
-                    val d = items[adapterPosition]
+                    val d = async.currentList[adapterPosition]
                     context.createShortcut(
                         d.label,
                         IconCompat.createWithBitmap(

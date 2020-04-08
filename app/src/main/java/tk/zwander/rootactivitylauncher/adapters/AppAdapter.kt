@@ -83,7 +83,7 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
 
     private fun sortAndSubmitList(items: List<AppInfo>) {
         async.submitList(items.sortedWith(Comparator { o1, o2 ->
-            o1.label.toString().compareTo(o2.label.toString())
+            o1.label.toString().compareTo(o2.label.toString(), true)
         }))
     }
 
