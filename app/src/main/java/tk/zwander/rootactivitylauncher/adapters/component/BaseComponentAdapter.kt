@@ -74,11 +74,6 @@ abstract class BaseComponentAdapter<
                         && oldItem.info.exported == newItem.info.exported
 
         })
-    internal val orig = ArrayList<DataClass>()
-
-    internal var currentQuery: String = ""
-    internal var enabledFilterMode = EnabledFilterMode.SHOW_ALL
-    internal var exportedFilterMode = ExportedFilterMode.SHOW_ALL
 
     init {
         setHasStableIds(true)
@@ -107,60 +102,8 @@ abstract class BaseComponentAdapter<
         holder.bind(items[position])
     }
 
-    fun setEnabledFilterMode(filterMode: EnabledFilterMode) {
-        this.enabledFilterMode = filterMode
-        items.replaceAll(filter(currentQuery))
-    }
-
-    fun setExportedFilterMode(filterMode: ExportedFilterMode) {
-        this.exportedFilterMode = filterMode
-        items.replaceAll(filter(currentQuery))
-    }
-
-    fun onQueryTextChange(newText: String?) {
-        currentQuery = newText ?: ""
-        items.replaceAll(filter(currentQuery))
-    }
-
     fun setItems(items: List<DataClass>) {
-        orig.clear()
-        orig.addAll(items)
-        this.items.replaceAll(filter(currentQuery))
-    }
-
-    internal open fun filter(query: String): List<DataClass> {
-        return orig.filterTo(LinkedList()) { matches(query, it) }
-    }
-
-    internal open fun filter(query: String, items: Collection<DataClass>): List<DataClass> {
-        return items.filterTo(LinkedList()) { matches(query, it) }
-    }
-
-    internal open fun matches(query: String, data: DataClass): Boolean {
-        when (enabledFilterMode) {
-            EnabledFilterMode.SHOW_DISABLED -> if (data.info.enabled) return false
-            EnabledFilterMode.SHOW_ENABLED -> if (!data.info.enabled) return false
-            else -> {
-                //no-op
-            }
-        }
-
-        when (exportedFilterMode) {
-            ExportedFilterMode.SHOW_EXPORTED -> if (!data.info.exported) return false
-            ExportedFilterMode.SHOW_UNEXPORTED -> if (data.info.exported) return false
-            else -> {
-                //no-op
-            }
-        }
-
-        if (query.isBlank()) return true
-
-        if (data.info.name.contains(query, true)
-            || (data.label.contains(query, true))
-        )
-            return true
-
-        return false
+        this.items.replaceAll(items)
     }
 
     abstract inner class BaseComponentVH(view: View) : RecyclerView.ViewHolder(view) {

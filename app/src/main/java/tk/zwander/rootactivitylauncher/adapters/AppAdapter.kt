@@ -16,6 +16,7 @@ import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.util.InnerDividerItemDecoration
+import tk.zwander.rootactivitylauncher.util.forEachParallel
 import tk.zwander.rootactivitylauncher.util.picasso
 import kotlin.collections.HashMap
 
@@ -69,8 +70,7 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), F
             if (field != value) {
                 field = value
 
-                orig.values.forEach { it.activityAdapter.setEnabledFilterMode(value) }
-                orig.values.forEach { it.serviceAdapter.setEnabledFilterMode(value) }
+                orig.values.forEachParallel { it.onFilterChange(currentQuery, value, exportedFilterMode) }
                 items.replaceAll(filter(currentQuery))
             }
         }
@@ -79,8 +79,7 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), F
             if (field != value) {
                 field = value
 
-                orig.values.forEach { it.activityAdapter.setExportedFilterMode(value) }
-                orig.values.forEach { it.serviceAdapter.setExportedFilterMode(value) }
+                orig.values.forEachParallel { it.onFilterChange(currentQuery, enabledFilterMode, value) }
                 items.replaceAll(filter(currentQuery))
             }
         }
@@ -130,8 +129,7 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), F
     fun onQueryTextChange(newText: String?) {
         currentQuery = newText ?: ""
 
-        orig.values.forEach { it.activityAdapter.onQueryTextChange(newText) }
-        orig.values.forEach { it.serviceAdapter.onQueryTextChange(newText) }
+        orig.values.forEachParallel { it.onFilterChange(currentQuery, enabledFilterMode, exportedFilterMode) }
         items.replaceAll(filter(currentQuery))
     }
 
@@ -140,9 +138,8 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), F
     }
 
     private fun matches(query: String, data: AppInfo): Boolean {
-        val activityFilterEmpty =
-            data.activityAdapter.filter(currentQuery, data.activities).isEmpty()
-        val serviceFilterEmpty = data.serviceAdapter.filter(currentQuery, data.services).isEmpty()
+        val activityFilterEmpty = data.filteredActivities.isEmpty()
+        val serviceFilterEmpty = data.filteredServices.isEmpty()
 
         if (activityFilterEmpty && serviceFilterEmpty) return false
 
@@ -216,18 +213,16 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), F
                 )
 
                 if (activities.isVisible) {
-                    data.activityAdapter.setItems(data.activities)
+                    data.activityAdapter.setItems(data.filteredActivities)
                 }
 
                 if (services.isVisible) {
-                    data.serviceAdapter.setItems(data.services)
+                    data.serviceAdapter.setItems(data.filteredServices)
                 }
 
-                activities_title.isVisible =
-                    data.activityAdapter.filter(currentQuery, data.activities).isNotEmpty()
+                activities_title.isVisible = data.filteredActivities.isNotEmpty()
                 data.activiesShown = activities_title.isVisible
-                services_title.isVisible =
-                    data.serviceAdapter.filter(currentQuery, data.services).isNotEmpty()
+                services_title.isVisible = data.filteredServices.isNotEmpty()
                 data.servicesShown = services_title.isVisible
             }
         }
