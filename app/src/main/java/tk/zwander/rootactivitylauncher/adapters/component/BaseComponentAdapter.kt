@@ -10,9 +10,7 @@ import android.widget.Toast
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.isVisible
-import androidx.recyclerview.widget.AsyncListDiffer
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.*
 import eu.chainfire.libsuperuser.Shell
 import kotlinx.android.synthetic.main.component_item.view.*
 import kotlinx.coroutines.*
@@ -30,21 +28,27 @@ import tk.zwander.rootactivitylauncher.views.ExtrasDialog
 abstract class BaseComponentAdapter<
         Self : BaseComponentAdapter<Self, DataClass, VHClass>,
         DataClass : BaseComponentInfo,
-        VHClass : BaseComponentAdapter<Self, DataClass, VHClass>.BaseComponentVH> :
+        VHClass : BaseComponentAdapter<Self, DataClass, VHClass>.BaseComponentVH>(
+    dataClass: Class<DataClass>
+) :
     RecyclerView.Adapter<VHClass>(), CoroutineScope by MainScope() {
-    val async = AsyncListDiffer(this, object : DiffUtil.ItemCallback<DataClass>() {
+    val currentList = SortedList(dataClass, object : SortedListAdapterCallback<DataClass>(this) {
+        override fun areItemsTheSame(item1: DataClass, item2: DataClass): Boolean {
+            return constructComponentKey(item1.info) == constructComponentKey(item2.info)
+        }
+
+        override fun compare(o1: DataClass, o2: DataClass): Int {
+            return o1.compareTo(o2)
+        }
+
         override fun areContentsTheSame(oldItem: DataClass, newItem: DataClass): Boolean {
             return false
         }
 
-        override fun areItemsTheSame(oldItem: DataClass, newItem: DataClass): Boolean {
-            return constructComponentKey(oldItem.info) ==
-                    constructComponentKey(newItem.info)
-        }
     })
 
     override fun getItemCount(): Int {
-        return async.currentList.size
+        return currentList.size()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VHClass {
@@ -57,11 +61,11 @@ abstract class BaseComponentAdapter<
     abstract fun onCreateViewHolder(view: View, viewType: Int): VHClass
 
     override fun onBindViewHolder(holder: VHClass, position: Int) {
-        holder.bind(async.currentList[position])
+        holder.bind(currentList[position])
     }
 
     fun setItems(items: Collection<DataClass>) {
-        async.submitList(items.toList())
+        currentList.replaceAll(items)
     }
 
     abstract inner class BaseComponentVH(view: View) : RecyclerView.ViewHolder(view) {
@@ -70,7 +74,7 @@ abstract class BaseComponentAdapter<
         internal val currentExtras: List<ExtraInfo>
             get() = itemView.context.findExtrasForComponent(currentComponentKey)
         internal val currentComponentKey: String
-            get() = async.currentList[adapterPosition].run {
+            get() = currentList[adapterPosition].run {
                 constructComponentKey(
                     info.packageName,
                     info.name
@@ -79,7 +83,7 @@ abstract class BaseComponentAdapter<
 
         internal val componentEnabledListener = object : CompoundButton.OnCheckedChangeListener {
             override fun onCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
-                val d = async.currentList[adapterPosition]
+                val d = currentList[adapterPosition]
                 val l = this
 
                 launch(Dispatchers.Main) {
@@ -120,10 +124,10 @@ abstract class BaseComponentAdapter<
                         .show()
                 }
                 launch.setOnClickListener {
-                    onLaunch(async.currentList[adapterPosition], context, currentExtras)
+                    onLaunch(currentList[adapterPosition], context, currentExtras)
                 }
                 shortcut.setOnClickListener {
-                    val d = async.currentList[adapterPosition]
+                    val d = currentList[adapterPosition]
                     context.createShortcut(
                         d.label,
                         IconCompat.createWithBitmap(

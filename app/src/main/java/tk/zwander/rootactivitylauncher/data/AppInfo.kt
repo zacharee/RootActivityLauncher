@@ -7,6 +7,7 @@ import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import java.util.*
+import kotlin.collections.ArrayList
 
 data class AppInfo(
     val info: ApplicationInfo,
@@ -17,8 +18,8 @@ data class AppInfo(
     val activityAdapter = ActivityAdapter()
     val serviceAdapter = ServiceAdapter()
 
-    val filteredActivities = TreeSet<ActivityInfo>()
-    val filteredServices = TreeSet<ServiceInfo>()
+    val filteredActivities = LinkedList<ActivityInfo>()
+    val filteredServices = LinkedList<ServiceInfo>()
 
     var activitiesExpanded: Boolean = false
     var servicesExpanded: Boolean = false
