@@ -193,10 +193,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                             val activityInfos = ArrayList<ActivityInfo>(activities?.size ?: 0)
                             val serviceInfos = ArrayList<ServiceInfo>(services?.size ?: 0)
 
-                            val appLabel = prefs.getOrLoadAppLabel(app)
+                            val appLabel = app.applicationInfo.loadLabel(packageManager)
 
                             activities?.forEach { act ->
-                                val label = prefs.getOrLoadComponentLabel(app, act).run { if (isBlank()) appLabel else this }
+                                val label = act.loadLabel(packageManager).run { if (isBlank()) appLabel else this }
                                 activityInfos.add(
                                     ActivityInfo(
                                         act,
@@ -206,7 +206,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                             }
 
                             services?.forEach { srv ->
-                                val label = prefs.getOrLoadComponentLabel(app, srv).run { if (isBlank()) appLabel else this }
+                                val label = srv.loadLabel(packageManager).run { if (isBlank()) appLabel else this }
                                 serviceInfos.add(
                                     ServiceInfo(
                                         srv,
