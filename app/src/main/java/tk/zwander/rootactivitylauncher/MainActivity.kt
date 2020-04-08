@@ -156,7 +156,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         return launch(Dispatchers.IO) {
             withContext(Dispatchers.Main) {
                 updateProgress(0)
-//                appAdapter.clearItems()
                 scrim.isVisible = true
                 progress.isVisible = true
                 search.isVisible = false
@@ -230,15 +229,15 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
             jobs.awaitAll()
 
-            launch(Dispatchers.Main) {
+            withContext(Dispatchers.Main) {
                 appAdapter.setItems(loaded)
                 progress.isVisible = false
                 scrim.isVisible = false
-                search.isVisible = true
-                filter.isVisible = true
 
-                scrim.postDelayed({
+                refresh.postDelayed({
                     updateScrollButtonState()
+                    search.isVisible = true
+                    filter.isVisible = true
                 }, 10)
             }
         }
