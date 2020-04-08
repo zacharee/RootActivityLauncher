@@ -173,6 +173,9 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
                     services.isVisible = data.servicesExpanded
                 }
 
+                activities_title.text = resources.getString(R.string.activities, data.filteredActivities.size)
+                services_title.text = resources.getString(R.string.services, data.filteredServices.size)
+
                 activities_title.setCompoundDrawablesRelative(
                     null,
                     null,

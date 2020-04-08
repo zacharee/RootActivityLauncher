@@ -13,8 +13,8 @@
     <string name="launch">Launch</string>
     <string name="create_shortcut">Create Shortcut</string>
 
-    <string name="activities">Activities</string>
-    <string name="services">Services</string>
+    <string name="activities">Activities (%d)</string>
+    <string name="services">Services (%d)</string>
 
     <string name="enabled_filter">Enabled Filter</string>
     <string name="exported_filter">Exported Filter</string>
