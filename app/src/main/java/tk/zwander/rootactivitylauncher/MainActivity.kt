@@ -148,8 +148,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
     private fun updateScrollButtonState() {
         val isActive = currentDataJob?.isActive == true
-        val newTopVis = appListLayoutManager.findFirstVisibleItemPosition() > 0 && !isActive
-        val newBotVis = appListLayoutManager.findLastVisibleItemPosition() < appAdapter.itemCount - 1 && !isActive
+        val newTopVis = app_list.computeVerticalScrollOffset() > 0 && !isActive
+        val newBotVis = appListLayoutManager.findLastCompletelyVisibleItemPosition() < appAdapter.itemCount - 1 && !isActive
 
         if (scrollToTop?.isVisible != newTopVis) {
             scrollToTop?.isVisible = newTopVis
