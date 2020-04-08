@@ -74,13 +74,12 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                             appAdapter.enabledFilterMode,
                             appAdapter.exportedFilterMode
                         ) { enabledMode, exportedMode ->
-                            appAdapter.enabledFilterMode = enabledMode
-                            appAdapter.exportedFilterMode = exportedMode
+                            appAdapter.onFilterChange(enabledMode = enabledMode, exportedMode = exportedMode)
                         }.show()
                         true
                     }
                     R.id.scroll_top -> {
-                        val vis = (app_list.layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition()
+                        val vis = (app_list.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
                         if (vis > 20) {
                             app_list.scrollToPosition(0)
                         } else {
@@ -89,7 +88,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                         true
                     }
                     R.id.scroll_bottom -> {
-                        val vis = (app_list.layoutManager as LinearLayoutManager).findLastCompletelyVisibleItemPosition()
+                        val vis = (app_list.layoutManager as LinearLayoutManager).findLastVisibleItemPosition()
                         if (appAdapter.itemCount - vis > 20) {
                             app_list.scrollToPosition(appAdapter.itemCount - 1)
                         } else {
@@ -119,7 +118,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     }
 
     override fun onQueryTextChange(newText: String?): Boolean {
-        appAdapter.onQueryTextChange(newText)
+        appAdapter.onFilterChange(newText ?: "")
         app_list.scrollToPosition(0)
         return true
     }
@@ -148,8 +147,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
     private fun updateScrollButtonState() {
         val isActive = currentDataJob?.isActive == true
-        scrollToTop?.isVisible = appListLayoutManager.findFirstCompletelyVisibleItemPosition() > 0 && !isActive
-        scrollToBottom?.isVisible = appListLayoutManager.findLastCompletelyVisibleItemPosition() < appAdapter.itemCount - 1 && !isActive
+        scrollToTop?.isVisible = appListLayoutManager.findFirstVisibleItemPosition() > 0 && !isActive
+        scrollToBottom?.isVisible = appListLayoutManager.findLastVisibleItemPosition() < appAdapter.itemCount - 1 && !isActive
     }
 
     private fun loadData(): Job {

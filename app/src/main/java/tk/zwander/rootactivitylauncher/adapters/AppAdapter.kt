@@ -20,7 +20,8 @@ import tk.zwander.rootactivitylauncher.util.forEachParallel
 import tk.zwander.rootactivitylauncher.util.picasso
 import kotlin.collections.HashMap
 
-class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), FastScrollRecyclerView.SectionedAdapter {
+class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
+    FastScrollRecyclerView.SectionedAdapter {
     val items = SortedList(AppInfo::class.java, object : SortedList.Callback<AppInfo>() {
         override fun areItemsTheSame(item1: AppInfo, item2: AppInfo) =
             item1.info.packageName == item2.info.packageName
@@ -66,23 +67,9 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), F
 
     private var currentQuery: String = ""
     var enabledFilterMode = EnabledFilterMode.SHOW_ALL
-        set(value) {
-            if (field != value) {
-                field = value
-
-                orig.values.forEachParallel { it.onFilterChange(currentQuery, value, exportedFilterMode) }
-                items.replaceAll(filter(currentQuery))
-            }
-        }
+        private set
     var exportedFilterMode = ExportedFilterMode.SHOW_ALL
-        set(value) {
-            if (field != value) {
-                field = value
-
-                orig.values.forEachParallel { it.onFilterChange(currentQuery, enabledFilterMode, value) }
-                items.replaceAll(filter(currentQuery))
-            }
-        }
+        private set
 
     init {
         setHasStableIds(true)
@@ -126,11 +113,26 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), F
         if (matches(currentQuery, item)) items.add(item)
     }
 
-    fun onQueryTextChange(newText: String?) {
-        currentQuery = newText ?: ""
+    fun onFilterChange(
+        query: String = currentQuery,
+        enabledMode: EnabledFilterMode = enabledFilterMode,
+        exportedMode: ExportedFilterMode = exportedFilterMode,
+        override: Boolean = false
+    ) {
+        if (override || currentQuery != query || enabledFilterMode != enabledMode || exportedFilterMode != exportedMode) {
+            currentQuery = query
+            enabledFilterMode = enabledMode
+            exportedFilterMode = exportedMode
 
-        orig.values.forEachParallel { it.onFilterChange(currentQuery, enabledFilterMode, exportedFilterMode) }
-        items.replaceAll(filter(currentQuery))
+            orig.values.forEachParallel {
+                it.onFilterChange(
+                    currentQuery,
+                    enabledFilterMode,
+                    exportedFilterMode
+                )
+            }
+            items.replaceAll(filter(currentQuery))
+        }
     }
 
     private fun filter(query: String): List<AppInfo> {
@@ -212,13 +214,8 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(), F
                     null
                 )
 
-                if (activities.isVisible) {
-                    data.activityAdapter.setItems(data.filteredActivities)
-                }
-
-                if (services.isVisible) {
-                    data.serviceAdapter.setItems(data.filteredServices)
-                }
+                data.activityAdapter.setItems(data.filteredActivities)
+                data.serviceAdapter.setItems(data.filteredServices)
 
                 activities_title.isVisible = data.filteredActivities.isNotEmpty()
                 data.activiesShown = activities_title.isVisible

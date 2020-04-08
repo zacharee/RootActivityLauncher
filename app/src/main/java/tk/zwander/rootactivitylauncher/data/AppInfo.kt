@@ -45,7 +45,12 @@ data class AppInfo(
         return info.packageName.hashCode()
     }
 
-    fun onFilterChange(query: String, enabledMode: EnabledFilterMode, exportedMode: ExportedFilterMode, override: Boolean = false) {
+    fun onFilterChange(
+        query: String = currentQuery,
+        enabledMode: EnabledFilterMode = enabledFilterMode,
+        exportedMode: ExportedFilterMode = exportedFilterMode,
+        override: Boolean = false
+    ) {
         if (override || currentQuery != query || enabledFilterMode != enabledMode || exportedFilterMode != exportedMode) {
             currentQuery = query
             enabledFilterMode = enabledMode
