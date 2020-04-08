@@ -101,7 +101,8 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
             orig[it.info.packageName] = it
         }
 
-        this.items.replaceAll(items.filter { matches(currentQuery, it) })
+        onFilterChange(override = true)
+        this.items.replaceAll(items.filter { matches(it) })
     }
 
     fun clearItems() {
@@ -110,7 +111,7 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
 
     fun addItem(item: AppInfo) {
         orig[item.info.packageName] = item
-        if (matches(currentQuery, item)) items.add(item)
+        if (matches(item)) items.add(item)
     }
 
     fun onFilterChange(
@@ -131,24 +132,24 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
                     exportedFilterMode
                 )
             }
-            items.replaceAll(filter(currentQuery))
+            items.replaceAll(filter())
         }
     }
 
-    private fun filter(query: String): List<AppInfo> {
-        return orig.values.filter { matches(query, it) }
+    private fun filter(): List<AppInfo> {
+        return orig.values.filter { matches(it) }
     }
 
-    private fun matches(query: String, data: AppInfo): Boolean {
+    private fun matches(data: AppInfo): Boolean {
         val activityFilterEmpty = data.filteredActivities.isEmpty()
         val serviceFilterEmpty = data.filteredServices.isEmpty()
 
         if (activityFilterEmpty && serviceFilterEmpty) return false
 
-        if (query.isBlank()) return true
+        if (currentQuery.isBlank()) return true
 
-        if (data.label.contains(query, true)
-            || data.info.packageName.contains(query, true)
+        if (data.label.contains(currentQuery, true)
+            || data.info.packageName.contains(currentQuery, true)
         ) return true
 
         if (!activityFilterEmpty || !serviceFilterEmpty)
