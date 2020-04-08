@@ -222,7 +222,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                                     activityInfos,
                                     serviceInfos
                                 ))
-                                app_list.scrollToPosition(0)
                             }
                         }
 
