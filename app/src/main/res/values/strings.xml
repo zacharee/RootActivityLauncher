@@ -12,6 +12,7 @@
     <string name="set_extras">Set Extras</string>
     <string name="launch">Launch</string>
     <string name="create_shortcut">Create Shortcut</string>
+    <string name="launch_status">Launch Status</string>
 
     <string name="activities">Activities (%d)</string>
     <string name="services">Services (%d)</string>

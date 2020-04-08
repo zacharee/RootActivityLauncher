@@ -1,12 +1,15 @@
 package tk.zwander.rootactivitylauncher.adapters.component
 
 import android.content.Context
+import android.content.pm.ActivityInfo
+import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.isVisible
@@ -141,19 +144,31 @@ abstract class BaseComponentAdapter<
         }
 
         fun bind(data: DataClass) {
-            if (adapterPosition != prevPos) {
-                prevPos = adapterPosition
-
-                onNewPosition(data)
-            }
-
             onBind(data)
         }
 
         open fun onBind(data: DataClass) {
             itemView.apply {
+                picasso.load(ActivityIconHandler.createUri(data.info.packageName, data.info.name))
+                    .fit()
+                    .centerInside()
+                    .into(icon)
+
                 name.text = data.label
                 cmp.text = data.info.name
+
+                val info = data.info
+                val requiresPermission = (info is ActivityInfo && info.permission != null) || (info is ServiceInfo && info.permission != null)
+
+                launch_status_indicator.setColorFilter(
+                    ContextCompat.getColor(context,
+                        when {
+                            !data.info.exported -> R.color.colorUnexported
+                            requiresPermission -> R.color.colorNeedsPermission
+                            else -> R.color.colorExported
+                        }
+                    )
+                )
 
                 getPicassoUri(data)?.apply {
                     picasso.load(this)
@@ -166,18 +181,6 @@ abstract class BaseComponentAdapter<
                 if (enabled.isChecked != data.info.enabled) enabled.isChecked = data.info.enabled
                 updateLaunchVisibility(data)
                 enabled.setOnCheckedChangeListener(componentEnabledListener)
-            }
-        }
-
-        open fun onNewPosition(data: DataClass) {
-            itemView.apply {
-                name.text = data.label
-                cmp.text = data.info.name
-
-                picasso.load(ActivityIconHandler.createUri(data.info.packageName, data.info.name))
-                    .fit()
-                    .centerInside()
-                    .into(icon)
             }
         }
 
