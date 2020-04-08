@@ -1,5 +1,6 @@
 package tk.zwander.rootactivitylauncher.util
 
+import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -47,16 +48,7 @@ fun Context.dpToPx(dp: Number): Int {
 }
 
 fun Context.launchService(extras: List<ExtraInfo>, componentKey: String) {
-    try {
-        val intent = Intent(Intent.ACTION_MAIN)
-        intent.component = ComponentName.unflattenFromString(componentKey)
-
-        if (extras.isNotEmpty()) extras.forEach {
-            intent.putExtra(it.key, it.value)
-        }
-
-        ContextCompat.startForegroundService(this, intent)
-    } catch (e: SecurityException) {
+    fun onException() {
         if (Shell.SU.available()) {
             val command = StringBuilder("am startservice $componentKey")
 
@@ -69,20 +61,23 @@ fun Context.launchService(extras: List<ExtraInfo>, componentKey: String) {
             Toast.makeText(this, R.string.requires_root, Toast.LENGTH_SHORT).show()
         }
     }
-}
 
-fun Context.launchActivity(extras: List<ExtraInfo>, componentKey: String) {
     try {
         val intent = Intent(Intent.ACTION_MAIN)
         intent.component = ComponentName.unflattenFromString(componentKey)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
         if (extras.isNotEmpty()) extras.forEach {
             intent.putExtra(it.key, it.value)
         }
 
-        startActivity(intent)
+        ContextCompat.startForegroundService(this, intent)
     } catch (e: SecurityException) {
+        onException()
+    }
+}
+
+fun Context.launchActivity(extras: List<ExtraInfo>, componentKey: String) {
+    fun onException() {
         if (Shell.SU.available()) {
             val command = StringBuilder("am start -n $componentKey")
 
@@ -94,6 +89,22 @@ fun Context.launchActivity(extras: List<ExtraInfo>, componentKey: String) {
         } else {
             Toast.makeText(this, R.string.requires_root, Toast.LENGTH_SHORT).show()
         }
+    }
+
+    try {
+        val intent = Intent(Intent.ACTION_MAIN)
+        intent.component = ComponentName.unflattenFromString(componentKey)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        if (extras.isNotEmpty()) extras.forEach {
+            intent.putExtra(it.key, it.value)
+        }
+
+        startActivity(intent)
+    } catch (e: SecurityException) {
+        onException()
+    } catch (e: ActivityNotFoundException) {
+        onException()
     }
 }
 
