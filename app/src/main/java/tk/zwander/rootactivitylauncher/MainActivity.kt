@@ -108,6 +108,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         searchView?.setOnQueryTextListener(this)
 
         app_list.adapter = appAdapter
+        app_list.setItemViewCacheSize(20)
         app_list.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 updateScrollButtonState()
@@ -147,8 +148,15 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
     private fun updateScrollButtonState() {
         val isActive = currentDataJob?.isActive == true
-        scrollToTop?.isVisible = appListLayoutManager.findFirstVisibleItemPosition() > 0 && !isActive
-        scrollToBottom?.isVisible = appListLayoutManager.findLastVisibleItemPosition() < appAdapter.itemCount - 1 && !isActive
+        val newTopVis = appListLayoutManager.findFirstVisibleItemPosition() > 0 && !isActive
+        val newBotVis = appListLayoutManager.findLastVisibleItemPosition() < appAdapter.itemCount - 1 && !isActive
+
+        if (scrollToTop?.isVisible != newTopVis) {
+            scrollToTop?.isVisible = newTopVis
+        }
+        if (scrollToBottom?.isVisible != newBotVis) {
+            scrollToBottom?.isVisible = newBotVis
+        }
     }
 
     private fun loadData(): Job {

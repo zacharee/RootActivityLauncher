@@ -20,13 +20,11 @@ data class AppInfo(
     val activityAdapter = ActivityAdapter()
     val serviceAdapter = ServiceAdapter()
 
-    val filteredActivities = LinkedList<ActivityInfo>()
-    val filteredServices = LinkedList<ServiceInfo>()
+    val filteredActivities = ArrayList<ActivityInfo>()
+    val filteredServices = ArrayList<ServiceInfo>()
 
     var activitiesExpanded: Boolean = false
     var servicesExpanded: Boolean = false
-    var activiesShown: Boolean = false
-    var servicesShown: Boolean = false
 
     internal var currentQuery: String = ""
     internal var enabledFilterMode = EnabledFilterMode.SHOW_ALL

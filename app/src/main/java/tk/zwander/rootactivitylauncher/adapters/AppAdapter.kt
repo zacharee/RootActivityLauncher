@@ -164,6 +164,20 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
             itemView.apply {
                 activities.addItemDecoration(innerDividerItemDecoration)
                 services.addItemDecoration(innerDividerItemDecoration)
+
+                activities_title.setOnClickListener {
+                    val d = items[adapterPosition]
+                    d.activitiesExpanded = !d.activitiesExpanded
+
+                    notifyItemChanged(adapterPosition)
+                }
+
+                services_title.setOnClickListener {
+                    val d = items[adapterPosition]
+                    d.servicesExpanded = !d.servicesExpanded
+
+                    notifyItemChanged(adapterPosition)
+                }
             }
         }
 
@@ -182,24 +196,14 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
 
                     activities.adapter = data.activityAdapter
                     services.adapter = data.serviceAdapter
-
-                    activities_title.setOnClickListener {
-                        val d = items[adapterPosition]
-                        d.activitiesExpanded = !d.activitiesExpanded
-
-                        notifyItemChanged(adapterPosition)
-                    }
-
-                    services_title.setOnClickListener {
-                        val d = items[adapterPosition]
-                        d.servicesExpanded = !d.servicesExpanded
-
-                        notifyItemChanged(adapterPosition)
-                    }
                 }
 
-                activities.isVisible = data.activitiesExpanded
-                services.isVisible = data.servicesExpanded
+                if (activities.isVisible != data.activitiesExpanded) {
+                    activities.isVisible = data.activitiesExpanded
+                }
+                if (services.isVisible != data.servicesExpanded) {
+                    services.isVisible = data.servicesExpanded
+                }
 
                 activities_title.setCompoundDrawablesRelative(
                     null,
@@ -214,13 +218,15 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
                     null
                 )
 
-                data.activityAdapter.setItems(data.filteredActivities)
-                data.serviceAdapter.setItems(data.filteredServices)
+                if (activities.isVisible) {
+                    data.activityAdapter.setItems(data.filteredActivities)
+                }
+                if (services.isVisible) {
+                    data.serviceAdapter.setItems(data.filteredServices)
+                }
 
                 activities_title.isVisible = data.filteredActivities.isNotEmpty()
-                data.activiesShown = activities_title.isVisible
                 services_title.isVisible = data.filteredServices.isNotEmpty()
-                data.servicesShown = services_title.isVisible
             }
         }
     }
