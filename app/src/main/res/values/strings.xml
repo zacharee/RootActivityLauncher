@@ -13,6 +13,7 @@
     <string name="launch">Launch</string>
     <string name="create_shortcut">Create Shortcut</string>
     <string name="launch_status">Launch Status</string>
+    <string name="component_info">Component Info</string>
 
     <string name="activities">Activities (%d)</string>
     <string name="services">Services (%d)</string>

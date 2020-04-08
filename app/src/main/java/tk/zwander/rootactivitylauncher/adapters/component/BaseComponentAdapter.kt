@@ -26,6 +26,7 @@ import tk.zwander.rootactivitylauncher.util.constructComponentKey
 import tk.zwander.rootactivitylauncher.util.createShortcut
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
 import tk.zwander.rootactivitylauncher.util.picasso
+import tk.zwander.rootactivitylauncher.views.ComponentInfoDialog
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
 
 abstract class BaseComponentAdapter<
@@ -139,6 +140,11 @@ abstract class BaseComponentAdapter<
                         currentComponentKey,
                         componentType
                     )
+                }
+                info.setOnClickListener {
+                    val d = currentList[adapterPosition]
+                    ComponentInfoDialog(context, d.info)
+                        .show()
                 }
             }
         }

@@ -82,6 +82,16 @@
         android:gravity="center">
 
         <ImageButton
+            android:id="@+id/info"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:src="@drawable/ic_baseline_help_outline_24"
+            android:background="?android:selectableItemBackground"
+            android:contentDescription="@string/component_info"
+            />
+
+        <ImageButton
             android:id="@+id/set_extras"
             android:layout_width="48dp"
             android:layout_height="48dp"
