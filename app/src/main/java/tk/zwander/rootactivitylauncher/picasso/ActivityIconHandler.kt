@@ -24,9 +24,13 @@ class ActivityIconHandler(private val context: Context) : RequestHandler() {
     override fun load(request: Request, networkPolicy: Int): Result? {
         val component = ComponentName.unflattenFromString(request.uri.schemeSpecificPart)!!
         return Result(
-            context.packageManager.getActivityIcon(component).toBitmap().run { copy(config, false) }
-                ?: context.packageManager.getApplicationIcon(component.packageName).toBitmap()
-                    .run { copy(config, false) },
+            try {
+                context.packageManager.getActivityIcon(component).toBitmap()
+                    .run { copy(config, false) }
+            } catch (e: Exception) {
+                context.packageManager.getApplicationIcon(component.packageName).toBitmap()
+                    .run { copy(config, false) }
+            },
             Picasso.LoadedFrom.DISK
         )
     }

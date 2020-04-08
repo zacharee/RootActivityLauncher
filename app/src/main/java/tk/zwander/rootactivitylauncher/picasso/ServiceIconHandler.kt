@@ -25,14 +25,18 @@ class ServiceIconHandler(private val context: Context) : RequestHandler() {
 
     override fun load(request: Request, networkPolicy: Int): Result? {
         val component = ComponentName.unflattenFromString(request.uri.schemeSpecificPart)!!
+
         return Result(
-            context.packageManager.getServiceInfo(
-                component,
-                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS else PackageManager.GET_DISABLED_COMPONENTS
-            ).loadIcon(context.packageManager)?.toBitmap()?.run { copy(config, false) }
-                ?: context.packageManager.getApplicationIcon(component.packageName).toBitmap().run {
+            try {
+                context.packageManager.getServiceInfo(
+                    component,
+                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS else PackageManager.GET_DISABLED_COMPONENTS
+                ).loadIcon(context.packageManager).toBitmap().run { copy(config, false) }
+            } catch (e: Exception) {
+                context.packageManager.getApplicationIcon(component.packageName).toBitmap().run {
                     copy(config, false)
-                },
+                }
+            },
             Picasso.LoadedFrom.DISK
         )
     }
