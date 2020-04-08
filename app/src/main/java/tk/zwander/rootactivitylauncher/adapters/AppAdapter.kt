@@ -97,12 +97,12 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
 
     fun setItems(items: Collection<AppInfo>) {
         orig.clear()
-        items.forEach {
+        items.forEachParallel {
             orig[it.info.packageName] = it
         }
 
         onFilterChange(override = true)
-        this.items.replaceAll(items.filter { matches(it) })
+        this.items.replaceAll(filter())
     }
 
     fun clearItems() {
