@@ -20,7 +20,6 @@ import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.PrefManager
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import java.lang.StringBuilder
-import java.util.*
 import java.util.regex.PatternSyntaxException
 import kotlin.collections.ArrayList
 import kotlin.coroutines.CoroutineContext
@@ -31,10 +30,10 @@ val Context.prefs: PrefManager
 val picasso: Picasso
     get() = Picasso.get()
 
-fun Context.findExtrasForComponent(activityName: String): List<ExtraInfo> {
+fun Context.findExtrasForComponent(componentName: String): List<ExtraInfo> {
     val extras = ArrayList<ExtraInfo>()
 
-    prefs.extras[activityName]?.let { extras.addAll(it) }
+    prefs.extras[componentName]?.let { extras.addAll(it) }
 
     return extras
 }
@@ -44,6 +43,17 @@ fun Context.updateExtrasForComponent(componentName: String, extras: List<ExtraIn
 
     map[componentName] = extras
     prefs.extras = map
+}
+
+fun Context.findActionForComponent(componentName: String): String {
+    return prefs.actions[componentName] ?: Intent.ACTION_MAIN
+}
+
+fun Context.updateActionForComponent(componentName: String, action: String?) {
+    val map = prefs.actions
+
+    map[componentName] = if (action.isNullOrBlank()) null else action
+    prefs.actions = map
 }
 
 fun Context.dpToPx(dp: Number): Int {

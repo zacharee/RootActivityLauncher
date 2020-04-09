@@ -1,11 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<tk.zwander.rootactivitylauncher.views.EditableRecyclerView xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/list"
+    android:orientation="vertical"
     android:padding="16dp"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    app:layoutManager=".util.PredictiveLinearLayoutManager"
-    tools:listitem="@layout/extra_item"
-    />
+    android:layout_height="match_parent">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:hint="@string/action"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/action"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/extras"
+        android:textSize="16sp"
+        android:textColor="?android:textColorPrimary"
+        />
+
+    <tk.zwander.rootactivitylauncher.views.EditableRecyclerView
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layoutManager=".util.PredictiveLinearLayoutManager"
+        tools:listitem="@layout/extra_item"
+        />
+
+</LinearLayout>

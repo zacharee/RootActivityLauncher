@@ -23,6 +23,7 @@ class PrefManager private constructor(context: Context) : ContextWrapper(context
         }
 
         const val KEY_EXTRAS = "ACTIVITY_EXTRAS"
+        const val KEY_ACTIONS = "COMPONENT_ACTIONS"
     }
 
     private val prefs = PreferenceManager.getDefaultSharedPreferences(this)
@@ -38,6 +39,19 @@ class PrefManager private constructor(context: Context) : ContextWrapper(context
             prefs.edit {
                 putString(
                     KEY_EXTRAS,
+                    gson.toJson(value)
+                )
+            }
+        }
+    var actions: HashMap<String, String?>
+        get() = gson.fromJson(
+            prefs.getString(KEY_ACTIONS, ""),
+            object : TypeToken<HashMap<String, String?>>() {}.type
+        ) ?: HashMap()
+        set(value) {
+            prefs.edit {
+                putString(
+                    KEY_ACTIONS,
                     gson.toJson(value)
                 )
             }
