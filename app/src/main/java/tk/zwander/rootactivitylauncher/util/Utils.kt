@@ -20,6 +20,9 @@ import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.PrefManager
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import java.lang.StringBuilder
+import java.util.*
+import java.util.regex.PatternSyntaxException
+import kotlin.collections.ArrayList
 import kotlin.coroutines.CoroutineContext
 
 val Context.prefs: PrefManager
@@ -165,4 +168,13 @@ fun <T> Collection<T>.forEachParallel(context: CoroutineContext = Dispatchers.IO
         )
     }
     jobs.awaitAll()
+}
+
+fun String.isValidRegex(): Boolean {
+    return try {
+        Regex(this)
+        true
+    } catch (e: PatternSyntaxException) {
+        false
+    }
 }

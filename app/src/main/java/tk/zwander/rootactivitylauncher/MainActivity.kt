@@ -1,12 +1,14 @@
 package tk.zwander.rootactivitylauncher
 
+import android.animation.TimeInterpolator
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.util.Log
 import android.view.MenuItem
+import android.view.ViewTreeObserver
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.DecelerateInterpolator
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.SearchView
@@ -15,20 +17,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.hmomeni.progresscircula.ProgressCircula
-import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.adapters.AppAdapter
-import tk.zwander.rootactivitylauncher.adapters.component.ActivityAdapter
-import tk.zwander.rootactivitylauncher.adapters.component.ServiceAdapter
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
-import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
-import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
-import tk.zwander.rootactivitylauncher.picasso.ServiceIconHandler
-import tk.zwander.rootactivitylauncher.util.picasso
-import tk.zwander.rootactivitylauncher.util.prefs
+import tk.zwander.rootactivitylauncher.util.dpToPx
 import tk.zwander.rootactivitylauncher.views.FilterDialog
 import java.util.*
 import kotlin.collections.ArrayList
@@ -63,6 +58,21 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         setContentView(R.layout.activity_main)
 
         setSupportActionBar(bottom_bar)
+
+        search_options_wrapper.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                setSearchWrapperState(false)
+                search_options_wrapper.isVisible = false
+                search_options_wrapper.viewTreeObserver.removeOnGlobalLayoutListener(this)
+            }
+        })
+        open_close.setOnClickListener {
+            setSearchWrapperState(search_options_wrapper.translationX != 0f)
+        }
+        use_regex.setOnCheckedChangeListener { _, isChecked ->
+            appAdapter.onFilterChange(useRegex = isChecked)
+            app_list.scrollToPosition(0)
+        }
 
         menuInflater.inflate(R.menu.search, menu)
         menu.setCallback(object : MenuBuilder.Callback {
@@ -106,6 +116,14 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         updateScrollButtonState()
 
         searchView?.setOnQueryTextListener(this)
+        searchView?.setOnSearchClickListener {
+            search_options_wrapper.isVisible = true
+        }
+        searchView?.setOnCloseListener {
+            setSearchWrapperState(false)
+            search_options_wrapper.isVisible = false
+            false
+        }
 
         app_list.adapter = appAdapter
         app_list.setItemViewCacheSize(20)
@@ -119,7 +137,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     }
 
     override fun onQueryTextChange(newText: String?): Boolean {
-        appAdapter.onFilterChange(newText ?: "")
+        appAdapter.onFilterChange(query = newText ?: "")
         app_list.scrollToPosition(0)
         return true
     }
@@ -159,6 +177,23 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         }
     }
 
+    private fun setSearchWrapperState(open: Boolean) {
+        search_options_wrapper.apply {
+            animate()
+                .translationX(if (open) 0f else run {
+                    width - dpToPx(28).toFloat()
+                })
+                .apply {
+                    duration = resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
+
+                    //Casts are required here for some reason
+                    interpolator = if (open) DecelerateInterpolator() as TimeInterpolator else AccelerateInterpolator() as TimeInterpolator
+                }
+        }
+        open_close.animate()
+            .scaleX(if (open) -1f else 1f)
+    }
+
     private fun loadData(): Job {
         return launch(Dispatchers.IO) {
             withContext(Dispatchers.Main) {
@@ -169,6 +204,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 filter.isVisible = false
                 scrollToTop.isVisible = false
                 scrollToBottom.isVisible = false
+                setSearchWrapperState(false)
             }
 
             val apps = packageManager.getInstalledPackages(

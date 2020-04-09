@@ -6,8 +6,8 @@ import tk.zwander.rootactivitylauncher.adapters.component.ServiceAdapter
 import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
+import tk.zwander.rootactivitylauncher.util.isValidRegex
 import java.util.*
-import kotlin.collections.ArrayList
 
 data class AppInfo(
     val info: ApplicationInfo,
@@ -27,9 +27,12 @@ data class AppInfo(
     internal var currentQuery: String = ""
     internal var enabledFilterMode = EnabledFilterMode.SHOW_ALL
     internal var exportedFilterMode = ExportedFilterMode.SHOW_ALL
+    internal var useRegex: Boolean = false
 
     init {
-        onFilterChange(currentQuery, enabledFilterMode, exportedFilterMode, true)
+        onFilterChange(
+            override = true
+        )
     }
 
     override fun equals(other: Any?): Boolean {
@@ -43,14 +46,21 @@ data class AppInfo(
 
     fun onFilterChange(
         query: String = currentQuery,
+        useRegex: Boolean = this.useRegex,
         enabledMode: EnabledFilterMode = enabledFilterMode,
         exportedMode: ExportedFilterMode = exportedFilterMode,
         override: Boolean = false
     ) {
-        if (override || currentQuery != query || enabledFilterMode != enabledMode || exportedFilterMode != exportedMode) {
+        if (override
+            || currentQuery != query
+            || enabledFilterMode != enabledMode
+            || exportedFilterMode != exportedMode
+            || this.useRegex != useRegex
+        ) {
             currentQuery = query
             enabledFilterMode = enabledMode
             exportedFilterMode = exportedMode
+            this.useRegex = useRegex
 
             filteredActivities.clear()
             filteredServices.clear()
@@ -59,7 +69,7 @@ data class AppInfo(
         }
     }
 
-    fun matches(data: BaseComponentInfo): Boolean {
+    private fun matches(data: BaseComponentInfo): Boolean {
         when (enabledFilterMode) {
             EnabledFilterMode.SHOW_DISABLED -> if (data.info.enabled) return false
             EnabledFilterMode.SHOW_ENABLED -> if (!data.info.enabled) return false
@@ -78,10 +88,20 @@ data class AppInfo(
 
         if (currentQuery.isBlank()) return true
 
-        if (data.info.name.contains(currentQuery, true)
-            || (data.label.contains(currentQuery, true))
-        )
-            return true
+        if (useRegex && currentQuery.isValidRegex()) {
+            if (Regex(currentQuery).run {
+                    containsMatchIn(data.info.name)
+                            || containsMatchIn(data.label)
+                }) {
+                return true
+            }
+        } else {
+            if (data.info.name.contains(currentQuery, true)
+                || (data.label.contains(currentQuery, true))
+            ) {
+                return true
+            }
+        }
 
         return false
     }

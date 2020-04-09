@@ -1,6 +1,7 @@
 package tk.zwander.rootactivitylauncher.adapters
 
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,9 +17,8 @@ import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
-import tk.zwander.rootactivitylauncher.util.InnerDividerItemDecoration
-import tk.zwander.rootactivitylauncher.util.forEachParallel
-import tk.zwander.rootactivitylauncher.util.picasso
+import tk.zwander.rootactivitylauncher.util.*
+import java.util.*
 import kotlin.Comparator
 import kotlin.collections.HashMap
 
@@ -53,6 +53,10 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
     var enabledFilterMode = EnabledFilterMode.SHOW_ALL
         private set
     var exportedFilterMode = ExportedFilterMode.SHOW_ALL
+        private set
+    var useRegex: Boolean = false
+        private set
+    var filterComponents: Boolean = true
         private set
 
     override fun getItemCount(): Int {
@@ -89,18 +93,26 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
 
     fun onFilterChange(
         query: String = currentQuery,
+        useRegex: Boolean = this.useRegex,
         enabledMode: EnabledFilterMode = enabledFilterMode,
         exportedMode: ExportedFilterMode = exportedFilterMode,
         override: Boolean = false
     ) {
-        if (override || currentQuery != query || enabledFilterMode != enabledMode || exportedFilterMode != exportedMode) {
+        if (override
+            || currentQuery != query
+            || enabledFilterMode != enabledMode
+            || exportedFilterMode != exportedMode
+            || this.useRegex != useRegex
+        ) {
             currentQuery = query
             enabledFilterMode = enabledMode
             exportedFilterMode = exportedMode
+            this.useRegex = useRegex
 
             orig.values.forEachParallel {
                 it.onFilterChange(
                     currentQuery,
+                    useRegex,
                     enabledFilterMode,
                     exportedFilterMode
                 )
@@ -121,11 +133,22 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
 
         if (currentQuery.isBlank()) return true
 
-        if (data.label.contains(currentQuery, true)
-            || data.info.packageName.contains(currentQuery, true)
-        ) return true
+        if (useRegex && currentQuery.isValidRegex()) {
+            if (Regex(currentQuery).run {
+                    containsMatchIn(data.info.packageName)
+                            || containsMatchIn(data.label)
+                }) {
+                return true
+            }
+        } else {
+            if (data.label.contains(currentQuery, true)
+                || data.info.packageName.contains(currentQuery, true)
+            ) {
+                return true
+            }
+        }
 
-        if (!activityFilterEmpty || !serviceFilterEmpty)
+        if (filterComponents && (!activityFilterEmpty || !serviceFilterEmpty))
             return true
 
         return false
@@ -173,8 +196,10 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
                     services.isVisible = data.servicesExpanded
                 }
 
-                activities_title.text = resources.getString(R.string.activities, data.filteredActivities.size)
-                services_title.text = resources.getString(R.string.services, data.filteredServices.size)
+                activities_title.text =
+                    resources.getString(R.string.activities, data.filteredActivities.size)
+                services_title.text =
+                    resources.getString(R.string.services, data.filteredServices.size)
 
                 activities_title.setCompoundDrawablesRelative(
                     null,
