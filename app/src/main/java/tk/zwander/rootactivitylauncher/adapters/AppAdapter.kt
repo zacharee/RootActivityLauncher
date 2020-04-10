@@ -1,7 +1,6 @@
 package tk.zwander.rootactivitylauncher.adapters
 
 import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,13 +11,13 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
 import kotlinx.android.synthetic.main.app_item.view.*
+import kotlinx.coroutines.coroutineScope
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.util.*
-import java.util.*
 import kotlin.Comparator
 import kotlin.collections.HashMap
 
@@ -75,7 +74,7 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
         return async.currentList[position].label.substring(0, 1)
     }
 
-    fun setItems(items: List<AppInfo>) {
+    suspend fun setItems(items: List<AppInfo>) = coroutineScope {
         orig.clear()
         items.forEachParallel {
             orig[it.info.packageName] = it
@@ -109,7 +108,7 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
             exportedFilterMode = exportedMode
             this.useRegex = useRegex
 
-            orig.values.forEachParallel {
+            orig.values.forEachParallelBlocking {
                 it.onFilterChange(
                     currentQuery,
                     useRegex,

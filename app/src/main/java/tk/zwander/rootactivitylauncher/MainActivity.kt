@@ -24,6 +24,7 @@ import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.util.dpToPx
+import tk.zwander.rootactivitylauncher.util.forEachParallel
 import tk.zwander.rootactivitylauncher.views.FilterDialog
 import java.util.*
 import kotlin.collections.ArrayList
@@ -196,7 +197,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
     private fun loadData(): Job {
         return launch(Dispatchers.IO) {
-            withContext(Dispatchers.Main) {
+            launch(Dispatchers.Main) {
                 updateProgress(0)
                 scrim.isVisible = true
                 progress.isVisible = true
@@ -214,64 +215,55 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                         else PackageManager.GET_DISABLED_COMPONENTS)
             val max = apps.size - 1
 
-            val jobs = ArrayList<Deferred<*>>(apps.size)
             var progressIndex = 0
 
             val loaded = LinkedList<AppInfo>()
 
-            apps.forEach { app ->
-                jobs.add(
-                    async {
-                        val activities = app.activities
-                        val services = app.services
+            apps.forEachParallel { app ->
+                val activities = app.activities
+                val services = app.services
 
-                        if (((activities != null && activities.isNotEmpty()) || (services != null && services.isNotEmpty()))) {
-                            val activityInfos = ArrayList<ActivityInfo>(activities?.size ?: 0)
-                            val serviceInfos = ArrayList<ServiceInfo>(services?.size ?: 0)
+                if (((activities != null && activities.isNotEmpty()) || (services != null && services.isNotEmpty()))) {
+                    val activityInfos = ArrayList<ActivityInfo>(activities?.size ?: 0)
+                    val serviceInfos = ArrayList<ServiceInfo>(services?.size ?: 0)
 
-                            val appLabel = app.applicationInfo.loadLabel(packageManager)
+                    val appLabel = app.applicationInfo.loadLabel(packageManager)
 
-                            activities?.forEach { act ->
-                                val label = act.loadLabel(packageManager).run { if (isBlank()) appLabel else this }
-                                activityInfos.add(
-                                    ActivityInfo(
-                                        act,
-                                        label
-                                    )
-                                )
-                            }
-
-                            services?.forEach { srv ->
-                                val label = srv.loadLabel(packageManager).run { if (isBlank()) appLabel else this }
-                                serviceInfos.add(
-                                    ServiceInfo(
-                                        srv,
-                                        label
-                                    )
-                                )
-                            }
-
-                            launch(Dispatchers.Main) {
-                                loaded.add(AppInfo(
-                                    app.applicationInfo,
-                                    appLabel,
-                                    activityInfos,
-                                    serviceInfos
-                                ))
-                            }
-                        }
-
-                        launch(Dispatchers.Main) {
-                            val p = (progressIndex++.toFloat() / max.toFloat() * 100f).toInt()
-                            updateProgress(p)
-                        }
+                    activities?.forEach { act ->
+                        val label = act.loadLabel(packageManager).run { if (isBlank()) appLabel else this }
+                        activityInfos.add(
+                            ActivityInfo(
+                                act,
+                                label
+                            )
+                        )
                     }
-                )
+
+                    services?.forEach { srv ->
+                        val label = srv.loadLabel(packageManager).run { if (isBlank()) appLabel else this }
+                        serviceInfos.add(
+                            ServiceInfo(
+                                srv,
+                                label
+                            )
+                        )
+                    }
+
+                    loaded.add(AppInfo(
+                        app.applicationInfo,
+                        appLabel,
+                        activityInfos,
+                        serviceInfos
+                    ))
+                }
+
+                launch(Dispatchers.Main) {
+                    val p = (progressIndex++.toFloat() / max.toFloat() * 100f).toInt()
+                    updateProgress(p)
+                }
             }
 
-            jobs.awaitAll()
-
-            withContext(Dispatchers.Main) {
+            launch(Dispatchers.Main) {
                 appAdapter.setItems(loaded)
                 progress.isVisible = false
                 scrim.isVisible = false

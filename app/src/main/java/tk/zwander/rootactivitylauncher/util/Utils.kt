@@ -168,7 +168,11 @@ fun <T> CoroutineScope.lazyDeferred(
 @ExperimentalCoroutinesApi
 suspend fun <T> Deferred<T>.getOrAwaitResult() = if (isCompleted) getCompleted() else await()
 
-fun <T> Collection<T>.forEachParallel(context: CoroutineContext = Dispatchers.IO, block: suspend CoroutineScope.(T) -> Unit) = runBlocking {
+fun <T> Collection<T>.forEachParallelBlocking(context: CoroutineContext = Dispatchers.IO, block: suspend CoroutineScope.(T) -> Unit) = runBlocking {
+    forEachParallel(context, block)
+}
+
+suspend fun <T> Collection<T>.forEachParallel(context: CoroutineContext = Dispatchers.IO, block: suspend CoroutineScope.(T) -> Unit) = coroutineScope {
     val jobs = ArrayList<Deferred<*>>(size)
     forEach {
         jobs.add(
