@@ -74,9 +74,9 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
         return async.currentList[position].label.substring(0, 1)
     }
 
-    suspend fun setItems(items: List<AppInfo>) = coroutineScope {
+    fun setItems(items: List<AppInfo>) {
         orig.clear()
-        items.forEachParallel {
+        items.forEachParallelBlocking {
             orig[it.info.packageName] = it
         }
 
