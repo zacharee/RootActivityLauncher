@@ -81,41 +81,45 @@
         android:animateLayoutChanges="true"
         android:gravity="center">
 
-        <ImageButton
+        <tk.zwander.rootactivitylauncher.views.TooltippedClickableImageView
             android:id="@+id/info"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_weight="1"
+            android:scaleType="center"
             android:src="@drawable/ic_baseline_help_outline_24"
             android:background="?android:selectableItemBackground"
             android:contentDescription="@string/component_info"
             />
 
-        <ImageButton
+        <tk.zwander.rootactivitylauncher.views.TooltippedClickableImageView
             android:id="@+id/set_extras"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_weight="1"
+            android:scaleType="center"
             android:src="@drawable/ic_baseline_more_horiz_24"
             android:background="?android:selectableItemBackground"
             android:contentDescription="@string/set_extras"
             />
 
-        <ImageButton
+        <tk.zwander.rootactivitylauncher.views.TooltippedClickableImageView
             android:id="@+id/shortcut"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_weight="1"
+            android:scaleType="center"
             android:src="@drawable/ic_baseline_link_24"
             android:background="?android:selectableItemBackground"
             android:contentDescription="@string/create_shortcut"
             />
 
-        <ImageButton
+        <tk.zwander.rootactivitylauncher.views.TooltippedClickableImageView
             android:id="@+id/launch"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_weight="1"
+            android:scaleType="center"
             android:src="@drawable/ic_baseline_open_in_new_24"
             android:background="?android:selectableItemBackground"
             android:contentDescription="@string/launch"

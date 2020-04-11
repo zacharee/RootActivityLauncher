@@ -55,13 +55,11 @@
 
             </LinearLayout>
 
-            <ImageView
+            <tk.zwander.rootactivitylauncher.views.TooltippedClickableImageView
                 android:id="@+id/app_info"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:contentDescription="@string/app_info"
-                android:clickable="true"
-                android:focusable="true"
                 android:scaleType="center"
                 android:layout_marginEnd="8dp"
                 android:background="?selectableItemBackgroundBorderless"
