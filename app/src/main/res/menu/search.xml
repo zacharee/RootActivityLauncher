@@ -41,4 +41,28 @@
         android:visible="false"
         />
 
+    <item
+        android:id="@+id/action_twitter"
+        android:title="@string/twitter"
+        app:showAsAction="never"
+        />
+
+    <item
+        android:id="@+id/action_web"
+        android:title="@string/website"
+        app:showAsAction="never"
+        />
+
+    <item
+        android:id="@+id/action_github"
+        android:title="@string/github"
+        app:showAsAction="never"
+        />
+
+    <item
+        android:id="@+id/action_email"
+        android:title="@string/email"
+        app:showAsAction="never"
+        />
+
 </menu>

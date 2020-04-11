@@ -21,10 +21,9 @@ import tk.zwander.rootactivitylauncher.activities.ShortcutLaunchActivity
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.PrefManager
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
-import java.lang.StringBuilder
 import java.util.regex.PatternSyntaxException
-import kotlin.collections.ArrayList
 import kotlin.coroutines.CoroutineContext
+
 
 val Context.prefs: PrefManager
     get() = PrefManager.getInstance(this)
@@ -153,6 +152,24 @@ fun Context.openAppInfo(packageName: String) {
     intent.data = Uri.parse("package:$packageName")
 
     startActivity(intent)
+}
+
+fun Context.launchUrl(url: String) {
+    try {
+        val browserIntent =
+            Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        startActivity(browserIntent)
+    } catch (e: Exception) {}
+}
+
+fun Context.launchEmail(to: String, subject: String) {
+    try {
+        val intent = Intent(Intent.ACTION_SENDTO)
+        intent.type = "text/plain"
+        intent.data = Uri.parse("mailto:${Uri.encode(to)}?subject=${Uri.encode(subject)}")
+
+        startActivity(intent)
+    } catch (e: Exception) {}
 }
 
 fun constructComponentKey(component: PackageItemInfo): String {

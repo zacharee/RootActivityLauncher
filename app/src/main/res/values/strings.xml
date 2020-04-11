@@ -35,4 +35,9 @@
 
     <string name="requires_root">Requires Root</string>
     <string name="loading">Loading…</string>
+
+    <string name="twitter">Twitter</string>
+    <string name="website">Website</string>
+    <string name="github">GitHub</string>
+    <string name="email">Email</string>
 </resources>

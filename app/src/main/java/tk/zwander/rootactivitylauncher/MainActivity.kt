@@ -30,6 +30,8 @@ import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.util.dpToPx
 import tk.zwander.rootactivitylauncher.util.forEachParallel
+import tk.zwander.rootactivitylauncher.util.launchEmail
+import tk.zwander.rootactivitylauncher.util.launchUrl
 import tk.zwander.rootactivitylauncher.views.FilterDialog
 import kotlin.collections.ArrayList
 
@@ -157,6 +159,22 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                         } else {
                             app_list.smoothScrollToPosition(appAdapter.itemCount - 1)
                         }
+                        true
+                    }
+                    R.id.action_twitter -> {
+                        launchUrl("https://twitter.com/Wander1236")
+                        true
+                    }
+                    R.id.action_web -> {
+                        launchUrl("https://zwander.dev")
+                        true
+                    }
+                    R.id.action_github -> {
+                        launchUrl("https://github.com/zacharee")
+                        true
+                    }
+                    R.id.action_email -> {
+                        launchEmail("zachary@zwander.dev", resources.getString(R.string.app_name))
                         true
                     }
                     else -> false
