@@ -31,7 +31,6 @@ import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.util.dpToPx
 import tk.zwander.rootactivitylauncher.util.forEachParallel
 import tk.zwander.rootactivitylauncher.views.FilterDialog
-import java.util.*
 import kotlin.collections.ArrayList
 
 
@@ -269,7 +268,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
             var progressIndex = 0
 
-            val loaded = LinkedList<AppInfo>()
+            val loaded = ArrayList<AppInfo>(apps.size)
 
             apps.forEachParallel { app ->
                 loadApp(app)?.let { loaded.add(it) }
@@ -281,6 +280,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                     }
                 }
             }
+
+            loaded.trimToSize()
 
             launch(Dispatchers.Main) {
                 appAdapter.setItems(loaded)

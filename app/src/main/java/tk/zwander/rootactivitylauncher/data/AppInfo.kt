@@ -7,7 +7,7 @@ import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.util.isValidRegex
-import java.util.*
+import kotlin.collections.ArrayList
 
 data class AppInfo(
     val info: ApplicationInfo,
@@ -18,8 +18,8 @@ data class AppInfo(
     val activityAdapter = ActivityAdapter()
     val serviceAdapter = ServiceAdapter()
 
-    val filteredActivities = LinkedList<ActivityInfo>()
-    val filteredServices = LinkedList<ServiceInfo>()
+    val filteredActivities = ArrayList<ActivityInfo>(activities.size)
+    val filteredServices = ArrayList<ServiceInfo>(services.size)
 
     var activitiesExpanded: Boolean = false
     var servicesExpanded: Boolean = false
