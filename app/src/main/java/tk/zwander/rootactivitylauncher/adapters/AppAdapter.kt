@@ -172,6 +172,12 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
 
                     notifyItemChanged(adapterPosition)
                 }
+
+                app_info.setOnClickListener {
+                    val d = async.currentList[adapterPosition]
+
+                    context.openAppInfo(d.info.packageName)
+                }
             }
         }
 

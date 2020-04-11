@@ -5,6 +5,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageItemInfo
+import android.net.Uri
+import android.provider.Settings
 import android.util.TypedValue
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -144,6 +146,13 @@ fun Context.createShortcut(
         info,
         null
     )
+}
+
+fun Context.openAppInfo(packageName: String) {
+    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+    intent.data = Uri.parse("package:$packageName")
+
+    startActivity(intent)
 }
 
 fun constructComponentKey(component: PackageItemInfo): String {
