@@ -12,6 +12,7 @@
     <string name="scroll_bottom">Scroll to Bottom</string>
     <string name="regex">Regex</string>
     <string name="app_info">App Info</string>
+    <string name="include_components">Search Components</string>
 
     <string name="set_extras">Set Extras</string>
     <string name="launch">Launch</string>

@@ -55,7 +55,7 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
         private set
     var useRegex: Boolean = false
         private set
-    var filterComponents: Boolean = true
+    var includeComponents: Boolean = true
         private set
 
     override fun getItemCount(): Int {
@@ -117,6 +117,7 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
     fun onFilterChange(
         query: String = currentQuery,
         useRegex: Boolean = this.useRegex,
+        includeComponents: Boolean = this.includeComponents,
         enabledMode: EnabledFilterMode = enabledFilterMode,
         exportedMode: ExportedFilterMode = exportedFilterMode,
         override: Boolean = false
@@ -125,17 +126,20 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
             || currentQuery != query
             || enabledFilterMode != enabledMode
             || exportedFilterMode != exportedMode
+            || this.includeComponents != includeComponents
             || this.useRegex != useRegex
         ) {
             currentQuery = query
             enabledFilterMode = enabledMode
             exportedFilterMode = exportedMode
             this.useRegex = useRegex
+            this.includeComponents = includeComponents
 
             orig.values.forEachParallelBlocking {
                 it.onFilterChange(
                     currentQuery,
                     useRegex,
+                    includeComponents,
                     enabledFilterMode,
                     exportedFilterMode
                 )
@@ -171,7 +175,7 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
             }
         }
 
-        if (filterComponents && (!activityFilterEmpty || !serviceFilterEmpty))
+        if (includeComponents && (!activityFilterEmpty || !serviceFilterEmpty))
             return true
 
         return false

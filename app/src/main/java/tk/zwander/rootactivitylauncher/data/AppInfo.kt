@@ -28,6 +28,7 @@ data class AppInfo(
     internal var enabledFilterMode = EnabledFilterMode.SHOW_ALL
     internal var exportedFilterMode = ExportedFilterMode.SHOW_ALL
     internal var useRegex: Boolean = false
+    internal var includeComponents: Boolean = true
 
     init {
         onFilterChange(
@@ -47,6 +48,7 @@ data class AppInfo(
     fun onFilterChange(
         query: String = currentQuery,
         useRegex: Boolean = this.useRegex,
+        includeComponents: Boolean = this.includeComponents,
         enabledMode: EnabledFilterMode = enabledFilterMode,
         exportedMode: ExportedFilterMode = exportedFilterMode,
         override: Boolean = false
@@ -56,11 +58,13 @@ data class AppInfo(
             || enabledFilterMode != enabledMode
             || exportedFilterMode != exportedMode
             || this.useRegex != useRegex
+            || this.includeComponents != includeComponents
         ) {
             currentQuery = query
             enabledFilterMode = enabledMode
             exportedFilterMode = exportedMode
             this.useRegex = useRegex
+            this.includeComponents = includeComponents
 
             filteredActivities.clear()
             filteredServices.clear()
@@ -86,7 +90,7 @@ data class AppInfo(
             }
         }
 
-        if (currentQuery.isBlank()) return true
+        if (currentQuery.isBlank() || !includeComponents) return true
 
         if (useRegex && currentQuery.isValidRegex()) {
             if (Regex(currentQuery).run {

@@ -122,6 +122,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             appAdapter.onFilterChange(useRegex = isChecked)
             app_list.scrollToPosition(0)
         }
+        include_components.setOnCheckedChangeListener { _, isChecked ->
+            appAdapter.onFilterChange(includeComponents = isChecked)
+            app_list.scrollToPosition(0)
+        }
 
         menuInflater.inflate(R.menu.search, menu)
         menu.setCallback(object : MenuBuilder.Callback {
