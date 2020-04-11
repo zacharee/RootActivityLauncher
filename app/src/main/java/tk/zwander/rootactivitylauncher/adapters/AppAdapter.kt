@@ -74,6 +74,31 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
         return async.currentList[position].label.substring(0, 1)
     }
 
+    fun addItem(item: AppInfo) {
+        orig[item.info.packageName] = item
+
+        onFilterChange(override = true)
+    }
+
+    fun removeItem(packageName: String) {
+        orig.remove(packageName)
+
+        onFilterChange(override = true)
+    }
+
+    fun removeItem(item: AppInfo) {
+        removeItem(item.info.packageName)
+    }
+
+    fun updateItem(item: AppInfo) {
+        orig[item.info.packageName] = item
+
+        val index = async.currentList.indexOf(item)
+        if (index != -1) {
+            notifyItemChanged(index)
+        }
+    }
+
     fun setItems(items: List<AppInfo>) {
         orig.clear()
         items.forEachParallelBlocking {
@@ -81,7 +106,6 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
         }
 
         onFilterChange(override = true)
-        sortAndSubmitList(items)
     }
 
     private fun sortAndSubmitList(items: List<AppInfo>) {

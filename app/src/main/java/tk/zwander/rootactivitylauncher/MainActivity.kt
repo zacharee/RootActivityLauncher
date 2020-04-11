@@ -2,6 +2,11 @@ package tk.zwander.rootactivitylauncher
 
 import android.animation.TimeInterpolator
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -52,11 +57,55 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     private val scrollToTop by lazy { menu.findItem(R.id.scroll_top) }
     private val scrollToBottom by lazy { menu.findItem(R.id.scroll_bottom) }
 
+    private val packageUpdateReceiver = object : BroadcastReceiver() {
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_PACKAGE_ADDED)
+            addAction(Intent.ACTION_PACKAGE_REMOVED)
+            addAction(Intent.ACTION_PACKAGE_REPLACED)
+        }
+
+        fun register() {
+            registerReceiver(this, filter)
+        }
+
+        fun unregister() {
+            unregisterReceiver(this)
+        }
+
+        override fun onReceive(context: Context?, intent: Intent?) {
+            launch(Dispatchers.IO) {
+                val host = intent?.data?.host
+
+                when (intent?.action) {
+                    Intent.ACTION_PACKAGE_ADDED -> {
+                        if (host != null) {
+                            val loaded = loadApp(getPackageInfo(host))
+
+                            appAdapter.addItem(loaded ?: return@launch)
+                        }
+                    }
+                    Intent.ACTION_PACKAGE_REMOVED -> {
+                        if (host != null) {
+                            appAdapter.removeItem(host)
+                        }
+                    }
+                    Intent.ACTION_PACKAGE_REPLACED -> {
+                        if (host != null) {
+                            appAdapter.updateItem(loadApp(getPackageInfo(host)) ?: return@launch)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private var currentDataJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        packageUpdateReceiver.register()
 
         setSupportActionBar(bottom_bar)
 
@@ -157,6 +206,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     override fun onDestroy() {
         super.onDestroy()
 
+        packageUpdateReceiver.unregister()
         cancel()
     }
 
@@ -195,17 +245,19 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             .scaleX(if (open) -1f else 1f)
     }
 
-    private fun loadData(): Job {
+    private fun loadData(silent: Boolean = false): Job {
         return launch(Dispatchers.IO) {
             launch(Dispatchers.Main) {
-                updateProgress(0)
-                scrim.isVisible = true
-                progress.isVisible = true
-                search.isVisible = false
-                filter.isVisible = false
-                scrollToTop.isVisible = false
-                scrollToBottom.isVisible = false
-                setSearchWrapperState(false)
+                if (!silent) {
+                    updateProgress(0)
+                    scrim.isVisible = true
+                    progress.isVisible = true
+                    search.isVisible = false
+                    filter.isVisible = false
+                    scrollToTop.isVisible = false
+                    scrollToBottom.isVisible = false
+                    setSearchWrapperState(false)
+                }
             }
 
             val apps = packageManager.getInstalledPackages(
@@ -220,60 +272,82 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             val loaded = LinkedList<AppInfo>()
 
             apps.forEachParallel { app ->
-                val activities = app.activities
-                val services = app.services
+                loadApp(app)?.let { loaded.add(it) }
 
-                if (((activities != null && activities.isNotEmpty()) || (services != null && services.isNotEmpty()))) {
-                    val activityInfos = ArrayList<ActivityInfo>(activities?.size ?: 0)
-                    val serviceInfos = ArrayList<ServiceInfo>(services?.size ?: 0)
-
-                    val appLabel = app.applicationInfo.loadLabel(packageManager)
-
-                    activities?.forEach { act ->
-                        val label = act.loadLabel(packageManager).run { if (isBlank()) appLabel else this }
-                        activityInfos.add(
-                            ActivityInfo(
-                                act,
-                                label
-                            )
-                        )
+                if (!silent) {
+                    launch(Dispatchers.Main) {
+                        val p = (progressIndex++.toFloat() / max.toFloat() * 100f).toInt()
+                        updateProgress(p)
                     }
-
-                    services?.forEach { srv ->
-                        val label = srv.loadLabel(packageManager).run { if (isBlank()) appLabel else this }
-                        serviceInfos.add(
-                            ServiceInfo(
-                                srv,
-                                label
-                            )
-                        )
-                    }
-
-                    loaded.add(AppInfo(
-                        app.applicationInfo,
-                        appLabel,
-                        activityInfos,
-                        serviceInfos
-                    ))
-                }
-
-                launch(Dispatchers.Main) {
-                    val p = (progressIndex++.toFloat() / max.toFloat() * 100f).toInt()
-                    updateProgress(p)
                 }
             }
 
             launch(Dispatchers.Main) {
                 appAdapter.setItems(loaded)
-                progress.isVisible = false
-                scrim.isVisible = false
+                if (!silent) {
+                    progress.isVisible = false
+                    scrim.isVisible = false
 
-                refresh.postDelayed({
-                    updateScrollButtonState()
-                    search.isVisible = true
-                    filter.isVisible = true
-                }, 10)
+                    refresh.postDelayed({
+                        updateScrollButtonState()
+                        search.isVisible = true
+                        filter.isVisible = true
+                    }, 10)
+                } else {
+                    refresh.postDelayed({
+                        updateScrollButtonState()
+                    }, 10)
+                }
             }
         }
+    }
+
+    private fun getPackageInfo(packageName: String): PackageInfo {
+        return packageManager.getPackageInfo(packageName,
+            PackageManager.GET_ACTIVITIES or
+                    PackageManager.GET_SERVICES or
+                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
+                    else PackageManager.GET_DISABLED_COMPONENTS)
+    }
+
+    private fun loadApp(app: PackageInfo) : AppInfo? {
+        val activities = app.activities
+        val services = app.services
+
+        if (((activities != null && activities.isNotEmpty()) || (services != null && services.isNotEmpty()))) {
+            val activityInfos = ArrayList<ActivityInfo>(activities?.size ?: 0)
+            val serviceInfos = ArrayList<ServiceInfo>(services?.size ?: 0)
+
+            val appLabel = app.applicationInfo.loadLabel(packageManager)
+
+            activities?.forEach { act ->
+                val label = act.loadLabel(packageManager).run { if (isBlank()) appLabel else this }
+                activityInfos.add(
+                    ActivityInfo(
+                        act,
+                        label
+                    )
+                )
+            }
+
+            services?.forEach { srv ->
+                val label = srv.loadLabel(packageManager).run { if (isBlank()) appLabel else this }
+                serviceInfos.add(
+                    ServiceInfo(
+                        srv,
+                        label
+                    )
+                )
+            }
+
+            return AppInfo(
+                app.applicationInfo,
+                appLabel,
+                activityInfos,
+                serviceInfos
+            )
+        }
+
+        return null
     }
 }
