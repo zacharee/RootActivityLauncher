@@ -56,6 +56,16 @@
             </LinearLayout>
 
             <tk.zwander.rootactivitylauncher.views.TooltippedClickableImageView
+                android:id="@+id/global_extras"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:contentDescription="@string/set_global_extras"
+                android:scaleType="center"
+                android:background="?selectableItemBackgroundBorderless"
+                app:srcCompat="@drawable/ic_baseline_more_horiz_24"
+                />
+
+            <tk.zwander.rootactivitylauncher.views.TooltippedClickableImageView
                 android:id="@+id/app_info"
                 android:layout_width="48dp"
                 android:layout_height="48dp"

@@ -18,6 +18,7 @@ import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.util.*
+import tk.zwander.rootactivitylauncher.views.ExtrasDialog
 import kotlin.Comparator
 import kotlin.collections.HashMap
 
@@ -205,6 +206,13 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
                     val d = async.currentList[adapterPosition]
 
                     context.openAppInfo(d.info.packageName)
+                }
+
+                global_extras.setOnClickListener {
+                    val d = async.currentList[adapterPosition]
+
+                    ExtrasDialog(context, d.info.packageName)
+                        .show()
                 }
             }
         }

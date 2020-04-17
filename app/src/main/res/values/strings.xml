@@ -3,6 +3,7 @@
 
     <string name="action_and_extras">Action &amp; Extras</string>
     <string name="extras">Extras</string>
+    <string name="global_extras">Global Extras</string>
     <string name="action">Action</string>
     <string name="hint_key">Key</string>
     <string name="hint_value">Value</string>
@@ -15,6 +16,7 @@
     <string name="include_components">Search Components</string>
 
     <string name="set_extras">Set Extras</string>
+    <string name="set_global_extras">Set Global Extras</string>
     <string name="launch">Launch</string>
     <string name="create_shortcut">Create Shortcut</string>
     <string name="launch_status">Launch Status</string>

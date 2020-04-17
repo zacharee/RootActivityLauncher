@@ -77,6 +77,10 @@ abstract class BaseComponentAdapter<
 
         internal val currentExtras: List<ExtraInfo>
             get() = itemView.context.findExtrasForComponent(currentComponentKey)
+        internal val currentGlobalExtras: List<ExtraInfo>
+            get() = itemView.context.findExtrasForComponent(currentPackageName)
+        internal val currentPackageName: String
+            get() = currentList[adapterPosition].info.packageName
         internal val currentComponentKey: String
             get() = currentList[adapterPosition].run {
                 constructComponentKey(
@@ -128,7 +132,7 @@ abstract class BaseComponentAdapter<
                         .show()
                 }
                 launch.setOnClickListener {
-                    onLaunch(currentList[adapterPosition], context, currentExtras)
+                    onLaunch(currentList[adapterPosition], context, currentGlobalExtras + currentExtras)
                 }
                 shortcut.setOnClickListener {
                     val d = currentList[adapterPosition]
