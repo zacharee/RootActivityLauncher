@@ -40,6 +40,8 @@ dependencies {
     implementation 'com.google.android.material:material:1.2.0-alpha06'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'com.google.firebase:firebase-crashlytics:17.0.0-beta04'
+    //Crashlytics doesn't seem to work without this added (wtf)
+    implementation 'com.google.firebase:firebase-analytics:17.3.0'
 
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.5'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.5'
