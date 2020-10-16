@@ -131,8 +131,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
         menuInflater.inflate(R.menu.search, menu)
         menu.setCallback(object : MenuBuilder.Callback {
-            override fun onMenuItemSelected(menu: MenuBuilder?, item: MenuItem?): Boolean {
-                return when (item?.itemId) {
+            override fun onMenuItemSelected(menu: MenuBuilder, item: MenuItem): Boolean {
+                return when (item.itemId) {
                     R.id.action_filter -> {
                         FilterDialog(
                             this@MainActivity,
@@ -181,7 +181,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 }
             }
 
-            override fun onMenuModeChange(menu: MenuBuilder?) {}
+            override fun onMenuModeChange(menu: MenuBuilder) {}
         })
 
         updateScrollButtonState()
