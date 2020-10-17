@@ -33,7 +33,8 @@ import tk.zwander.rootactivitylauncher.util.forEachParallel
 import tk.zwander.rootactivitylauncher.util.launchEmail
 import tk.zwander.rootactivitylauncher.util.launchUrl
 import tk.zwander.rootactivitylauncher.views.FilterDialog
-import kotlin.collections.ArrayList
+import java.util.*
+import java.util.concurrent.ConcurrentLinkedQueue
 
 
 @SuppressLint("RestrictedApi")
@@ -100,7 +101,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         }
     }
 
-    private var currentDataJob: Job? = null
+    private var currentDataJob: Deferred<*>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -110,7 +111,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
         setSupportActionBar(bottom_bar)
 
-        search_options_wrapper.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+        search_options_wrapper.viewTreeObserver.addOnGlobalLayoutListener(object :
+            ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
                 setSearchWrapperState(false)
                 search_options_wrapper.isVisible = false
@@ -139,12 +141,16 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                             appAdapter.enabledFilterMode,
                             appAdapter.exportedFilterMode
                         ) { enabledMode, exportedMode ->
-                            appAdapter.onFilterChange(enabledMode = enabledMode, exportedMode = exportedMode)
+                            appAdapter.onFilterChange(
+                                enabledMode = enabledMode,
+                                exportedMode = exportedMode
+                            )
                         }.show()
                         true
                     }
                     R.id.scroll_top -> {
-                        val vis = (app_list.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
+                        val vis =
+                            (app_list.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
                         if (vis > 20) {
                             app_list.scrollToPosition(0)
                         } else {
@@ -153,7 +159,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                         true
                     }
                     R.id.scroll_bottom -> {
-                        val vis = (app_list.layoutManager as LinearLayoutManager).findLastVisibleItemPosition()
+                        val vis =
+                            (app_list.layoutManager as LinearLayoutManager).findLastVisibleItemPosition()
                         if (appAdapter.itemCount - vis > 20) {
                             app_list.scrollToPosition(appAdapter.itemCount - 1)
                         } else {
@@ -204,7 +211,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             }
         })
         refresh.setOnRefreshListener(this)
-        currentDataJob = loadData()
+        currentDataJob = loadDataAsync()
     }
 
     override fun onQueryTextChange(newText: String?): Boolean {
@@ -220,13 +227,14 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     override fun onRefresh() {
         refresh.isRefreshing = true
         if (currentDataJob?.isActive == true) currentDataJob?.cancel()
-        currentDataJob = loadData()
+        currentDataJob = loadDataAsync()
         refresh.isRefreshing = false
     }
 
     override fun onDestroy() {
         super.onDestroy()
 
+        currentDataJob?.cancel()
         packageUpdateReceiver.unregister()
         cancel()
     }
@@ -239,7 +247,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     private fun updateScrollButtonState() {
         val isActive = currentDataJob?.isActive == true
         val newTopVis = app_list.computeVerticalScrollOffset() > 0 && !isActive
-        val newBotVis = appListLayoutManager.findLastCompletelyVisibleItemPosition() < appAdapter.itemCount - 1 && !isActive
+        val newBotVis =
+            appListLayoutManager.findLastCompletelyVisibleItemPosition() < appAdapter.itemCount - 1 && !isActive
 
         if (scrollToTop?.isVisible != newTopVis) {
             scrollToTop?.isVisible = newTopVis
@@ -259,87 +268,85 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                     duration = resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
 
                     //Casts are required here for some reason
-                    interpolator = if (open) DecelerateInterpolator() as TimeInterpolator else AccelerateInterpolator() as TimeInterpolator
+                    interpolator =
+                        if (open) DecelerateInterpolator() as TimeInterpolator else AccelerateInterpolator() as TimeInterpolator
                 }
+                .start()
         }
         open_close.animate()
             .scaleX(if (open) -1f else 1f)
+            .start()
     }
 
-    private fun loadData(silent: Boolean = false): Job {
-        return launch(Dispatchers.IO) {
-            launch(Dispatchers.Main) {
-                if (!silent) {
-                    updateProgress(0)
-                    scrim.isVisible = true
-                    progress.isVisible = true
-                    search.isVisible = false
-                    filter.isVisible = false
-                    scrollToTop.isVisible = false
-                    scrollToBottom.isVisible = false
-                    setSearchWrapperState(false)
-                }
+    private fun loadDataAsync(silent: Boolean = false) = async(Dispatchers.Main) {
+        if (!silent) {
+            updateProgress(0)
+            scrim.isVisible = true
+            progress.isVisible = true
+            search.isVisible = false
+            filter.isVisible = false
+            scrollToTop.isVisible = false
+            scrollToBottom.isVisible = false
+            setSearchWrapperState(false)
+        }
+
+        val apps = packageManager.getInstalledPackages(
+            PackageManager.GET_ACTIVITIES or
+                    PackageManager.GET_SERVICES or
+                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
+                    else PackageManager.GET_DISABLED_COMPONENTS
+        )
+        val max = apps.size - 1
+        val loaded = ConcurrentLinkedQueue<AppInfo>()
+
+        var progressIndex = 0
+
+        apps.forEachParallel { app ->
+            loadApp(app)?.let {
+                loaded.add(it)
             }
 
-            val apps = packageManager.getInstalledPackages(
-                PackageManager.GET_ACTIVITIES or
-                        PackageManager.GET_SERVICES or
-                        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
-                        else PackageManager.GET_DISABLED_COMPONENTS)
-            val max = apps.size - 1
-
-            var progressIndex = 0
-
-            val loaded = ArrayList<AppInfo>(apps.size)
-
-            apps.forEachParallel { app ->
-                loadApp(app)?.let { loaded.add(it) }
-
-                if (!silent) {
-                    launch(Dispatchers.Main) {
-                        val p = (progressIndex++.toFloat() / max.toFloat() * 100f).toInt()
-                        updateProgress(p)
-                    }
-                }
+            if (!silent) {
+                val p = (progressIndex++.toFloat() / max.toFloat() * 100f).toInt()
+                updateProgress(p)
             }
+        }
 
-            loaded.trimToSize()
+        appAdapter.setItems(loaded)
 
-            launch(Dispatchers.Main) {
-                appAdapter.setItems(loaded)
-                if (!silent) {
-                    progress.isVisible = false
-                    scrim.isVisible = false
+        if (!silent) {
+            progress.isVisible = false
+            scrim.isVisible = false
 
-                    refresh.postDelayed({
-                        updateScrollButtonState()
-                        search.isVisible = true
-                        filter.isVisible = true
-                    }, 10)
-                } else {
-                    refresh.postDelayed({
-                        updateScrollButtonState()
-                    }, 10)
-                }
-            }
+            refresh.postDelayed({
+                updateScrollButtonState()
+                search.isVisible = true
+                filter.isVisible = true
+            }, 10)
+        } else {
+            refresh.postDelayed({
+                updateScrollButtonState()
+            }, 10)
         }
     }
 
     private fun getPackageInfo(packageName: String): PackageInfo {
-        return packageManager.getPackageInfo(packageName,
+        return packageManager.getPackageInfo(
+            packageName,
             PackageManager.GET_ACTIVITIES or
                     PackageManager.GET_SERVICES or
                     if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
-                    else PackageManager.GET_DISABLED_COMPONENTS)
+                    else PackageManager.GET_DISABLED_COMPONENTS
+        )
     }
 
-    private fun loadApp(app: PackageInfo) : AppInfo? {
+    private suspend fun loadApp(app: PackageInfo): AppInfo? = coroutineScope {
         val activities = app.activities
         val services = app.services
 
         if (((activities != null && activities.isNotEmpty()) || (services != null && services.isNotEmpty()))) {
-            val activityInfos = ArrayList<ActivityInfo>(activities?.size ?: 0)
-            val serviceInfos = ArrayList<ServiceInfo>(services?.size ?: 0)
+            val activityInfos = LinkedList<ActivityInfo>()
+            val serviceInfos = LinkedList<ServiceInfo>()
 
             val appLabel = app.applicationInfo.loadLabel(packageManager)
 
@@ -363,7 +370,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 )
             }
 
-            return AppInfo(
+            return@coroutineScope AppInfo(
                 app.applicationInfo,
                 appLabel,
                 activityInfos,
@@ -371,6 +378,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             )
         }
 
-        return null
+        return@coroutineScope null
     }
 }

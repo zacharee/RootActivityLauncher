@@ -12,8 +12,8 @@ import kotlin.collections.ArrayList
 data class AppInfo(
     val info: ApplicationInfo,
     val label: CharSequence,
-    val activities: List<ActivityInfo>,
-    val services: List<ServiceInfo>
+    val activities: Collection<ActivityInfo>,
+    val services: Collection<ServiceInfo>
 ) {
     val activityAdapter = ActivityAdapter()
     val serviceAdapter = ServiceAdapter()

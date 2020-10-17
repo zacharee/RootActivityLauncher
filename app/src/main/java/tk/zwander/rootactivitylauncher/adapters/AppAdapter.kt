@@ -100,7 +100,7 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
         }
     }
 
-    fun setItems(items: List<AppInfo>) {
+    fun setItems(items: Collection<AppInfo>) {
         orig.clear()
         items.forEachParallelBlocking {
             orig[it.info.packageName] = it

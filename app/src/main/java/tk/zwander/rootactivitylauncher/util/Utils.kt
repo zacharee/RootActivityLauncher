@@ -210,6 +210,18 @@ suspend fun <T> Collection<T>.forEachParallel(context: CoroutineContext = Dispat
     jobs.awaitAll()
 }
 
+suspend fun <T> Array<T>.forEachParallel(context: CoroutineContext = Dispatchers.IO, block: suspend CoroutineScope.(T) -> Unit) = coroutineScope {
+    val jobs = ArrayList<Deferred<*>>(size)
+    forEach {
+        jobs.add(
+            async(context) {
+                block(it)
+            }
+        )
+    }
+    jobs.awaitAll()
+}
+
 fun String.isValidRegex(): Boolean {
     return try {
         Regex(this)
