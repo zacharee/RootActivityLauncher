@@ -1,8 +1,6 @@
 package tk.zwander.rootactivitylauncher.activities
 
-import android.content.ComponentName
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
@@ -32,16 +30,15 @@ class ShortcutLaunchActivity : AppCompatActivity() {
             return
         }
 
-        val extras = findExtrasForComponent(componentKey)
+        val extras = findExtrasForComponent(componentKey!!)
 
         when (componentType) {
             ComponentType.ACTIVITY -> {
-                Log.e("RAL", "activity")
-                launchActivity(extras, componentKey)
+                launchActivity(extras, componentKey!!)
             }
 
             ComponentType.SERVICE -> {
-                launchService(extras, componentKey)
+                launchService(extras, componentKey!!)
             }
         }
 
