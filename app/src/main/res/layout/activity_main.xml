@@ -50,6 +50,7 @@
             app:pgc_indeterminate="false"
             app:pgc_rimColor="?android:colorAccent"
             app:pgc_rimWidth="8dp"
+            app:pgc_speed="0.5"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"

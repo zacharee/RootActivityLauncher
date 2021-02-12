@@ -8,4 +8,6 @@
     android:padding="16dp"
     app:pgc_indeterminate="true"
     app:pgc_rimColor="?android:colorAccent"
+    app:pgc_rimWidth="2dp"
+    app:pgc_speed="0.5"
     />
