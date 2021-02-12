@@ -42,6 +42,9 @@ dependencies {
     implementation 'com.google.firebase:firebase-crashlytics:17.3.1'
     //Crashlytics doesn't seem to work without this added (wtf)
     implementation 'com.google.firebase:firebase-analytics:18.0.2'
+    implementation "rikka.shizuku:api:11.0.1"
+    implementation "rikka.shizuku:provider:11.0.1"
+    implementation 'com.github.ChickenHook:RestrictionBypass:2.2'
 
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.2'

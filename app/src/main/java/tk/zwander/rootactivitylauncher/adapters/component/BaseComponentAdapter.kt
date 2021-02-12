@@ -1,9 +1,14 @@
 package tk.zwander.rootactivitylauncher.adapters.component
 
+import android.app.IActivityManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.content.pm.IPackageManager
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.net.Uri
+import android.os.UserHandle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,15 +22,15 @@ import androidx.recyclerview.widget.*
 import eu.chainfire.libsuperuser.Shell
 import kotlinx.android.synthetic.main.component_item.view.*
 import kotlinx.coroutines.*
+import rikka.shizuku.Shizuku
+import rikka.shizuku.ShizukuBinderWrapper
+import rikka.shizuku.SystemServiceHelper
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
-import tk.zwander.rootactivitylauncher.util.constructComponentKey
-import tk.zwander.rootactivitylauncher.util.createShortcut
-import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
-import tk.zwander.rootactivitylauncher.util.picasso
+import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.ComponentInfoDialog
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
 
@@ -99,9 +104,30 @@ abstract class BaseComponentAdapter<
                         Shell.SU.available()
                     }
 
-                    if (hasRoot) {
+                    if (hasRoot || (Shizuku.pingBinder() && itemView.context.hasShizukuPermission)) {
                         val result = withContext(Dispatchers.IO) {
-                            Shell.Pool.SU.run("pm ${if (isChecked) "enable" else "disable"} $currentComponentKey") == 0
+                            if (hasRoot) {
+                                Shell.Pool.SU.run("pm ${if (isChecked) "enable" else "disable"} $currentComponentKey") == 0
+                            } else {
+                                val ipm = IPackageManager.Stub.asInterface(ShizukuBinderWrapper(
+                                        SystemServiceHelper.getSystemService("package")))
+
+                                try {
+                                    ipm.setComponentEnabledSetting(
+                                            ComponentName.unflattenFromString(currentComponentKey),
+                                            if (isChecked) PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                                            else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                                            0,
+                                            UserHandle.USER_CURRENT
+                                    )
+
+                                    true
+                                } catch (e: Exception) {
+                                    Toast.makeText(itemView.context, R.string.requires_root, Toast.LENGTH_SHORT)
+                                            .show()
+                                    false
+                                }
+                            }
                         }
 
                         if (result) {

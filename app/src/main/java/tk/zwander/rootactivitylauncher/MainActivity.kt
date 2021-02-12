@@ -24,14 +24,12 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.hmomeni.progresscircula.ProgressCircula
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
+import rikka.shizuku.Shizuku
 import tk.zwander.rootactivitylauncher.adapters.AppAdapter
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
-import tk.zwander.rootactivitylauncher.util.dpToPx
-import tk.zwander.rootactivitylauncher.util.forEachParallel
-import tk.zwander.rootactivitylauncher.util.launchEmail
-import tk.zwander.rootactivitylauncher.util.launchUrl
+import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.FilterDialog
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -39,7 +37,11 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 @SuppressLint("RestrictedApi")
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
-    SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
+    SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener, Shizuku.OnRequestPermissionResultListener {
+    companion object {
+        const val REQ_SHIZUKU = 10001
+    }
+
     private val appAdapter by lazy {
         AppAdapter(this)
     }
@@ -131,6 +133,13 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             app_list.scrollToPosition(0)
         }
 
+        if (Shizuku.pingBinder()) {
+            if (!hasShizukuPermission) {
+                Shizuku.addRequestPermissionResultListener(this)
+                requestShizukuPermission(REQ_SHIZUKU)
+            }
+        }
+
         menuInflater.inflate(R.menu.search, menu)
         menu.setCallback(object : MenuBuilder.Callback {
             override fun onMenuItemSelected(menu: MenuBuilder, item: MenuItem): Boolean {
@@ -212,6 +221,18 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         })
         refresh.setOnRefreshListener(this)
         currentDataJob = loadDataAsync()
+    }
+
+    override fun onRequestPermissionResult(requestCode: Int, grantResult: Int) {
+        if (requestCode == REQ_SHIZUKU && grantResult == PackageManager.PERMISSION_GRANTED) {
+            //Nothing yet
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        onRequestPermissionResult(requestCode, grantResults[0])
     }
 
     override fun onQueryTextChange(newText: String?): Boolean {
