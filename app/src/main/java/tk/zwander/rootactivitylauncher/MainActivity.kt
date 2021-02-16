@@ -10,6 +10,9 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
+import android.os.Process
+import android.os.Process.myUid
 import android.view.MenuItem
 import android.view.ViewTreeObserver
 import android.view.animation.AccelerateInterpolator
@@ -25,6 +28,7 @@ import com.hmomeni.progresscircula.ProgressCircula
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import rikka.shizuku.Shizuku
+import rikka.shizuku.SystemServiceHelper
 import tk.zwander.rootactivitylauncher.adapters.AppAdapter
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
@@ -108,6 +112,18 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        //Maybe if we ever get a KNOX license key...
+//        val cInfoClass = Class.forName("com.samsung.android.knox.ContextInfo")
+//        val cInfo = cInfoClass.getDeclaredConstructor(Int::class.java)
+//                .newInstance(myUid())
+//
+//        val lmClass = Class.forName("com.samsung.android.knox.license.IEnterpriseLicense\$Stub")
+//        val lm = lmClass.getMethod("asInterface", IBinder::class.java)
+//                .invoke(null, SystemServiceHelper.getSystemService("enterprise_license_policy"))
+//
+//        lmClass.getMethod("activateLicense", cInfoClass, String::class.java, String::class.java, String::class.java)
+//                .invoke(lm, cInfo, "<KPE_LICENSE>", null, null)
 
         packageUpdateReceiver.register()
 

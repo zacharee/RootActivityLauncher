@@ -42,4 +42,6 @@
     <string name="website">Website</string>
     <string name="github">GitHub</string>
     <string name="email">Email</string>
+
+    <string name="device_admin_desc">Device Admin can be used on Samsung One UI devices to launch otherwise un-launchable components.</string>
 </resources>
