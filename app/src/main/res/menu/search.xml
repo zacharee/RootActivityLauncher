@@ -65,4 +65,16 @@
         app:showAsAction="never"
         />
 
+    <item
+        android:id="@+id/action_patreon"
+        android:title="@string/patreon"
+        app:showAsAction="never"
+        />
+
+    <item
+        android:id="@+id/action_supporters"
+        android:title="@string/supporters"
+        app:showAsAction="never"
+        />
+
 </menu>

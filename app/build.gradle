@@ -45,6 +45,7 @@ dependencies {
     implementation "rikka.shizuku:api:11.0.1"
     implementation "rikka.shizuku:provider:11.0.1"
     implementation 'com.github.ChickenHook:RestrictionBypass:2.2'
+    implementation 'com.github.zacharee:PatreonSupportersRetrieval:4ce71eb5bf'
 
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.2'

@@ -27,11 +27,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.hmomeni.progresscircula.ProgressCircula
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import rikka.shizuku.Shizuku
 import rikka.shizuku.SystemServiceHelper
+import tk.zwander.patreonsupportersretrieval.view.SupporterView
 import tk.zwander.rootactivitylauncher.adapters.AppAdapter
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
@@ -211,6 +213,19 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                     }
                     R.id.action_email -> {
                         launchEmail("zachary@zwander.dev", resources.getString(R.string.app_name))
+                        true
+                    }
+                    R.id.action_patreon -> {
+                        launchUrl("https//patreon.com/zacharywander")
+                        true
+                    }
+                    R.id.action_supporters -> {
+                        MaterialAlertDialogBuilder(this@MainActivity)
+                            .setTitle(R.string.supporters)
+                            .setMessage(R.string.supporters_desc)
+                            .setView(SupporterView(this@MainActivity))
+                            .setPositiveButton(android.R.string.ok, null)
+                            .show()
                         true
                     }
                     else -> false
