@@ -225,8 +225,10 @@ class ComponentInfoDialog(context: Context, info: Any) : MaterialAlertDialogBuil
                 perm.group?.let { group ->
                     printer.println("    group=$group")
                 }
-                perm.backgroundPermission?.let { p ->
-                    printer.println("    backgroundPermission=$p")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    perm.backgroundPermission?.let { p ->
+                        printer.println("    backgroundPermission=$p")
+                    }
                 }
                 perm.descriptionRes.let { res ->
                     printer.println("    descriptionRes=0x${res.hexString}")
@@ -327,8 +329,10 @@ class ComponentInfoDialog(context: Context, info: Any) : MaterialAlertDialogBuil
             printer.println("installLocation=$it")
         }
 
-        info.isStub.let {
-            printer.println("isStub=$it")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            info.isStub.let {
+                printer.println("isStub=$it")
+            }
         }
 
         info.coreApp.let {
