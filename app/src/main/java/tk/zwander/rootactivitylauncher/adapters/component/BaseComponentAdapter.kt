@@ -165,7 +165,7 @@ abstract class BaseComponentAdapter<
                     context.createShortcut(
                         d.label,
                         IconCompat.createWithBitmap(
-                            icon.drawable.toBitmap()
+                            (icon.drawable ?: ContextCompat.getDrawable(context, R.mipmap.ic_launcher))!!.toBitmap()
                         ),
                         currentComponentKey,
                         componentType
