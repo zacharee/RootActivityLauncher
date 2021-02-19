@@ -3,9 +3,7 @@ package tk.zwander.rootactivitylauncher.activities
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
-import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
-import tk.zwander.rootactivitylauncher.util.launchActivity
-import tk.zwander.rootactivitylauncher.util.launchService
+import tk.zwander.rootactivitylauncher.util.*
 
 class ShortcutLaunchActivity : AppCompatActivity() {
     companion object {
@@ -31,14 +29,19 @@ class ShortcutLaunchActivity : AppCompatActivity() {
         }
 
         val extras = findExtrasForComponent(componentKey!!)
+        val globalExtras = findExtrasForComponent(determineComponentNamePackage(componentKey!!))
 
         when (componentType) {
             ComponentType.ACTIVITY -> {
-                launchActivity(extras, componentKey!!)
+                launchActivity(globalExtras + extras, componentKey!!)
             }
 
             ComponentType.SERVICE -> {
-                launchService(extras, componentKey!!)
+                launchService(globalExtras + extras, componentKey!!)
+            }
+
+            ComponentType.RECEIVER -> {
+                launchReceiver(globalExtras + extras, componentKey!!)
             }
         }
 

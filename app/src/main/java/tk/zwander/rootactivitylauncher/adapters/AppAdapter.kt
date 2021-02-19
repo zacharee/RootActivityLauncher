@@ -18,6 +18,7 @@ import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.util.*
+import tk.zwander.rootactivitylauncher.views.ComponentInfoDialog
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
 import kotlin.Comparator
 import kotlin.collections.HashMap
@@ -156,8 +157,9 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
     private fun matches(data: AppInfo): Boolean {
         val activityFilterEmpty = data.filteredActivities.isEmpty()
         val serviceFilterEmpty = data.filteredServices.isEmpty()
+        val receiverFilterEmpty = data.filteredReceivers.isEmpty()
 
-        if (activityFilterEmpty && serviceFilterEmpty) return false
+        if (activityFilterEmpty && serviceFilterEmpty && receiverFilterEmpty) return false
 
         if (currentQuery.isBlank()) return true
 
@@ -176,7 +178,7 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
             }
         }
 
-        if (includeComponents && (!activityFilterEmpty || !serviceFilterEmpty))
+        if (includeComponents && (!activityFilterEmpty || !serviceFilterEmpty || !receiverFilterEmpty))
             return true
 
         return false
@@ -187,6 +189,7 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
             itemView.apply {
                 activities.addItemDecoration(innerDividerItemDecoration)
                 services.addItemDecoration(innerDividerItemDecoration)
+                receivers.addItemDecoration(innerDividerItemDecoration)
 
                 activities_title.setOnClickListener {
                     val d = async.currentList[adapterPosition]
@@ -198,6 +201,13 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
                 services_title.setOnClickListener {
                     val d = async.currentList[adapterPosition]
                     d.servicesExpanded = !d.servicesExpanded
+
+                    notifyItemChanged(adapterPosition)
+                }
+
+                receivers_title.setOnClickListener {
+                    val d = async.currentList[adapterPosition]
+                    d.receiversExpanded = !d.receiversExpanded
 
                     notifyItemChanged(adapterPosition)
                 }
@@ -214,6 +224,13 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
                     ExtrasDialog(context, d.info.packageName)
                         .show()
                 }
+
+                app_component_info.setOnClickListener {
+                    val d = async.currentList[adapterPosition]
+
+                    ComponentInfoDialog(context, d.pInfo)
+                            .show()
+                }
             }
         }
 
@@ -229,6 +246,7 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
 
                 activities.adapter = data.activityAdapter
                 services.adapter = data.serviceAdapter
+                receivers.adapter = data.receiverAdapter
 
                 if (activities.isVisible != data.activitiesExpanded) {
                     activities.isVisible = data.activitiesExpanded
@@ -236,11 +254,16 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
                 if (services.isVisible != data.servicesExpanded) {
                     services.isVisible = data.servicesExpanded
                 }
+                if (receivers.isVisible != data.receiversExpanded) {
+                    receivers.isVisible = data.receiversExpanded
+                }
 
                 activities_title.text =
                     resources.getString(R.string.activities, data.filteredActivities.size)
                 services_title.text =
                     resources.getString(R.string.services, data.filteredServices.size)
+                receivers_title.text =
+                    resources.getString(R.string.receivers, data.filteredReceivers.size)
 
                 activities_title.setCompoundDrawablesRelative(
                     null,
@@ -254,6 +277,12 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
                     if (data.servicesExpanded) arrowUp else arrowDown,
                     null
                 )
+                receivers_title.setCompoundDrawablesRelative(
+                    null,
+                    null,
+                    if (data.receiversExpanded) arrowUp else arrowDown,
+                    null
+                )
 
                 if (activities.isVisible) {
                     data.activityAdapter.setItems(data.filteredActivities)
@@ -261,9 +290,13 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
                 if (services.isVisible) {
                     data.serviceAdapter.setItems(data.filteredServices)
                 }
+                if (receivers.isVisible) {
+                    data.receiverAdapter.setItems(data.filteredReceivers)
+                }
 
                 activities_title.isVisible = data.filteredActivities.isNotEmpty()
                 services_title.isVisible = data.filteredServices.isNotEmpty()
+                receivers_title.isVisible = data.filteredReceivers.isNotEmpty()
             }
         }
     }

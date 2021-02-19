@@ -1,5 +1,6 @@
 package tk.zwander.rootactivitylauncher.util
 
+import android.app.AppOpsManager
 import android.app.IActivityManager
 import android.app.admin.DevicePolicyManager
 import android.content.ActivityNotFoundException
@@ -39,6 +40,18 @@ private fun tryRootActivityLaunch(componentKey: String, extras: List<ExtraInfo>)
 
     if (extras.isNotEmpty()) extras.forEach {
         command.append(" -e \"${it.key}\" \"${it.value}\"")
+    }
+
+    return Shell.Pool.SU.run(command.toString()) == 0
+}
+
+private fun tryRootBroadcastLaunch(componentKey: String, extras: List<ExtraInfo>): Boolean {
+    val command = StringBuilder("am broadcast -n $componentKey")
+
+    if (extras.isNotEmpty()) {
+        extras.forEach {
+            command.append(" -e \"${it.key}\" \"${it.value}\"")
+        }
     }
 
     return Shell.Pool.SU.run(command.toString()) == 0
@@ -97,8 +110,24 @@ private fun tryShizukuActivityLaunch(intent: Intent): Boolean {
     }
 }
 
+private fun tryShizukuBroadcastLaunch(intent: Intent): Boolean {
+    return try {
+        val iam = IActivityManager.Stub.asInterface(ShizukuBinderWrapper(
+                SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)))
+
+        iam.broadcastIntent(
+                null, intent, null, null, 0, null,
+                null, null, AppOpsManager.OP_NONE, null, false, false,
+                UserHandle.USER_CURRENT
+        )
+        true
+    } catch (e: Exception) {
+        false
+    }
+}
+
 fun Context.launchService(extras: List<ExtraInfo>, componentKey: String) {
-    val intent = Intent(Intent.ACTION_MAIN)
+    val intent = Intent(prefs.findActionForComponent(componentKey))
     intent.component = ComponentName.unflattenFromString(componentKey)
 
     if (extras.isNotEmpty()) extras.forEach {
@@ -126,7 +155,7 @@ fun Context.launchService(extras: List<ExtraInfo>, componentKey: String) {
 }
 
 fun Context.launchActivity(extras: List<ExtraInfo>, componentKey: String) {
-    val intent = Intent(Intent.ACTION_MAIN)
+    val intent = Intent(prefs.findActionForComponent(componentKey))
     intent.component = ComponentName.unflattenFromString(componentKey)
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
@@ -157,6 +186,33 @@ fun Context.launchActivity(extras: List<ExtraInfo>, componentKey: String) {
 
     if (Shell.SU.available()) {
         tryRootActivityLaunch(componentKey, extras)
+        return
+    }
+
+    showRootToast()
+}
+
+fun Context.launchReceiver(extras: List<ExtraInfo>, componentKey: String) {
+    val intent = Intent(prefs.findActionForComponent(componentKey))
+    intent.component = ComponentName.unflattenFromString(componentKey)
+
+    if (extras.isNotEmpty()) extras.forEach {
+        intent.putExtra(it.key, it.value)
+    }
+
+    try {
+        sendBroadcast(intent)
+    } catch (e: SecurityException) {
+    }
+
+    if (Shizuku.pingBinder() && hasShizukuPermission) {
+        if (tryShizukuBroadcastLaunch(intent)) {
+            return
+        }
+    }
+
+    if (Shell.SU.available()) {
+        tryRootBroadcastLaunch(componentKey, extras)
         return
     }
 

@@ -13,6 +13,7 @@ import android.os.Bundle
 import android.os.IBinder
 import android.os.Process
 import android.os.Process.myUid
+import android.util.Log
 import android.view.MenuItem
 import android.view.ViewTreeObserver
 import android.view.animation.AccelerateInterpolator
@@ -32,6 +33,7 @@ import rikka.shizuku.SystemServiceHelper
 import tk.zwander.rootactivitylauncher.adapters.AppAdapter
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
+import tk.zwander.rootactivitylauncher.data.component.ReceiverInfo
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.FilterDialog
@@ -330,6 +332,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         val apps = packageManager.getInstalledPackages(
             PackageManager.GET_ACTIVITIES or
                     PackageManager.GET_SERVICES or
+                    PackageManager.GET_RECEIVERS or
+                    PackageManager.GET_PERMISSIONS or
+                    PackageManager.GET_CONFIGURATIONS or
                     if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
                     else PackageManager.GET_DISABLED_COMPONENTS
         )
@@ -372,6 +377,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             packageName,
             PackageManager.GET_ACTIVITIES or
                     PackageManager.GET_SERVICES or
+                    PackageManager.GET_RECEIVERS or
+                    PackageManager.GET_PERMISSIONS or
+                    PackageManager.GET_CONFIGURATIONS or
                     if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
                     else PackageManager.GET_DISABLED_COMPONENTS
         )
@@ -380,10 +388,15 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     private suspend fun loadApp(app: PackageInfo): AppInfo? = coroutineScope {
         val activities = app.activities
         val services = app.services
+        val receivers = app.receivers
 
-        if (((activities != null && activities.isNotEmpty()) || (services != null && services.isNotEmpty()))) {
+        if ((activities != null && activities.isNotEmpty())
+                || (services != null && services.isNotEmpty())
+                || (receivers != null && receivers.isNotEmpty())
+        ) {
             val activityInfos = LinkedList<ActivityInfo>()
             val serviceInfos = LinkedList<ServiceInfo>()
+            val receiverInfos = LinkedList<ReceiverInfo>()
 
             val appLabel = app.applicationInfo.loadLabel(packageManager)
 
@@ -407,11 +420,22 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 )
             }
 
+            receivers?.forEach { rec ->
+                val label = rec.loadLabel(packageManager).run { if (isBlank()) appLabel else this }
+                receiverInfos.add(
+                        ReceiverInfo(
+                            rec,
+                            label
+                        )
+                )
+            }
+
             return@coroutineScope AppInfo(
-                app.applicationInfo,
-                appLabel,
-                activityInfos,
-                serviceInfos
+                pInfo = app,
+                label = appLabel,
+                activities = activityInfos,
+                services = serviceInfos,
+                receivers = receiverInfos
             )
         }
 

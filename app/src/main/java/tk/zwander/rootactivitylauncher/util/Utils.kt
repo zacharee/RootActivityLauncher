@@ -12,12 +12,14 @@ import android.net.Uri
 import android.os.Build
 import android.os.UserHandle
 import android.provider.Settings
+import android.util.SparseArray
 import android.util.TypedValue
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
+import androidx.core.util.forEach
 import com.squareup.picasso.Picasso
 import eu.chainfire.libsuperuser.Shell
 import kotlinx.coroutines.*
@@ -34,11 +36,29 @@ import java.util.regex.PatternSyntaxException
 import kotlin.coroutines.CoroutineContext
 
 
+inline fun <T, R> SparseArray<out T>.map(transform: (T) -> R): List<R> {
+    return mapTo(ArrayList(), transform)
+}
+
+inline fun <T, R, C : MutableCollection<in R>> SparseArray<out T>.mapTo(destination: C, transform: (T) -> R): C {
+    forEach { _, any ->
+        destination.add(transform(any))
+    }
+
+    return destination
+}
+
 val Context.prefs: PrefManager
     get() = PrefManager.getInstance(this)
 
 val picasso: Picasso
     get() = Picasso.get()
+
+fun determineComponentNamePackage(componentName: String): String {
+    val component = ComponentName.unflattenFromString(componentName)
+
+    return if (component != null) component.packageName else componentName
+}
 
 fun Context.findExtrasForComponent(componentName: String): List<ExtraInfo> {
     val extras = ArrayList<ExtraInfo>()
@@ -56,7 +76,9 @@ fun Context.updateExtrasForComponent(componentName: String, extras: List<ExtraIn
 }
 
 fun Context.findActionForComponent(componentName: String): String {
-    return prefs.actions[componentName] ?: Intent.ACTION_MAIN
+    val pkg = determineComponentNamePackage(componentName)
+
+    return prefs.actions[componentName] ?: (prefs.actions[pkg] ?: Intent.ACTION_MAIN)
 }
 
 fun Context.updateActionForComponent(componentName: String, action: String?) {

@@ -2,7 +2,8 @@ package tk.zwander.rootactivitylauncher.data.component
 
 enum class ComponentType {
     ACTIVITY,
-    SERVICE;
+    SERVICE,
+    RECEIVER;
 
     fun serialize(): String = name
 

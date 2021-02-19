@@ -24,6 +24,7 @@
 
     <string name="activities">Activities (%d)</string>
     <string name="services">Services (%d)</string>
+    <string name="receivers">Receivers (%d)</string>
 
     <string name="enabled_filter">Enabled Filter</string>
     <string name="exported_filter">Exported Filter</string>

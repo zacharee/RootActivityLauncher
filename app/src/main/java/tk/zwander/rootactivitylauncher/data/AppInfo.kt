@@ -1,28 +1,36 @@
 package tk.zwander.rootactivitylauncher.data
 
 import android.content.pm.ApplicationInfo
+import android.content.pm.PackageInfo
 import tk.zwander.rootactivitylauncher.adapters.component.ActivityAdapter
+import tk.zwander.rootactivitylauncher.adapters.component.ReceiverAdapter
 import tk.zwander.rootactivitylauncher.adapters.component.ServiceAdapter
 import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
+import tk.zwander.rootactivitylauncher.data.component.ReceiverInfo
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.util.isValidRegex
 import kotlin.collections.ArrayList
 
 data class AppInfo(
-    val info: ApplicationInfo,
+    val pInfo: PackageInfo,
+    val info: ApplicationInfo = pInfo.applicationInfo,
     val label: CharSequence,
     val activities: Collection<ActivityInfo>,
-    val services: Collection<ServiceInfo>
+    val services: Collection<ServiceInfo>,
+    val receivers: Collection<ReceiverInfo>
 ) {
     val activityAdapter = ActivityAdapter()
     val serviceAdapter = ServiceAdapter()
+    val receiverAdapter = ReceiverAdapter()
 
     val filteredActivities = ArrayList<ActivityInfo>(activities.size)
     val filteredServices = ArrayList<ServiceInfo>(services.size)
+    val filteredReceivers = ArrayList<ReceiverInfo>(receivers.size)
 
     var activitiesExpanded: Boolean = false
     var servicesExpanded: Boolean = false
+    var receiversExpanded: Boolean = false
 
     internal var currentQuery: String = ""
     internal var enabledFilterMode = EnabledFilterMode.SHOW_ALL
@@ -68,8 +76,10 @@ data class AppInfo(
 
             filteredActivities.clear()
             filteredServices.clear()
+            filteredReceivers.clear()
             activities.filterTo(filteredActivities) { matches(it) }
             services.filterTo(filteredServices) { matches(it) }
+            receivers.filterTo(filteredReceivers) { matches(it) }
         }
     }
 
