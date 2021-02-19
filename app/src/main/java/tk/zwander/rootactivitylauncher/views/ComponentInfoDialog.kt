@@ -10,6 +10,7 @@ import androidx.appcompat.app.AlertDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textview.MaterialTextView
 import tk.zwander.rootactivitylauncher.R
+import tk.zwander.rootactivitylauncher.util.hexString
 import tk.zwander.rootactivitylauncher.util.map
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -116,7 +117,9 @@ class ComponentInfoDialog(context: Context, info: Any) : MaterialAlertDialogBuil
         }
 
         info.sharedUserLabel.let {
-            printer.println("sharedUserLabel=$it")
+            if (it != 0) {
+                printer.println("sharedUserLabel=0x${it.hexString}")
+            }
         }
 
         info.firstInstallTime.let {
@@ -189,8 +192,32 @@ class ComponentInfoDialog(context: Context, info: Any) : MaterialAlertDialogBuil
             printer.println("permissions:")
             perms.forEach { perm ->
                 printer.println("  permission:")
+                perm.name?.let { name ->
+                    printer.println("    name=$name")
+                }
+                perm.packageName?.let { name ->
+                    printer.println("    packageName=$name")
+                }
+                perm.labelRes.let { res ->
+                    if (res != 0) {
+                        printer.println("    labelRes=0x${res.hexString}")
+                    }
+                }
+                perm.nonLocalizedLabel?.let { label ->
+                    printer.println("    nonLocalizedLabel=$label")
+                }
+                perm.icon.let { icon ->
+                    if (icon != 0) {
+                        printer.println("    icon=0x${icon.hexString}")
+                    }
+                }
+                perm.banner.let { banner ->
+                    if (banner != 0) {
+                        printer.println("    banner=${banner.hexString}")
+                    }
+                }
                 perm.protectionLevel.let { level ->
-                    printer.println("    protectionLevel=$level")
+                    printer.println("    protectionLevel=${PermissionInfo.protectionToString(level)}")
                 }
                 perm.flags.let { flags ->
                     printer.println("    flags=$flags")
@@ -202,10 +229,10 @@ class ComponentInfoDialog(context: Context, info: Any) : MaterialAlertDialogBuil
                     printer.println("    backgroundPermission=$p")
                 }
                 perm.descriptionRes.let { res ->
-                    printer.println("    descriptionRes=$res")
+                    printer.println("    descriptionRes=0x${res.hexString}")
                 }
                 perm.requestRes.let { res ->
-                    printer.println("    requestRes=$res")
+                    printer.println("    requestRes=0x${res.hexString}")
                 }
                 perm.nonLocalizedDescription?.let { desc ->
                     printer.println("    nonLocalizedDescription=$desc")

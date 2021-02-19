@@ -48,6 +48,9 @@ inline fun <T, R, C : MutableCollection<in R>> SparseArray<out T>.mapTo(destinat
     return destination
 }
 
+val Int.hexString: String
+    get() = Integer.toHexString(this)
+
 val Context.prefs: PrefManager
     get() = PrefManager.getInstance(this)
 
