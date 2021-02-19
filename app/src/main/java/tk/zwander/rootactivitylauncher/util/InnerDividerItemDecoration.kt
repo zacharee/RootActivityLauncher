@@ -6,6 +6,7 @@ import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
+import kotlin.math.roundToInt
 
 class InnerDividerItemDecoration(context: Context, orientation: Int) : DividerItemDecoration(context, orientation) {
     private val mOrientation: Int
@@ -42,25 +43,15 @@ class InnerDividerItemDecoration(context: Context, orientation: Int) : DividerIt
         parent: RecyclerView
     ) {
         canvas.save()
-        val left: Int
-        val right: Int
-        if (parent.clipToPadding) {
-            left = parent.paddingLeft
-            right = parent.width - parent.paddingRight
-            canvas.clipRect(
-                left, parent.paddingTop, right,
-                parent.height - parent.paddingBottom
-            )
-        } else {
-            left = 0
-            right = parent.width
-        }
         val childCount = parent.childCount
         for (i in 0 until childCount - 1) {
             val child = parent.getChildAt(i)
             parent.getDecoratedBoundsWithMargins(child, mBounds)
-            val bottom = mBounds.bottom + Math.round(child.translationY)
+            val bottom = mBounds.bottom + child.translationY.roundToInt()
             val top = bottom - mDivider!!.intrinsicHeight
+            val left = child.left + parent.context.dpToPx(8)
+            val right = child.right - parent.context.dpToPx(8)
+
             mDivider!!.setBounds(left, top, right, bottom)
             mDivider!!.draw(canvas)
         }
@@ -72,25 +63,15 @@ class InnerDividerItemDecoration(context: Context, orientation: Int) : DividerIt
         parent: RecyclerView
     ) {
         canvas.save()
-        val top: Int
-        val bottom: Int
-        if (parent.clipToPadding) {
-            top = parent.paddingTop
-            bottom = parent.height - parent.paddingBottom
-            canvas.clipRect(
-                parent.paddingLeft, top,
-                parent.width - parent.paddingRight, bottom
-            )
-        } else {
-            top = 0
-            bottom = parent.height
-        }
         val childCount = parent.childCount
         for (i in 0 until childCount - 1) {
             val child = parent.getChildAt(i)
             parent.layoutManager!!.getDecoratedBoundsWithMargins(child, mBounds)
-            val right = mBounds.right + Math.round(child.translationX)
+            val right = mBounds.right + child.translationX.roundToInt()
             val left = right - mDivider!!.intrinsicWidth
+            val top = child.top + parent.context.dpToPx(8)
+            val bottom = child.bottom - parent.context.dpToPx(8)
+
             mDivider!!.setBounds(left, top, right, bottom)
             mDivider!!.draw(canvas)
         }

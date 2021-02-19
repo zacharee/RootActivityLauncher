@@ -34,6 +34,7 @@ import tk.zwander.rootactivitylauncher.data.PrefManager
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import java.util.regex.PatternSyntaxException
 import kotlin.coroutines.CoroutineContext
+import kotlin.math.roundToInt
 
 
 inline fun <T, R> SparseArray<out T>.map(transform: (T) -> R): List<R> {
@@ -226,3 +227,15 @@ fun Activity.requestShizukuPermission(code: Int) {
         Shizuku.requestPermission(code)
     }
 }
+
+//Take a DP value and return its representation in pixels.
+fun Context.dpAsPx(dpVal: Number) =
+    TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        dpVal.toFloat(),
+        resources.displayMetrics
+    ).roundToInt()
+
+//Take a pixel value and return its representation in DP.
+fun Context.pxAsDp(pxVal: Number) =
+    pxVal.toFloat() / resources.displayMetrics.density

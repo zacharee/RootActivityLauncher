@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -24,6 +25,7 @@ import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.hmomeni.progresscircula.ProgressCircula
 import kotlinx.android.synthetic.main.activity_main.*
@@ -51,8 +53,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     private val appAdapter by lazy {
         AppAdapter(this)
     }
-    private val appListLayoutManager: LinearLayoutManager
-        get() = app_list.layoutManager as LinearLayoutManager
+    private val appListLayoutManager: RecyclerView.LayoutManager
+        get() = app_list.layoutManager as RecyclerView.LayoutManager
     private val menu by lazy { action_menu_view.menu as MenuBuilder }
 
     private val progress by lazy { menu.findItem(R.id.progress) }
@@ -231,6 +233,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         }
 
         app_list.adapter = appAdapter
+        app_list.layoutManager = getAppropriateLayoutManager(resources.configuration.screenWidthDp)
         app_list.setItemViewCacheSize(20)
         app_list.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -239,6 +242,12 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         })
         refresh.setOnRefreshListener(this)
         currentDataJob = loadDataAsync()
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        app_list.layoutManager = getAppropriateLayoutManager(newConfig.screenWidthDp)
     }
 
     override fun onRequestPermissionResult(requestCode: Int, grantResult: Int) {
@@ -286,8 +295,21 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     private fun updateScrollButtonState() {
         val isActive = currentDataJob?.isActive == true
         val newTopVis = app_list.computeVerticalScrollOffset() > 0 && !isActive
-        val newBotVis =
-            appListLayoutManager.findLastCompletelyVisibleItemPosition() < appAdapter.itemCount - 1 && !isActive
+        val newBotVis = run {
+            val pos = when (val manager = appListLayoutManager) {
+                is StaggeredGridLayoutManager -> {
+                    IntArray(50).apply { manager.findLastCompletelyVisibleItemPositions(this) }
+                        .maxOrNull() ?: 0
+                }
+                is LinearLayoutManager -> {
+                    manager.findLastCompletelyVisibleItemPosition()
+                }
+                else -> {
+                    throw IllegalStateException("Invalid layout manager $manager")
+                }
+            }
+            pos < appAdapter.itemCount - 1 && !isActive
+        }
 
         if (scrollToTop?.isVisible != newTopVis) {
             scrollToTop?.isVisible = newTopVis

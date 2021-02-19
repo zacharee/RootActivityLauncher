@@ -9,6 +9,7 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.hmomeni.progresscircula.dpToPx
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
 import kotlinx.android.synthetic.main.app_item.view.*
 import kotlinx.coroutines.coroutineScope
@@ -247,6 +248,10 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
                 activities.adapter = data.activityAdapter
                 services.adapter = data.serviceAdapter
                 receivers.adapter = data.receiverAdapter
+
+                activities.layoutManager = context.getAppropriateLayoutManager(context.pxAsDp(width).toInt())
+                services.layoutManager = context.getAppropriateLayoutManager(context.pxAsDp(width).toInt())
+                receivers.layoutManager = context.getAppropriateLayoutManager(context.pxAsDp(width).toInt())
 
                 if (activities.isVisible != data.activitiesExpanded) {
                     activities.isVisible = data.activitiesExpanded
