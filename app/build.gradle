@@ -46,12 +46,13 @@ dependencies {
     implementation "rikka.shizuku:provider:11.0.1"
     implementation 'com.github.ChickenHook:RestrictionBypass:2.2'
     implementation 'com.github.zacharee:PatreonSupportersRetrieval:4ce71eb5bf'
+    implementation 'com.github.zacharee:RecyclerView-FastScroll:224bd6f8e8'
 
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.2'
     implementation 'eu.chainfire:libsuperuser:1.1.0.+'
     implementation 'com.hmomeni.progresscircula:progresscircula:0.2.1'
     implementation 'com.squareup.picasso:picasso:2.71828'
-    implementation 'com.simplecityapps:recyclerview-fastscroll:2.0.1'
+//    implementation 'com.simplecityapps:recyclerview-fastscroll:2.0.1'
     implementation "com.github.skydoves:balloon:1.2.4"
 }
