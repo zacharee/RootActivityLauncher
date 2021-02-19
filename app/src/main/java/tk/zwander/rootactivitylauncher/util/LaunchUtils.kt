@@ -147,7 +147,7 @@ fun Context.launchService(extras: List<ExtraInfo>, componentKey: String) {
     }
 
     if (Shizuku.pingBinder() && hasShizukuPermission) {
-        if (tryShizukuServiceLaunch(intent)) {
+        if (tryShizukuServiceLaunch(intent, extras)) {
             return
         }
     }
