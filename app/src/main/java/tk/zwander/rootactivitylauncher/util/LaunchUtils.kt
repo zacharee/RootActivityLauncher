@@ -2,22 +2,18 @@ package tk.zwander.rootactivitylauncher.util
 
 import android.app.AppOpsManager
 import android.app.IActivityManager
+import android.app.IApplicationThread
 import android.app.admin.DevicePolicyManager
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.os.IBinder
-import android.os.Process
-import android.os.ServiceManager
-import android.os.UserHandle
+import android.os.*
 import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import eu.chainfire.libsuperuser.Shell
-import rikka.shizuku.Shizuku
-import rikka.shizuku.ShizukuBinderWrapper
-import rikka.shizuku.SystemServiceHelper
+import rikka.shizuku.*
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 
@@ -57,16 +53,26 @@ private fun tryRootBroadcastLaunch(componentKey: String, extras: List<ExtraInfo>
     return Shell.Pool.SU.run(command.toString()) == 0
 }
 
-private fun tryShizukuServiceLaunch(intent: Intent): Boolean {
+private fun tryShizukuServiceLaunch(intent: Intent, extras: List<ExtraInfo>): Boolean {
     return try {
         val iam = IActivityManager.Stub.asInterface(ShizukuBinderWrapper(
                 SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)))
 
-        iam.startService(
+        try {
+            iam.startService(
                 null, intent, null, false, "com.android.shell",
                 null, UserHandle.USER_CURRENT
-        )
-        true
+            )
+            true
+        } catch (e: Exception) {
+            val command = StringBuilder("am start -n ${intent.component}")
+
+            if (extras.isNotEmpty()) extras.forEach {
+                command.append(" -e \"${it.key}\" \"${it.value}\"")
+            }
+
+            Shizuku.newProcess(arrayOf("sh", "-c", command.toString()), null, null).exitValue() == 0
+        }
     } catch (e: Exception) {
         false
     }
