@@ -347,25 +347,39 @@ class ComponentInfoDialog(context: Context, info: Any) : MaterialAlertDialogBuil
             printer.println("requiredAccountType=$it")
         }
 
-        if (info.isOverlayPackage) {
+        if (info.overlayTarget != null) {
             info.overlayTarget?.let {
                 printer.println("overlayTarget=$it")
             }
 
-            info.targetOverlayableName?.let {
-                printer.println("targetOverlayableName=$it")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                info.targetOverlayableName?.let {
+                    printer.println("targetOverlayableName=$it")
+                }
             }
 
-            info.overlayCategory?.let {
-                printer.println("overlayCategory=$it")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                info.overlayCategory?.let {
+                    printer.println("overlayCategory=$it")
+                }
             }
 
-            info.overlayPriority.let {
-                printer.println("overlayPriority=$it")
-            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                info.overlayPriority.let {
+                    printer.println("overlayPriority=$it")
+                }
 
-            info.mOverlayIsStatic.let {
-                printer.println("mOverlayIsStatic=$it")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    info.mOverlayIsStatic.let {
+                        printer.println("mOverlayIsStatic=$it")
+                    }
+                } else {
+                    PackageInfo::class.java
+                        .getDeclaredField("isStaticOverlay")
+                        .get(info).let {
+                            printer.println("isStaticOverlay=$it")
+                        }
+                }
             }
         }
 
