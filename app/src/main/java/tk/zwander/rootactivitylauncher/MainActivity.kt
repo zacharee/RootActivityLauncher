@@ -527,7 +527,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 receivers = receiverInfos,
                 isForTasker = isForTasker,
                 selectionCallback = { info ->
-                    selectedItem = info.type() to info.info.run { ComponentName(packageName, name) }
+                    selectedItem = info.type() to info.component
                 }
             )
         }

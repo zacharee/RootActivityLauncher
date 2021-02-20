@@ -1,6 +1,8 @@
 package tk.zwander.rootactivitylauncher.data.component
 
+import android.content.ComponentName
 import android.content.pm.ComponentInfo
+import com.google.android.gms.common.internal.Objects
 import tk.zwander.rootactivitylauncher.util.constructComponentKey
 import java.lang.IllegalStateException
 
@@ -8,6 +10,8 @@ open class BaseComponentInfo(
     open val info: ComponentInfo,
     open val label: CharSequence
 ) : Comparable<BaseComponentInfo> {
+    val component by lazy { ComponentName(info.packageName, info.name) }
+
     fun type(): ComponentType {
         return when(this) {
             is ActivityInfo -> ComponentType.ACTIVITY
@@ -26,10 +30,11 @@ open class BaseComponentInfo(
 
     override fun equals(other: Any?): Boolean {
         return other is BaseComponentInfo
+                && component == other.component
                 && label == other.label
     }
 
     override fun hashCode(): Int {
-        return label.hashCode()
+        return Objects.hashCode(component, label)
     }
 }
