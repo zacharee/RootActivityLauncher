@@ -2,6 +2,7 @@ package tk.zwander.rootactivitylauncher
 
 import android.animation.TimeInterpolator
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -14,6 +15,7 @@ import android.os.Bundle
 import android.os.IBinder
 import android.os.Process
 import android.os.Process.myUid
+import android.provider.DocumentsContract
 import android.util.Log
 import android.view.MenuItem
 import android.view.ViewTreeObserver
@@ -23,6 +25,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
+import androidx.documentfile.provider.DocumentFile
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
@@ -41,6 +44,7 @@ import tk.zwander.rootactivitylauncher.data.component.ReceiverInfo
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.FilterDialog
+import java.io.File
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -50,10 +54,28 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener, Shizuku.OnRequestPermissionResultListener {
     companion object {
         const val REQ_SHIZUKU = 10001
+        const val REQ_EXTRACT = 1001
     }
 
+    @Volatile
+    private var extractInfo: AppInfo? = null
+        set(value) {
+            field = value
+
+            if (value != null) {
+
+            }
+        }
+
     private val appAdapter by lazy {
-        AppAdapter(this)
+        AppAdapter(this) { d ->
+            extractInfo = d
+
+            val extractIntent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+            extractIntent.putExtra(Intent.EXTRA_TITLE, getString(R.string.choose_extract_folder_msg))
+
+            startActivityForResult(extractIntent, REQ_EXTRACT)
+        }
     }
     private val appListLayoutManager: RecyclerView.LayoutManager
         get() = app_list.layoutManager as RecyclerView.LayoutManager
@@ -275,6 +297,48 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
         onRequestPermissionResult(requestCode, grantResults[0])
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == REQ_EXTRACT && resultCode == Activity.RESULT_OK
+            && extractInfo != null) {
+            val dirUri = data?.data ?: return
+            val dir = DocumentFile.fromTreeUri(this, dirUri) ?: return
+
+            val extractInfo = extractInfo!!
+            val baseDir = File(extractInfo.info.sourceDir)
+
+            val splits = extractInfo.info.splitSourceDirs?.mapIndexed { index, s ->
+                val splitApk = File(s)
+                val splitName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    extractInfo.info.splitNames[index]
+                } else splitApk.nameWithoutExtension
+
+                splitName to s
+            }
+
+            val baseFile = dir.createFile("application/vnd.android.package-archive", extractInfo.info.packageName) ?: return
+            contentResolver.openOutputStream(baseFile.uri).use { writer ->
+                Log.e("RootActivityLauncher", "$baseDir")
+                baseDir.inputStream().use { reader ->
+                    reader.copyTo(writer)
+                }
+            }
+
+            splits?.forEach { split ->
+                val name = split.first
+                val path = File(split.second)
+
+                val file = dir.createFile("application/vnd.android.package-archive", "${extractInfo.info.packageName}_$name") ?: return
+                contentResolver.openOutputStream(file.uri).use { writer ->
+                    path.inputStream().use { reader ->
+                        reader.copyTo(writer)
+                    }
+                }
+            }
+        }
     }
 
     override fun onQueryTextChange(newText: String?): Boolean {

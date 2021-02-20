@@ -21,6 +21,7 @@
     <string name="create_shortcut">Create Shortcut</string>
     <string name="launch_status">Launch Status</string>
     <string name="component_info">Component Info</string>
+    <string name="extract_apk">Extract APK(s)</string>
 
     <string name="activities">Activities (%d)</string>
     <string name="services">Services (%d)</string>
@@ -47,4 +48,5 @@
     <string name="supporters">Supporters</string>
 
     <string name="device_admin_desc">Device Admin can be used on Samsung One UI devices to launch otherwise un-launchable components.</string>
+    <string name="choose_extract_folder_msg">Choose a folder to extract the APK(s) to.</string>
 </resources>

@@ -102,6 +102,17 @@
                 app:srcCompat="@drawable/about_outline"
                 />
 
+            <tk.zwander.rootactivitylauncher.views.TooltippedClickableImageView
+                android:id="@+id/app_extract"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:contentDescription="@string/extract_apk"
+                android:scaleType="center"
+                android:background="?selectableItemBackground"
+                app:srcCompat="@drawable/ic_baseline_open_in_new_24"
+                />
+
         </LinearLayout>
 
         <View

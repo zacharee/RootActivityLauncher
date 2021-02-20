@@ -1,6 +1,7 @@
 package tk.zwander.rootactivitylauncher.adapters
 
 import android.content.Context
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,10 +22,11 @@ import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.ComponentInfoDialog
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
+import java.io.File
 import kotlin.Comparator
 import kotlin.collections.HashMap
 
-class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
+class AppAdapter(context: Context, private val extractCallback: (AppInfo) -> Unit) : RecyclerView.Adapter<AppAdapter.AppVH>(),
     FastScrollRecyclerView.SectionedAdapter {
     val async = AsyncListDiffer(this, object : DiffUtil.ItemCallback<AppInfo>() {
         override fun areContentsTheSame(oldItem: AppInfo, newItem: AppInfo): Boolean {
@@ -231,6 +233,11 @@ class AppAdapter(context: Context) : RecyclerView.Adapter<AppAdapter.AppVH>(),
 
                     ComponentInfoDialog(context, d.pInfo)
                             .show()
+                }
+
+                app_extract.setOnClickListener {
+                    val d = async.currentList[adapterPosition]
+                    extractCallback(d)
                 }
             }
         }
