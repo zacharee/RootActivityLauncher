@@ -233,8 +233,10 @@ class ComponentInfoDialog(context: Context, info: Any) : MaterialAlertDialogBuil
                 perm.descriptionRes.let { res ->
                     printer.println("    descriptionRes=0x${res.hexString}")
                 }
-                perm.requestRes.let { res ->
-                    printer.println("    requestRes=0x${res.hexString}")
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+                    perm.requestRes.let { res ->
+                        printer.println("    requestRes=0x${res.hexString}")
+                    }
                 }
                 perm.nonLocalizedDescription?.let { desc ->
                     printer.println("    nonLocalizedDescription=$desc")
@@ -387,12 +389,14 @@ class ComponentInfoDialog(context: Context, info: Any) : MaterialAlertDialogBuil
             }
         }
 
-        info.compileSdkVersion.let {
-            printer.println("compileSdkVersion=$it")
-        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            info.compileSdkVersion.let {
+                printer.println("compileSdkVersion=$it")
+            }
 
-        info.compileSdkVersionCodename?.let {
-            printer.println("compileSdkVersionCodename=$it")
+            info.compileSdkVersionCodename?.let {
+                printer.println("compileSdkVersionCodename=$it")
+            }
         }
 
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
