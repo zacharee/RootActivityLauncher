@@ -1,7 +1,6 @@
 package tk.zwander.rootactivitylauncher.adapters
 
 import android.content.Context
-import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,10 +9,8 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.hmomeni.progresscircula.dpToPx
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
 import kotlinx.android.synthetic.main.app_item.view.*
-import kotlinx.coroutines.coroutineScope
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
@@ -22,11 +19,10 @@ import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.ComponentInfoDialog
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
-import java.io.File
 import kotlin.Comparator
 import kotlin.collections.HashMap
 
-class AppAdapter(context: Context, private val extractCallback: (AppInfo) -> Unit) : RecyclerView.Adapter<AppAdapter.AppVH>(),
+class AppAdapter(context: Context, private val isForTasker: Boolean, private val extractCallback: (AppInfo) -> Unit) : RecyclerView.Adapter<AppAdapter.AppVH>(),
     FastScrollRecyclerView.SectionedAdapter {
     val async = AsyncListDiffer(this, object : DiffUtil.ItemCallback<AppInfo>() {
         override fun areContentsTheSame(oldItem: AppInfo, newItem: AppInfo): Boolean {
@@ -239,6 +235,8 @@ class AppAdapter(context: Context, private val extractCallback: (AppInfo) -> Uni
                     val d = async.currentList[adapterPosition]
                     extractCallback(d)
                 }
+
+                action_wrapper.isVisible = !isForTasker
             }
         }
 

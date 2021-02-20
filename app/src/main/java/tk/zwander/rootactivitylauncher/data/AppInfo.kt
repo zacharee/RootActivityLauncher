@@ -18,11 +18,13 @@ data class AppInfo(
     val label: CharSequence,
     val activities: Collection<ActivityInfo>,
     val services: Collection<ServiceInfo>,
-    val receivers: Collection<ReceiverInfo>
+    val receivers: Collection<ReceiverInfo>,
+    val isForTasker: Boolean,
+    val selectionCallback: (BaseComponentInfo) -> Unit
 ) {
-    val activityAdapter = ActivityAdapter()
-    val serviceAdapter = ServiceAdapter()
-    val receiverAdapter = ReceiverAdapter()
+    val activityAdapter = ActivityAdapter(isForTasker, selectionCallback)
+    val serviceAdapter = ServiceAdapter(isForTasker, selectionCallback)
+    val receiverAdapter = ReceiverAdapter(isForTasker, selectionCallback)
 
     val filteredActivities = ArrayList<ActivityInfo>(activities.size)
     val filteredServices = ArrayList<ServiceInfo>(services.size)

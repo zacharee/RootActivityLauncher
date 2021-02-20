@@ -18,7 +18,9 @@ import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 
 private fun Context.showRootToast() {
-    Toast.makeText(this, R.string.requires_root, Toast.LENGTH_SHORT).show()
+    try {
+        Toast.makeText(this, R.string.requires_root, Toast.LENGTH_SHORT).show()
+    } catch (e: Exception) {}
 }
 
 private fun tryRootServiceLaunch(componentKey: String, extras: List<ExtraInfo>): Boolean {
@@ -132,7 +134,7 @@ private fun tryShizukuBroadcastLaunch(intent: Intent): Boolean {
     }
 }
 
-fun Context.launchService(extras: List<ExtraInfo>, componentKey: String) {
+fun Context.launchService(extras: List<ExtraInfo>, componentKey: String): Boolean {
     val intent = Intent(prefs.findActionForComponent(componentKey))
     intent.component = ComponentName.unflattenFromString(componentKey)
 
@@ -142,25 +144,26 @@ fun Context.launchService(extras: List<ExtraInfo>, componentKey: String) {
 
     try {
         ContextCompat.startForegroundService(this, intent)
-        return
+        return true
     } catch (e: SecurityException) {
     }
 
     if (Shizuku.pingBinder() && hasShizukuPermission) {
         if (tryShizukuServiceLaunch(intent, extras)) {
-            return
+            return true
         }
     }
 
     if (Shell.SU.available()) {
         tryRootServiceLaunch(componentKey, extras)
-        return
+        return true
     }
 
     showRootToast()
+    return false
 }
 
-fun Context.launchActivity(extras: List<ExtraInfo>, componentKey: String) {
+fun Context.launchActivity(extras: List<ExtraInfo>, componentKey: String): Boolean {
     val intent = Intent(prefs.findActionForComponent(componentKey))
     intent.component = ComponentName.unflattenFromString(componentKey)
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -171,14 +174,14 @@ fun Context.launchActivity(extras: List<ExtraInfo>, componentKey: String) {
 
     try {
         startActivity(intent)
-        return
+        return true
     } catch (e: SecurityException) {
     } catch (e: ActivityNotFoundException) {
     }
 
     if (Shizuku.pingBinder() && hasShizukuPermission) {
         if (tryShizukuActivityLaunch(intent)) {
-            return
+            return true
         }
     }
 
@@ -186,19 +189,20 @@ fun Context.launchActivity(extras: List<ExtraInfo>, componentKey: String) {
 
     if (dpm.isAdminActive(ComponentName(this, AdminReceiver::class.java))) {
         if (tryAdminActivityLaunch(componentKey)) {
-            return
+            return true
         }
     }
 
     if (Shell.SU.available()) {
         tryRootActivityLaunch(componentKey, extras)
-        return
+        return true
     }
 
     showRootToast()
+    return false
 }
 
-fun Context.launchReceiver(extras: List<ExtraInfo>, componentKey: String) {
+fun Context.launchReceiver(extras: List<ExtraInfo>, componentKey: String): Boolean {
     val intent = Intent(prefs.findActionForComponent(componentKey))
     intent.component = ComponentName.unflattenFromString(componentKey)
 
@@ -213,14 +217,15 @@ fun Context.launchReceiver(extras: List<ExtraInfo>, componentKey: String) {
 
     if (Shizuku.pingBinder() && hasShizukuPermission) {
         if (tryShizukuBroadcastLaunch(intent)) {
-            return
+            return true
         }
     }
 
     if (Shell.SU.available()) {
         tryRootBroadcastLaunch(componentKey, extras)
-        return
+        return true
     }
 
     showRootToast()
+    return false
 }

@@ -3,19 +3,12 @@ package tk.zwander.rootactivitylauncher
 import android.animation.TimeInterpolator
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
-import android.os.Process
-import android.os.Process.myUid
-import android.provider.DocumentsContract
 import android.util.Log
 import android.view.MenuItem
 import android.view.ViewTreeObserver
@@ -35,13 +28,10 @@ import com.hmomeni.progresscircula.ProgressCircula
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import rikka.shizuku.Shizuku
-import rikka.shizuku.SystemServiceHelper
 import tk.zwander.patreonsupportersretrieval.view.SupporterView
 import tk.zwander.rootactivitylauncher.adapters.AppAdapter
 import tk.zwander.rootactivitylauncher.data.AppInfo
-import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
-import tk.zwander.rootactivitylauncher.data.component.ReceiverInfo
-import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
+import tk.zwander.rootactivitylauncher.data.component.*
 import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.FilterDialog
 import java.io.File
@@ -50,25 +40,21 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 
 @SuppressLint("RestrictedApi")
-class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
+open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener, Shizuku.OnRequestPermissionResultListener {
     companion object {
         const val REQ_SHIZUKU = 10001
         const val REQ_EXTRACT = 1001
     }
 
+    protected open val isForTasker = false
+    protected open var selectedItem: Pair<ComponentType, ComponentName>? = null
+
     @Volatile
     private var extractInfo: AppInfo? = null
-        set(value) {
-            field = value
-
-            if (value != null) {
-
-            }
-        }
 
     private val appAdapter by lazy {
-        AppAdapter(this) { d ->
+        fun onExtract(d: AppInfo) {
             extractInfo = d
 
             val extractIntent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
@@ -76,6 +62,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
             startActivityForResult(extractIntent, REQ_EXTRACT)
         }
+
+        AppAdapter(this, isForTasker, ::onExtract)
     }
     private val appListLayoutManager: RecyclerView.LayoutManager
         get() = app_list.layoutManager as RecyclerView.LayoutManager
@@ -536,7 +524,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 label = appLabel,
                 activities = activityInfos,
                 services = serviceInfos,
-                receivers = receiverInfos
+                receivers = receiverInfos,
+                isForTasker = isForTasker,
+                selectionCallback = { info ->
+                    selectedItem = info.type() to info.info.run { ComponentName(packageName, name) }
+                }
             )
         }
 

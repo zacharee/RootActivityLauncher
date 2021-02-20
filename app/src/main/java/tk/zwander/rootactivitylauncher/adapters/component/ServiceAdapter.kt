@@ -5,12 +5,18 @@ import android.net.Uri
 import android.view.View
 import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
+import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.picasso.ServiceIconHandler
 import tk.zwander.rootactivitylauncher.util.launchService
 
-class ServiceAdapter : BaseComponentAdapter<ServiceAdapter, ServiceInfo, ServiceAdapter.ServiceVH>(ServiceInfo::class.java) {
+class ServiceAdapter(isForTasker: Boolean, selectionCallback: (BaseComponentInfo) -> Unit) :
+    BaseComponentAdapter<ServiceAdapter, ServiceInfo, ServiceAdapter.ServiceVH>(
+        ServiceInfo::class.java,
+        isForTasker,
+        selectionCallback
+    ) {
     override fun onCreateViewHolder(view: View, viewType: Int): ServiceVH {
         return ServiceVH(view)
     }

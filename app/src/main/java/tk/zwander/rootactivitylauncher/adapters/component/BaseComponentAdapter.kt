@@ -33,12 +33,18 @@ import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.ComponentInfoDialog
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
+import android.util.TypedValue
+
+
+
 
 abstract class BaseComponentAdapter<
         Self : BaseComponentAdapter<Self, DataClass, VHClass>,
         DataClass : BaseComponentInfo,
         VHClass : BaseComponentAdapter<Self, DataClass, VHClass>.BaseComponentVH>(
-    dataClass: Class<DataClass>
+    dataClass: Class<DataClass>,
+    private val isForTasker: Boolean,
+    private val selectionCallback: (BaseComponentInfo) -> Unit
 ) :
     RecyclerView.Adapter<VHClass>(), CoroutineScope by MainScope() {
     val currentList = SortedList(dataClass, object : SortedListAdapterCallback<DataClass>(this) {
@@ -109,21 +115,28 @@ abstract class BaseComponentAdapter<
                             if (hasRoot) {
                                 Shell.Pool.SU.run("pm ${if (isChecked) "enable" else "disable"} $currentComponentKey") == 0
                             } else {
-                                val ipm = IPackageManager.Stub.asInterface(ShizukuBinderWrapper(
-                                        SystemServiceHelper.getSystemService("package")))
+                                val ipm = IPackageManager.Stub.asInterface(
+                                    ShizukuBinderWrapper(
+                                        SystemServiceHelper.getSystemService("package")
+                                    )
+                                )
 
                                 try {
                                     ipm.setComponentEnabledSetting(
-                                            ComponentName.unflattenFromString(currentComponentKey),
-                                            if (isChecked) PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-                                            else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                                            0,
-                                            UserHandle.USER_CURRENT
+                                        ComponentName.unflattenFromString(currentComponentKey),
+                                        if (isChecked) PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                                        else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                                        0,
+                                        UserHandle.USER_CURRENT
                                     )
 
                                     true
                                 } catch (e: Exception) {
-                                    Toast.makeText(itemView.context, R.string.requires_root, Toast.LENGTH_SHORT)
+                                    Toast.makeText(
+                                        itemView.context,
+                                        R.string.requires_root,
+                                        Toast.LENGTH_SHORT
+                                    )
                                             .show()
                                     false
                                 }
@@ -153,19 +166,45 @@ abstract class BaseComponentAdapter<
 
         init {
             itemView.apply {
+                action_wrapper.isVisible = !isForTasker
+                enabled.isVisible = !isForTasker
+
+                if (isForTasker) {
+                    root.isClickable = true
+                    root.isFocusable = true
+
+                    val outValue = TypedValue()
+                    context.theme.resolveAttribute(
+                        android.R.attr.selectableItemBackground,
+                        outValue,
+                        true
+                    )
+                    root.setBackgroundResource(outValue.resourceId)
+                    root.setOnClickListener {
+                        selectionCallback(currentList[adapterPosition])
+                    }
+                }
+
                 set_extras.setOnClickListener {
                     ExtrasDialog(context, currentComponentKey)
                         .show()
                 }
                 launch.setOnClickListener {
-                    onLaunch(currentList[adapterPosition], context, currentGlobalExtras + currentExtras)
+                    onLaunch(
+                        currentList[adapterPosition],
+                        context,
+                        currentGlobalExtras + currentExtras
+                    )
                 }
                 shortcut.setOnClickListener {
                     val d = currentList[adapterPosition]
                     context.createShortcut(
                         d.label,
                         IconCompat.createWithBitmap(
-                            (icon.drawable ?: ContextCompat.getDrawable(context, R.mipmap.ic_launcher))!!.toBitmap()
+                            (icon.drawable ?: ContextCompat.getDrawable(
+                                context,
+                                R.mipmap.ic_launcher
+                            ))!!.toBitmap()
                         ),
                         currentComponentKey,
                         componentType
@@ -197,7 +236,8 @@ abstract class BaseComponentAdapter<
                 val requiresPermission = (info is ActivityInfo && info.permission != null) || (info is ServiceInfo && info.permission != null)
 
                 launch_status_indicator.setColorFilter(
-                    ContextCompat.getColor(context,
+                    ContextCompat.getColor(
+                        context,
                         when {
                             !data.info.exported -> R.color.colorUnexported
                             requiresPermission -> R.color.colorNeedsPermission

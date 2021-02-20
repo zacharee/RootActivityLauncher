@@ -4,12 +4,18 @@ import android.content.Context
 import android.net.Uri
 import android.view.View
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
+import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.data.component.ReceiverInfo
 import tk.zwander.rootactivitylauncher.picasso.ReceiverIconHandler
 import tk.zwander.rootactivitylauncher.util.launchReceiver
 
-class ReceiverAdapter : BaseComponentAdapter<ReceiverAdapter, ReceiverInfo, ReceiverAdapter.ReceiverVH>(ReceiverInfo::class.java) {
+class ReceiverAdapter(isForTasker: Boolean, selectionCallback: (BaseComponentInfo) -> Unit) :
+    BaseComponentAdapter<ReceiverAdapter, ReceiverInfo, ReceiverAdapter.ReceiverVH>(
+        ReceiverInfo::class.java,
+        isForTasker,
+        selectionCallback
+    ) {
     override fun onCreateViewHolder(view: View, viewType: Int): ReceiverAdapter.ReceiverVH {
         return ReceiverVH(view)
     }
