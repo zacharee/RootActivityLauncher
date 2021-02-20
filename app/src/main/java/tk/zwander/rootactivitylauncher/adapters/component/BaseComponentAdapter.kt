@@ -36,8 +36,6 @@ import tk.zwander.rootactivitylauncher.views.ExtrasDialog
 import android.util.TypedValue
 
 
-
-
 abstract class BaseComponentAdapter<
         Self : BaseComponentAdapter<Self, DataClass, VHClass>,
         DataClass : BaseComponentInfo,
