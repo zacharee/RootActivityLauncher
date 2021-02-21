@@ -405,6 +405,11 @@ class ComponentInfoDialog(context: Context, info: Any) : MaterialAlertDialogBuil
             }
         }
 
+        info.applicationInfo.let {
+            printer.println("applicationInfo:")
+            it.dump(printer, "  ")
+        }
+
         val string = formatDump(sWriter.toString())
 
         sWriter.close()
@@ -429,6 +434,10 @@ class ComponentInfoDialog(context: Context, info: Any) : MaterialAlertDialogBuil
                     .replaceFirst(Regex("^(?!&nbsp;&nbsp;)"), "<b>")
                     .replace("=", "</b>=")
                     .replace(Regex(":$"), "</b>:")
+                    .run {
+                        if (!contains("=") && !contains(":")) "$this</b>"
+                        else this
+                    }
 
                 when {
                     index == lastIndex -> string.append(formatted)
