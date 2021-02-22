@@ -23,9 +23,11 @@ private fun Context.showRootToast() {
     } catch (e: Exception) {}
 }
 
-private fun tryRootServiceLaunch(componentKey: String, extras: List<ExtraInfo>): Boolean {
+private fun tryRootServiceLaunch(componentKey: String, action: String, extras: List<ExtraInfo>): Boolean {
     val command = StringBuilder("am startservice $componentKey")
 
+    command.append(" -a $action")
+
     if (extras.isNotEmpty()) extras.forEach {
         command.append(" -e \"${it.key}\" \"${it.value}\"")
     }
@@ -33,9 +35,11 @@ private fun tryRootServiceLaunch(componentKey: String, extras: List<ExtraInfo>):
     return Shell.Pool.SU.run(command.toString()) == 0
 }
 
-private fun tryRootActivityLaunch(componentKey: String, extras: List<ExtraInfo>): Boolean {
+private fun tryRootActivityLaunch(componentKey: String, action: String, extras: List<ExtraInfo>): Boolean {
     val command = StringBuilder("am start -n $componentKey")
 
+    command.append(" -a $action")
+
     if (extras.isNotEmpty()) extras.forEach {
         command.append(" -e \"${it.key}\" \"${it.value}\"")
     }
@@ -43,8 +47,10 @@ private fun tryRootActivityLaunch(componentKey: String, extras: List<ExtraInfo>)
     return Shell.Pool.SU.run(command.toString()) == 0
 }
 
-private fun tryRootBroadcastLaunch(componentKey: String, extras: List<ExtraInfo>): Boolean {
+private fun tryRootBroadcastLaunch(componentKey: String, action: String, extras: List<ExtraInfo>): Boolean {
     val command = StringBuilder("am broadcast -n $componentKey")
+
+    command.append(" -a $action")
 
     if (extras.isNotEmpty()) {
         extras.forEach {
@@ -57,17 +63,19 @@ private fun tryRootBroadcastLaunch(componentKey: String, extras: List<ExtraInfo>
 
 private fun tryShizukuServiceLaunch(intent: Intent, extras: List<ExtraInfo>): Boolean {
     return try {
-        val iam = IActivityManager.Stub.asInterface(ShizukuBinderWrapper(
+        try {
+            val iam = IActivityManager.Stub.asInterface(ShizukuBinderWrapper(
                 SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)))
 
-        try {
             iam.startService(
                 null, intent, null, false, "com.android.shell",
                 null, UserHandle.USER_CURRENT
             )
             true
-        } catch (e: Exception) {
-            val command = StringBuilder("am start -n ${intent.component}")
+        } catch (e: Throwable) {
+            val command = StringBuilder("am startservice ${intent.component}")
+
+            command.append(" -a ${intent.action}")
 
             if (extras.isNotEmpty()) extras.forEach {
                 command.append(" -e \"${it.key}\" \"${it.value}\"")
@@ -75,7 +83,7 @@ private fun tryShizukuServiceLaunch(intent: Intent, extras: List<ExtraInfo>): Bo
 
             Shizuku.newProcess(arrayOf("sh", "-c", command.toString()), null, null).exitValue() == 0
         }
-    } catch (e: Exception) {
+    } catch (e: Throwable) {
         false
     }
 }
@@ -102,33 +110,57 @@ private fun tryAdminActivityLaunch(componentKey: String): Boolean {
     }
 }
 
-private fun tryShizukuActivityLaunch(intent: Intent): Boolean {
+private fun tryShizukuActivityLaunch(intent: Intent, extras: List<ExtraInfo>): Boolean {
     return try {
-        val iam = IActivityManager.Stub.asInterface(ShizukuBinderWrapper(
+        try {
+            val iam = IActivityManager.Stub.asInterface(ShizukuBinderWrapper(
                 SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)))
 
-        iam.startActivity(
+            iam.startActivity(
                 null, "com.android.shell", intent,
                 null, null, null, 0, 0,
                 null, null
-        )
-        true
-    } catch (e: Exception) {
+            )
+            true
+        } catch (e: Throwable) {
+            val command = StringBuilder("am start -n ${intent.component}")
+
+            command.append(" -a ${intent.action}")
+
+            if (extras.isNotEmpty()) extras.forEach {
+                command.append(" -e \"${it.key}\" \"${it.value}\"")
+            }
+
+            Shizuku.newProcess(arrayOf("sh", "-c", command.toString()), null, null).exitValue() == 0
+        }
+    } catch (e: Throwable) {
         false
     }
 }
 
-private fun tryShizukuBroadcastLaunch(intent: Intent): Boolean {
+private fun tryShizukuBroadcastLaunch(intent: Intent, extras: List<ExtraInfo>): Boolean {
     return try {
-        val iam = IActivityManager.Stub.asInterface(ShizukuBinderWrapper(
+        try {
+            val iam = IActivityManager.Stub.asInterface(ShizukuBinderWrapper(
                 SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)))
 
-        iam.broadcastIntent(
+            iam.broadcastIntent(
                 null, intent, null, null, 0, null,
                 null, null, AppOpsManager.OP_NONE, null, false, false,
                 UserHandle.USER_CURRENT
-        )
-        true
+            )
+            true
+        } catch (e: Throwable) {
+            val command = StringBuilder("am broadcast -n ${intent.component}")
+
+            command.append(" -a ${intent.action}")
+
+            if (extras.isNotEmpty()) extras.forEach {
+                command.append(" -e \"${it.key}\" \"${it.value}\"")
+            }
+
+            Shizuku.newProcess(arrayOf("sh", "-c", command.toString()), null, null).exitValue() == 0
+        }
     } catch (e: Exception) {
         false
     }
@@ -155,7 +187,7 @@ fun Context.launchService(extras: List<ExtraInfo>, componentKey: String): Boolea
     }
 
     if (Shell.SU.available()) {
-        tryRootServiceLaunch(componentKey, extras)
+        tryRootServiceLaunch(componentKey, intent.action, extras)
         return true
     }
 
@@ -180,7 +212,7 @@ fun Context.launchActivity(extras: List<ExtraInfo>, componentKey: String): Boole
     }
 
     if (Shizuku.pingBinder() && hasShizukuPermission) {
-        if (tryShizukuActivityLaunch(intent)) {
+        if (tryShizukuActivityLaunch(intent, extras)) {
             return true
         }
     }
@@ -194,7 +226,7 @@ fun Context.launchActivity(extras: List<ExtraInfo>, componentKey: String): Boole
     }
 
     if (Shell.SU.available()) {
-        tryRootActivityLaunch(componentKey, extras)
+        tryRootActivityLaunch(componentKey, intent.action, extras)
         return true
     }
 
@@ -216,13 +248,13 @@ fun Context.launchReceiver(extras: List<ExtraInfo>, componentKey: String): Boole
     }
 
     if (Shizuku.pingBinder() && hasShizukuPermission) {
-        if (tryShizukuBroadcastLaunch(intent)) {
+        if (tryShizukuBroadcastLaunch(intent, extras)) {
             return true
         }
     }
 
     if (Shell.SU.available()) {
-        tryRootBroadcastLaunch(componentKey, extras)
+        tryRootBroadcastLaunch(componentKey, intent.action, extras)
         return true
     }
 
