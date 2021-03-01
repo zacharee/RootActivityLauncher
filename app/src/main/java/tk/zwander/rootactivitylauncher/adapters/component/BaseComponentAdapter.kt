@@ -1,6 +1,5 @@
 package tk.zwander.rootactivitylauncher.adapters.component
 
-import android.app.IActivityManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.ActivityInfo
@@ -125,17 +124,18 @@ abstract class BaseComponentAdapter<
                                         if (isChecked) PackageManager.COMPONENT_ENABLED_STATE_ENABLED
                                         else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                                         0,
-                                        UserHandle.USER_CURRENT
+                                        UserHandle.USER_SYSTEM
                                     )
 
                                     true
                                 } catch (e: Exception) {
-                                    Toast.makeText(
-                                        itemView.context,
-                                        R.string.requires_root,
-                                        Toast.LENGTH_SHORT
-                                    )
-                                            .show()
+                                    launch(Dispatchers.Main) {
+                                        Toast.makeText(
+                                            itemView.context,
+                                            R.string.requires_root,
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
                                     false
                                 }
                             }
