@@ -49,8 +49,8 @@ dependencies {
     implementation 'com.github.zacharee:RecyclerView-FastScroll:224bd6f8e8'
     implementation 'com.joaomgcd:taskerpluginlibrary:0.3.3'
 
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.3'
     implementation 'eu.chainfire:libsuperuser:1.1.0.+'
     implementation 'com.hmomeni.progresscircula:progresscircula:0.2.1'
     implementation 'com.squareup.picasso:picasso:2.71828'
