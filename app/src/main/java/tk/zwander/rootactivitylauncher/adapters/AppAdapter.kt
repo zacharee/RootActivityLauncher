@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CompoundButton
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.AsyncListDiffer
@@ -22,7 +23,11 @@ import tk.zwander.rootactivitylauncher.views.ExtrasDialog
 import kotlin.Comparator
 import kotlin.collections.HashMap
 
-class AppAdapter(context: Context, private val isForTasker: Boolean, private val extractCallback: (AppInfo) -> Unit) : RecyclerView.Adapter<AppAdapter.AppVH>(),
+class AppAdapter(
+    context: Context,
+    private val isForTasker: Boolean,
+    private val extractCallback: (AppInfo) -> Unit
+) : RecyclerView.Adapter<AppAdapter.AppVH>(),
     FastScrollRecyclerView.SectionedAdapter {
     val async = AsyncListDiffer(this, object : DiffUtil.ItemCallback<AppInfo>() {
         override fun areContentsTheSame(oldItem: AppInfo, newItem: AppInfo): Boolean {
@@ -228,13 +233,29 @@ class AppAdapter(context: Context, private val isForTasker: Boolean, private val
                     val d = async.currentList[adapterPosition]
 
                     ComponentInfoDialog(context, d.pInfo)
-                            .show()
+                        .show()
                 }
 
                 app_extract.setOnClickListener {
                     val d = async.currentList[adapterPosition]
                     extractCallback(d)
                 }
+
+                app_enabled.setOnCheckedChangeListener(object :
+                    CompoundButton.OnCheckedChangeListener {
+                    override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
+                        val d = async.currentList[adapterPosition]
+
+                        if (!itemView.context.setPackageEnabled(
+                                d.info.packageName, isChecked
+                            )
+                        ) {
+                            app_enabled.setOnCheckedChangeListener(null)
+                            app_enabled.isChecked = !isChecked
+                            app_enabled.setOnCheckedChangeListener(this)
+                        }
+                    }
+                })
 
                 action_wrapper.isVisible = !isForTasker
             }
@@ -249,14 +270,18 @@ class AppAdapter(context: Context, private val isForTasker: Boolean, private val
 
                 app_name.text = data.label
                 app_pkg.text = data.info.packageName
+                if (data.info.enabled != app_enabled.isChecked) app_enabled.isChecked = data.info.enabled
 
                 activities.adapter = data.activityAdapter
                 services.adapter = data.serviceAdapter
                 receivers.adapter = data.receiverAdapter
 
-                activities.layoutManager = context.getAppropriateLayoutManager(context.pxAsDp(width).toInt())
-                services.layoutManager = context.getAppropriateLayoutManager(context.pxAsDp(width).toInt())
-                receivers.layoutManager = context.getAppropriateLayoutManager(context.pxAsDp(width).toInt())
+                activities.layoutManager =
+                    context.getAppropriateLayoutManager(context.pxAsDp(width).toInt())
+                services.layoutManager =
+                    context.getAppropriateLayoutManager(context.pxAsDp(width).toInt())
+                receivers.layoutManager =
+                    context.getAppropriateLayoutManager(context.pxAsDp(width).toInt())
 
                 if (activities.isVisible != data.activitiesExpanded) {
                     activities.isVisible = data.activitiesExpanded

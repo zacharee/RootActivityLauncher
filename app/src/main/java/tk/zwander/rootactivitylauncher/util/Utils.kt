@@ -239,3 +239,9 @@ fun Context.dpAsPx(dpVal: Number) =
 //Take a pixel value and return its representation in DP.
 fun Context.pxAsDp(pxVal: Number) =
     pxVal.toFloat() / resources.displayMetrics.density
+
+fun Context.showRootToast() {
+    try {
+        Toast.makeText(this, R.string.requires_root, Toast.LENGTH_SHORT).show()
+    } catch (e: Exception) {}
+}

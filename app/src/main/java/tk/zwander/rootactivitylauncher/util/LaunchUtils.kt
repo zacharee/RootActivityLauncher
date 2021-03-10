@@ -17,12 +17,6 @@ import rikka.shizuku.*
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 
-private fun Context.showRootToast() {
-    try {
-        Toast.makeText(this, R.string.requires_root, Toast.LENGTH_SHORT).show()
-    } catch (e: Exception) {}
-}
-
 private fun tryRootServiceLaunch(componentKey: String, action: String, extras: List<ExtraInfo>): Boolean {
     val command = StringBuilder("am startservice $componentKey")
 
