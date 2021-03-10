@@ -189,6 +189,21 @@ class AppAdapter(
     }
 
     inner class AppVH(view: View) : RecyclerView.ViewHolder(view) {
+        private val enabledListener = object : CompoundButton.OnCheckedChangeListener {
+            override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
+                val d = async.currentList[adapterPosition]
+
+                if (!itemView.context.setPackageEnabled(
+                        d.info.packageName, isChecked
+                    )
+                ) {
+                    itemView.app_enabled.setOnCheckedChangeListener(null)
+                    itemView.app_enabled.isChecked = !isChecked
+                    itemView.app_enabled.setOnCheckedChangeListener(this)
+                }
+            }
+        }
+
         init {
             itemView.apply {
                 activities.addItemDecoration(innerDividerItemDecoration)
@@ -241,22 +256,6 @@ class AppAdapter(
                     extractCallback(d)
                 }
 
-                app_enabled.setOnCheckedChangeListener(object :
-                    CompoundButton.OnCheckedChangeListener {
-                    override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
-                        val d = async.currentList[adapterPosition]
-
-                        if (!itemView.context.setPackageEnabled(
-                                d.info.packageName, isChecked
-                            )
-                        ) {
-                            app_enabled.setOnCheckedChangeListener(null)
-                            app_enabled.isChecked = !isChecked
-                            app_enabled.setOnCheckedChangeListener(this)
-                        }
-                    }
-                })
-
                 action_wrapper.isVisible = !isForTasker
             }
         }
@@ -270,7 +269,11 @@ class AppAdapter(
 
                 app_name.text = data.label
                 app_pkg.text = data.info.packageName
-                if (data.info.enabled != app_enabled.isChecked) app_enabled.isChecked = data.info.enabled
+                if (data.info.enabled != app_enabled.isChecked) {
+                    app_enabled.setOnCheckedChangeListener(null)
+                    app_enabled.isChecked = data.info.enabled
+                    app_enabled.setOnCheckedChangeListener(enabledListener)
+                }
 
                 activities.adapter = data.activityAdapter
                 services.adapter = data.serviceAdapter
