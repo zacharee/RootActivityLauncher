@@ -207,8 +207,12 @@ fun String.isValidRegex(): Boolean {
 
 val Context.hasShizukuPermission: Boolean
     get() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+        if (!Shizuku.pingBinder()) {
             return false
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return true
         }
 
         return if (Shizuku.isPreV11() || Shizuku.getVersion() < 11) {
