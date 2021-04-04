@@ -19,7 +19,6 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.*
 import eu.chainfire.libsuperuser.Shell
-import kotlinx.android.synthetic.main.component_item.view.*
 import kotlinx.coroutines.*
 import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuBinderWrapper
@@ -33,6 +32,7 @@ import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.ComponentInfoDialog
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
 import android.util.TypedValue
+import tk.zwander.rootactivitylauncher.databinding.ComponentItemBinding
 
 
 abstract class BaseComponentAdapter<
@@ -81,6 +81,8 @@ abstract class BaseComponentAdapter<
     }
 
     abstract inner class BaseComponentVH(view: View) : RecyclerView.ViewHolder(view) {
+        protected val binding = ComponentItemBinding.bind(itemView)
+
         internal abstract val componentType: ComponentType
 
         internal val currentExtras: List<ExtraInfo>
@@ -164,12 +166,12 @@ abstract class BaseComponentAdapter<
 
         init {
             itemView.apply {
-                action_wrapper.isVisible = !isForTasker
-                enabled.isVisible = !isForTasker
+                binding.actionWrapper.isVisible = !isForTasker
+                binding.enabled.isVisible = !isForTasker
 
                 if (isForTasker) {
-                    root.isClickable = true
-                    root.isFocusable = true
+                    binding.root.isClickable = true
+                    binding.root.isFocusable = true
 
                     val outValue = TypedValue()
                     context.theme.resolveAttribute(
@@ -177,29 +179,29 @@ abstract class BaseComponentAdapter<
                         outValue,
                         true
                     )
-                    root.setBackgroundResource(outValue.resourceId)
-                    root.setOnClickListener {
+                    binding.root.setBackgroundResource(outValue.resourceId)
+                    binding.root.setOnClickListener {
                         selectionCallback(currentList[adapterPosition])
                     }
                 }
 
-                set_extras.setOnClickListener {
+                binding.setExtras.setOnClickListener {
                     ExtrasDialog(context, currentComponentKey)
                         .show()
                 }
-                launch.setOnClickListener {
+                binding.launch.setOnClickListener {
                     onLaunch(
                         currentList[adapterPosition],
                         context,
                         currentGlobalExtras + currentExtras
                     )
                 }
-                shortcut.setOnClickListener {
+                binding.shortcut.setOnClickListener {
                     val d = currentList[adapterPosition]
                     context.createShortcut(
                         d.label,
                         IconCompat.createWithBitmap(
-                            (icon.drawable ?: ContextCompat.getDrawable(
+                            (binding.icon.drawable ?: ContextCompat.getDrawable(
                                 context,
                                 R.mipmap.ic_launcher
                             ))!!.toBitmap()
@@ -208,7 +210,7 @@ abstract class BaseComponentAdapter<
                         componentType
                     )
                 }
-                info.setOnClickListener {
+                binding.info.setOnClickListener {
                     val d = currentList[adapterPosition]
                     ComponentInfoDialog(context, d.info)
                         .show()
@@ -225,15 +227,15 @@ abstract class BaseComponentAdapter<
                 picasso.load(ActivityIconHandler.createUri(data.info.packageName, data.info.name))
                     .fit()
                     .centerInside()
-                    .into(icon)
+                    .into(binding.icon)
 
-                name.text = data.label
-                cmp.text = data.info.name
+                binding.name.text = data.label
+                binding.cmp.text = data.info.name
 
                 val info = data.info
                 val requiresPermission = (info is ActivityInfo && info.permission != null) || (info is ServiceInfo && info.permission != null)
 
-                launch_status_indicator.setColorFilter(
+                binding.launchStatusIndicator.setColorFilter(
                     ContextCompat.getColor(
                         context,
                         when {
@@ -248,13 +250,13 @@ abstract class BaseComponentAdapter<
                     picasso.load(this)
                         .fit()
                         .centerInside()
-                        .into(icon)
+                        .into(binding.icon)
                 }
 
-                enabled.setOnCheckedChangeListener(null)
-                if (enabled.isChecked != data.info.enabled) enabled.isChecked = data.info.enabled
+                binding.enabled.setOnCheckedChangeListener(null)
+                if (binding.enabled.isChecked != data.info.enabled) binding.enabled.isChecked = data.info.enabled
                 updateLaunchVisibility(data)
-                enabled.setOnCheckedChangeListener(componentEnabledListener)
+                binding.enabled.setOnCheckedChangeListener(componentEnabledListener)
             }
         }
 
@@ -264,7 +266,7 @@ abstract class BaseComponentAdapter<
 
         private fun updateLaunchVisibility(data: DataClass) {
             itemView.apply {
-                if (launch.isVisible != data.info.enabled) launch.isVisible = data.info.enabled
+                if (binding.launch.isVisible != data.info.enabled) binding.launch.isVisible = data.info.enabled
             }
         }
     }

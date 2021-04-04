@@ -11,11 +11,11 @@ import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
-import kotlinx.android.synthetic.main.app_item.view.*
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
+import tk.zwander.rootactivitylauncher.databinding.AppItemBinding
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.ComponentInfoDialog
@@ -189,6 +189,8 @@ class AppAdapter(
     }
 
     inner class AppVH(view: View) : RecyclerView.ViewHolder(view) {
+        private val binding = AppItemBinding.bind(itemView)
+
         private val enabledListener = object : CompoundButton.OnCheckedChangeListener {
             override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
                 val d = async.currentList[adapterPosition]
@@ -197,66 +199,66 @@ class AppAdapter(
                         d.info.packageName, isChecked
                     )
                 ) {
-                    itemView.app_enabled.setOnCheckedChangeListener(null)
-                    itemView.app_enabled.isChecked = !isChecked
-                    itemView.app_enabled.setOnCheckedChangeListener(this)
+                    binding.appEnabled.setOnCheckedChangeListener(null)
+                    binding.appEnabled.isChecked = !isChecked
+                    binding.appEnabled.setOnCheckedChangeListener(this)
                 }
             }
         }
 
         init {
             itemView.apply {
-                activities.addItemDecoration(innerDividerItemDecoration)
-                services.addItemDecoration(innerDividerItemDecoration)
-                receivers.addItemDecoration(innerDividerItemDecoration)
+                binding.activities.addItemDecoration(innerDividerItemDecoration)
+                binding.services.addItemDecoration(innerDividerItemDecoration)
+                binding.receivers.addItemDecoration(innerDividerItemDecoration)
 
-                activities_title.setOnClickListener {
+                binding.activitiesTitle.setOnClickListener {
                     val d = async.currentList[adapterPosition]
                     d.activitiesExpanded = !d.activitiesExpanded
 
                     notifyItemChanged(adapterPosition)
                 }
 
-                services_title.setOnClickListener {
+                binding.servicesTitle.setOnClickListener {
                     val d = async.currentList[adapterPosition]
                     d.servicesExpanded = !d.servicesExpanded
 
                     notifyItemChanged(adapterPosition)
                 }
 
-                receivers_title.setOnClickListener {
+                binding.receiversTitle.setOnClickListener {
                     val d = async.currentList[adapterPosition]
                     d.receiversExpanded = !d.receiversExpanded
 
                     notifyItemChanged(adapterPosition)
                 }
 
-                app_info.setOnClickListener {
+                binding.appInfo.setOnClickListener {
                     val d = async.currentList[adapterPosition]
 
                     context.openAppInfo(d.info.packageName)
                 }
 
-                global_extras.setOnClickListener {
+                binding.globalExtras.setOnClickListener {
                     val d = async.currentList[adapterPosition]
 
                     ExtrasDialog(context, d.info.packageName)
                         .show()
                 }
 
-                app_component_info.setOnClickListener {
+                binding.appComponentInfo.setOnClickListener {
                     val d = async.currentList[adapterPosition]
 
                     ComponentInfoDialog(context, d.pInfo)
                         .show()
                 }
 
-                app_extract.setOnClickListener {
+                binding.appExtract.setOnClickListener {
                     val d = async.currentList[adapterPosition]
                     extractCallback(d)
                 }
 
-                action_wrapper.isVisible = !isForTasker
+                binding.actionWrapper.isVisible = !isForTasker
             }
         }
 
@@ -265,76 +267,76 @@ class AppAdapter(
                 picasso.load(AppIconHandler.createUri(data.info.packageName))
                     .fit()
                     .centerInside()
-                    .into(app_icon)
+                    .into(binding.appIcon)
 
-                app_name.text = data.label
-                app_pkg.text = data.info.packageName
-                if (data.info.enabled != app_enabled.isChecked) {
-                    app_enabled.setOnCheckedChangeListener(null)
-                    app_enabled.isChecked = data.info.enabled
-                    app_enabled.setOnCheckedChangeListener(enabledListener)
+                binding.appName.text = data.label
+                binding.appPkg.text = data.info.packageName
+                if (data.info.enabled != binding.appEnabled.isChecked) {
+                    binding.appEnabled.setOnCheckedChangeListener(null)
+                    binding.appEnabled.isChecked = data.info.enabled
+                    binding.appEnabled.setOnCheckedChangeListener(enabledListener)
                 }
 
-                activities.adapter = data.activityAdapter
-                services.adapter = data.serviceAdapter
-                receivers.adapter = data.receiverAdapter
+                binding.activities.adapter = data.activityAdapter
+                binding.services.adapter = data.serviceAdapter
+                binding.receivers.adapter = data.receiverAdapter
 
-                activities.layoutManager =
+                binding.activities.layoutManager =
                     context.getAppropriateLayoutManager(context.pxAsDp(width).toInt())
-                services.layoutManager =
+                binding.services.layoutManager =
                     context.getAppropriateLayoutManager(context.pxAsDp(width).toInt())
-                receivers.layoutManager =
+                binding.receivers.layoutManager =
                     context.getAppropriateLayoutManager(context.pxAsDp(width).toInt())
 
-                if (activities.isVisible != data.activitiesExpanded) {
-                    activities.isVisible = data.activitiesExpanded
+                if (binding.activities.isVisible != data.activitiesExpanded) {
+                    binding.activities.isVisible = data.activitiesExpanded
                 }
-                if (services.isVisible != data.servicesExpanded) {
-                    services.isVisible = data.servicesExpanded
+                if (binding.services.isVisible != data.servicesExpanded) {
+                    binding.services.isVisible = data.servicesExpanded
                 }
-                if (receivers.isVisible != data.receiversExpanded) {
-                    receivers.isVisible = data.receiversExpanded
+                if (binding.receivers.isVisible != data.receiversExpanded) {
+                    binding.receivers.isVisible = data.receiversExpanded
                 }
 
-                activities_title.text =
+                binding.activitiesTitle.text =
                     resources.getString(R.string.activities, data.filteredActivities.size)
-                services_title.text =
+                binding.servicesTitle.text =
                     resources.getString(R.string.services, data.filteredServices.size)
-                receivers_title.text =
+                binding.receiversTitle.text =
                     resources.getString(R.string.receivers, data.filteredReceivers.size)
 
-                activities_title.setCompoundDrawablesRelative(
+                binding.activitiesTitle.setCompoundDrawablesRelative(
                     null,
                     null,
                     if (data.activitiesExpanded) arrowUp else arrowDown,
                     null
                 )
-                services_title.setCompoundDrawablesRelative(
+                binding.servicesTitle.setCompoundDrawablesRelative(
                     null,
                     null,
                     if (data.servicesExpanded) arrowUp else arrowDown,
                     null
                 )
-                receivers_title.setCompoundDrawablesRelative(
+                binding.receiversTitle.setCompoundDrawablesRelative(
                     null,
                     null,
                     if (data.receiversExpanded) arrowUp else arrowDown,
                     null
                 )
 
-                if (activities.isVisible) {
+                if (binding.activities.isVisible) {
                     data.activityAdapter.setItems(data.filteredActivities)
                 }
-                if (services.isVisible) {
+                if (binding.services.isVisible) {
                     data.serviceAdapter.setItems(data.filteredServices)
                 }
-                if (receivers.isVisible) {
+                if (binding.receivers.isVisible) {
                     data.receiverAdapter.setItems(data.filteredReceivers)
                 }
 
-                activities_title.isVisible = data.filteredActivities.isNotEmpty()
-                services_title.isVisible = data.filteredServices.isNotEmpty()
-                receivers_title.isVisible = data.filteredReceivers.isNotEmpty()
+                binding.activitiesTitle.isVisible = data.filteredActivities.isNotEmpty()
+                binding.servicesTitle.isVisible = data.filteredServices.isNotEmpty()
+                binding.receiversTitle.isVisible = data.filteredReceivers.isNotEmpty()
             }
         }
     }

@@ -25,13 +25,13 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.hmomeni.progresscircula.ProgressCircula
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import rikka.shizuku.Shizuku
 import tk.zwander.patreonsupportersretrieval.view.SupporterView
 import tk.zwander.rootactivitylauncher.adapters.AppAdapter
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.component.*
+import tk.zwander.rootactivitylauncher.databinding.ActivityMainBinding
 import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.FilterDialog
 import java.io.File
@@ -49,6 +49,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
     protected open val isForTasker = false
     protected open var selectedItem: Pair<ComponentType, ComponentName>? = null
+    protected val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
 
     @Volatile
     private var extractInfo: AppInfo? = null
@@ -66,8 +67,8 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         AppAdapter(this, isForTasker, ::onExtract)
     }
     private val appListLayoutManager: RecyclerView.LayoutManager
-        get() = app_list.layoutManager as RecyclerView.LayoutManager
-    private val menu by lazy { action_menu_view.menu as MenuBuilder }
+        get() = binding.appList.layoutManager as RecyclerView.LayoutManager
+    private val menu by lazy { binding.actionMenuView.menu as MenuBuilder }
 
     private val progress by lazy { menu.findItem(R.id.progress) }
     private val progressView: ProgressCircula?
@@ -127,7 +128,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(binding.root)
 
         //Maybe if we ever get a KNOX license key...
 //        val cInfoClass = Class.forName("com.samsung.android.knox.ContextInfo")
@@ -143,26 +144,26 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
         packageUpdateReceiver.register()
 
-        setSupportActionBar(bottom_bar)
+        setSupportActionBar(binding.bottomBar)
 
-        search_options_wrapper.viewTreeObserver.addOnGlobalLayoutListener(object :
+        binding.searchOptionsWrapper.viewTreeObserver.addOnGlobalLayoutListener(object :
             ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
                 setSearchWrapperState(false)
-                search_options_wrapper.isVisible = false
-                search_options_wrapper.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                binding.searchOptionsWrapper.isVisible = false
+                binding.searchOptionsWrapper.viewTreeObserver.removeOnGlobalLayoutListener(this)
             }
         })
-        open_close.setOnClickListener {
-            setSearchWrapperState(search_options_wrapper.translationX != 0f)
+        binding.openClose.setOnClickListener {
+            setSearchWrapperState(binding.searchOptionsWrapper.translationX != 0f)
         }
-        use_regex.setOnCheckedChangeListener { _, isChecked ->
+        binding.useRegex.setOnCheckedChangeListener { _, isChecked ->
             appAdapter.onFilterChange(useRegex = isChecked)
-            app_list.scrollToPosition(0)
+            binding.appList.scrollToPosition(0)
         }
-        include_components.setOnCheckedChangeListener { _, isChecked ->
+        binding.includeComponents.setOnCheckedChangeListener { _, isChecked ->
             appAdapter.onFilterChange(includeComponents = isChecked)
-            app_list.scrollToPosition(0)
+            binding.appList.scrollToPosition(0)
         }
 
         if (Shizuku.pingBinder()) {
@@ -193,18 +194,18 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                         val vis =
                             (appListLayoutManager).findFirstVisibleItemPosition()
                         if (vis > 20) {
-                            app_list.scrollToPosition(0)
+                            binding.appList.scrollToPosition(0)
                         } else {
-                            app_list.smoothScrollToPosition(0)
+                            binding.appList.smoothScrollToPosition(0)
                         }
                         true
                     }
                     R.id.scroll_bottom -> {
                         val vis = (appListLayoutManager).findLastVisibleItemPosition()
                         if (appAdapter.itemCount - vis > 20) {
-                            app_list.scrollToPosition(appAdapter.itemCount - 1)
+                            binding.appList.scrollToPosition(appAdapter.itemCount - 1)
                         } else {
-                            app_list.smoothScrollToPosition(appAdapter.itemCount - 1)
+                            binding.appList.smoothScrollToPosition(appAdapter.itemCount - 1)
                         }
                         true
                     }
@@ -248,30 +249,30 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
         searchView?.setOnQueryTextListener(this)
         searchView?.setOnSearchClickListener {
-            search_options_wrapper.isVisible = true
+            binding.searchOptionsWrapper.isVisible = true
         }
         searchView?.setOnCloseListener {
             setSearchWrapperState(false)
-            search_options_wrapper.isVisible = false
+            binding.searchOptionsWrapper.isVisible = false
             false
         }
 
-        app_list.adapter = appAdapter
-        app_list.layoutManager = getAppropriateLayoutManager(resources.configuration.screenWidthDp)
-        app_list.setItemViewCacheSize(20)
-        app_list.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+        binding.appList.adapter = appAdapter
+        binding.appList.layoutManager = getAppropriateLayoutManager(resources.configuration.screenWidthDp)
+        binding.appList.setItemViewCacheSize(20)
+        binding.appList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 updateScrollButtonState()
             }
         })
-        refresh.setOnRefreshListener(this)
+        binding.refresh.setOnRefreshListener(this)
         currentDataJob = loadDataAsync()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
-        app_list.layoutManager = getAppropriateLayoutManager(newConfig.screenWidthDp)
+        binding.appList.layoutManager = getAppropriateLayoutManager(newConfig.screenWidthDp)
     }
 
     override fun onRequestPermissionResult(requestCode: Int, grantResult: Int) {
@@ -330,7 +331,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
     override fun onQueryTextChange(newText: String?): Boolean {
         appAdapter.onFilterChange(query = newText ?: "")
-        app_list.scrollToPosition(0)
+        binding.appList.scrollToPosition(0)
         return true
     }
 
@@ -339,10 +340,10 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     }
 
     override fun onRefresh() {
-        refresh.isRefreshing = true
+        binding.refresh.isRefreshing = true
         if (currentDataJob?.isActive == true) currentDataJob?.cancel()
         currentDataJob = loadDataAsync()
-        refresh.isRefreshing = false
+        binding.refresh.isRefreshing = false
     }
 
     override fun onDestroy() {
@@ -355,12 +356,12 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
     private fun updateProgress(progress: Int) {
         progressView?.progress = progress
-        scrim_progress.progress = progress
+        binding.scrimProgress.progress = progress
     }
 
     private fun updateScrollButtonState() {
         val isActive = currentDataJob?.isActive == true
-        val newTopVis = app_list.computeVerticalScrollOffset() > 0 && !isActive
+        val newTopVis = binding.appList.computeVerticalScrollOffset() > 0 && !isActive
         val newBotVis = run {
             val pos = when (val manager = appListLayoutManager) {
                 is StaggeredGridLayoutManager -> {
@@ -386,7 +387,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     }
 
     private fun setSearchWrapperState(open: Boolean) {
-        search_options_wrapper.apply {
+        binding.searchOptionsWrapper.apply {
             animate()
                 .translationX(if (open) 0f else run {
                     width - dpToPx(28).toFloat()
@@ -400,7 +401,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 }
                 .start()
         }
-        open_close.animate()
+        binding.openClose.animate()
             .scaleX(if (open) -1f else 1f)
             .start()
     }
@@ -408,7 +409,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     private fun loadDataAsync(silent: Boolean = false) = async(Dispatchers.Main) {
         if (!silent) {
             updateProgress(0)
-            scrim.isVisible = true
+            binding.scrim.isVisible = true
             progress.isVisible = true
             search.isVisible = false
             filter.isVisible = false
@@ -446,15 +447,15 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
         if (!silent) {
             progress.isVisible = false
-            scrim.isVisible = false
+            binding.scrim.isVisible = false
 
-            refresh.postDelayed({
+            binding.refresh.postDelayed({
                 updateScrollButtonState()
                 search.isVisible = true
                 filter.isVisible = true
             }, 10)
         } else {
-            refresh.postDelayed({
+            binding.refresh.postDelayed({
                 updateScrollButtonState()
             }, 10)
         }

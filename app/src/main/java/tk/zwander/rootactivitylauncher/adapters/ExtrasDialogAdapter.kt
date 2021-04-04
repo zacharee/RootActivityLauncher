@@ -6,9 +6,9 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.widget.doOnTextChanged
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.extra_item.view.*
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
+import tk.zwander.rootactivitylauncher.databinding.ExtraItemBinding
 
 class ExtrasDialogAdapter : RecyclerView.Adapter<ExtrasDialogAdapter.BaseVH<out Any>>() {
     companion object {
@@ -72,14 +72,16 @@ class ExtrasDialogAdapter : RecyclerView.Adapter<ExtrasDialogAdapter.BaseVH<out 
     }
 
     inner class ExtraVH(view: View) : BaseVH<ExtraInfo>(view) {
+        private val binding = ExtraItemBinding.bind(itemView)
+
         override fun bind(data: ExtraInfo) {
-            itemView.apply {
-                key_field.setText(data.key, TextView.BufferType.EDITABLE)
-                value_field.setText(data.value, TextView.BufferType.EDITABLE)
-                key_field.doOnTextChanged { text, _, _, _ ->
+            binding.apply {
+                keyField.setText(data.key, TextView.BufferType.EDITABLE)
+                valueField.setText(data.value, TextView.BufferType.EDITABLE)
+                keyField.doOnTextChanged { text, _, _, _ ->
                     items[adapterPosition - 1].key = text.toString()
                 }
-                value_field.doOnTextChanged { text, _, _, _ ->
+                valueField.doOnTextChanged { text, _, _, _ ->
                     items[adapterPosition - 1].value = text.toString()
                 }
                 remove.setOnClickListener {
