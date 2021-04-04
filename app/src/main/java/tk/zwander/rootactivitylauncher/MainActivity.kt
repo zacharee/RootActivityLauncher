@@ -191,7 +191,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                     }
                     R.id.scroll_top -> {
                         val vis =
-                            (app_list.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
+                            (appListLayoutManager).findFirstVisibleItemPosition()
                         if (vis > 20) {
                             app_list.scrollToPosition(0)
                         } else {
@@ -200,8 +200,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                         true
                     }
                     R.id.scroll_bottom -> {
-                        val vis =
-                            (app_list.layoutManager as LinearLayoutManager).findLastVisibleItemPosition()
+                        val vis = (appListLayoutManager).findLastVisibleItemPosition()
                         if (appAdapter.itemCount - vis > 20) {
                             app_list.scrollToPosition(appAdapter.itemCount - 1)
                         } else {

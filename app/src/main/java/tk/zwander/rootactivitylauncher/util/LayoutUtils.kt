@@ -20,3 +20,23 @@ fun Context.getAppropriateLayoutManager(widthDp: Int): RecyclerView.LayoutManage
         else -> linearLayoutManager()
     }
 }
+
+fun RecyclerView.LayoutManager.findFirstVisibleItemPosition(): Int {
+    if (this is LinearLayoutManager) {
+        return findFirstVisibleItemPosition()
+    } else if (this is StaggeredGridLayoutManager) {
+        return findFirstVisibleItemPositions(null)[0]
+    }
+
+    return -1
+}
+
+fun RecyclerView.LayoutManager.findLastVisibleItemPosition(): Int {
+    if (this is LinearLayoutManager) {
+        return findLastVisibleItemPosition()
+    } else if (this is StaggeredGridLayoutManager) {
+        return findLastVisibleItemPositions(null).last()
+    }
+
+    return -1
+}
