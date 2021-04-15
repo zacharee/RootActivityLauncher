@@ -311,7 +311,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             contentResolver.openOutputStream(baseFile.uri).use { writer ->
                 Log.e("RootActivityLauncher", "$baseDir")
                 baseDir.inputStream().use { reader ->
-                    reader.copyTo(writer)
+                    reader.copyTo(writer!!)
                 }
             }
 
@@ -322,7 +322,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 val file = dir.createFile("application/vnd.android.package-archive", "${extractInfo.info.packageName}_$name") ?: return
                 contentResolver.openOutputStream(file.uri).use { writer ->
                     path.inputStream().use { reader ->
-                        reader.copyTo(writer)
+                        reader.copyTo(writer!!)
                     }
                 }
             }
