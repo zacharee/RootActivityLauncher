@@ -49,4 +49,15 @@
 
     <string name="device_admin_desc">Device Admin can be used on Samsung One UI devices to launch otherwise un-launchable components.</string>
     <string name="choose_extract_folder_msg">Choose a folder to extract the APK(s) to.</string>
+    
+    <string name="usage_advanced_search">Advanced Search</string>
+
+    <string name="usage_advanced_search_has_permission">Has Permission</string>
+    <string name="usage_advanced_search_has_permission_desc">You can use Root Activity Launcher to search for apps that request different permissions. The basic format is: \"has-permission:[AND/OR;]list,of,permissions\". If you use \"AND\" apps must request all permissions in the list to be shown in the results. If you use \"OR\" apps must request at least one permission in the list. The default mode is \"AND\".</string>
+
+    <string name="usage_advanced_search_declares_permission">Declares Permission</string>
+    <string name="usage_advanced_search_declares_permission_desc">You can use Root Activity Launcher to search for apps that declare different permissions. The basic format is: \"declares-permission:[AND/OR;]list,of,permissions\". If you use \"AND\" apps must declare all permissions in the list to be shown in the results. If you use \"OR\" apps must declare at least one permission in the list. The default mode is \"AND\".</string>
+
+    <string name="usage_advanced_search_requires_permission">Requires Permission</string>
+    <string name="usage_advanced_search_requires_permission_desc">You can use Root Activity Launcher to search for apps and components that require different permissions. The basic format is: \"requires-permission:list,of,permissions\". The only supported mode for this is \"OR\".</string>
 </resources>

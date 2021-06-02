@@ -33,6 +33,7 @@ import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.component.*
 import tk.zwander.rootactivitylauncher.databinding.ActivityMainBinding
 import tk.zwander.rootactivitylauncher.util.*
+import tk.zwander.rootactivitylauncher.views.AdvancedUsageDialog
 import tk.zwander.rootactivitylauncher.views.FilterDialog
 import java.io.File
 import java.util.*
@@ -235,6 +236,11 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                             .setMessage(R.string.supporters_desc)
                             .setView(SupporterView(this@MainActivity))
                             .setPositiveButton(android.R.string.ok, null)
+                            .show()
+                        true
+                    }
+                    R.id.action_advanced_search -> {
+                        AdvancedUsageDialog(this@MainActivity)
                             .show()
                         true
                     }

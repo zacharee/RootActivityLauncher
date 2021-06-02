@@ -42,6 +42,12 @@
         />
 
     <item
+        android:id="@+id/action_advanced_search"
+        android:title="@string/usage_advanced_search"
+        app:showAsAction="never"
+        />
+
+    <item
         android:id="@+id/action_twitter"
         android:title="@string/twitter"
         app:showAsAction="never"
