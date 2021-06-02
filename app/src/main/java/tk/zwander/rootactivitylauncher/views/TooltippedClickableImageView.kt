@@ -13,7 +13,7 @@ class TooltippedClickableImageView(context: Context, attrs: AttributeSet) : AppC
         setOnLongClickListener {
             if (contentDescription.isNotBlank()) {
                 createBalloon(context) {
-                    arrowVisible = false
+                    isVisibleArrow = false
                     text = contentDescription.toString()
                     setPadding(8)
                     setCornerRadius(2f)
