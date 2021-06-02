@@ -9,6 +9,7 @@ import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ReceiverInfo
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
+import tk.zwander.rootactivitylauncher.util.AdvancedSearcher
 import tk.zwander.rootactivitylauncher.util.isValidRegex
 import kotlin.collections.ArrayList
 
@@ -104,16 +105,19 @@ data class AppInfo(
 
         if (currentQuery.isBlank() || !includeComponents) return true
 
+        val advancedMatch = AdvancedSearcher.matchesRequiresPermission(currentQuery, data.info)
+
         if (useRegex && currentQuery.isValidRegex()) {
             if (Regex(currentQuery).run {
                     containsMatchIn(data.info.name)
                             || containsMatchIn(data.label)
-                }) {
+                } || advancedMatch) {
                 return true
             }
         } else {
             if (data.info.name.contains(currentQuery, true)
                 || (data.label.contains(currentQuery, true))
+                || advancedMatch
             ) {
                 return true
             }

@@ -163,7 +163,11 @@ class AppAdapter(
         val serviceFilterEmpty = data.filteredServices.isEmpty()
         val receiverFilterEmpty = data.filteredReceivers.isEmpty()
 
-        if (activityFilterEmpty && serviceFilterEmpty && receiverFilterEmpty) return false
+        val advancedMatch = AdvancedSearcher.matchesHasPermission(currentQuery, data)
+                || AdvancedSearcher.matchesRequiresPermission(currentQuery, data)
+                || AdvancedSearcher.matchesDeclaresPermission(currentQuery, data)
+
+        if (!advancedMatch && activityFilterEmpty && serviceFilterEmpty && receiverFilterEmpty) return false
 
         if (currentQuery.isBlank()) return true
 
@@ -171,12 +175,13 @@ class AppAdapter(
             if (Regex(currentQuery).run {
                     containsMatchIn(data.info.packageName)
                             || containsMatchIn(data.label)
-                }) {
+                } || advancedMatch) {
                 return true
             }
         } else {
             if (data.label.contains(currentQuery, true)
                 || data.info.packageName.contains(currentQuery, true)
+                || advancedMatch
             ) {
                 return true
             }
