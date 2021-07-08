@@ -226,8 +226,16 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                         launchEmail("zachary@zwander.dev", resources.getString(R.string.app_name))
                         true
                     }
+                    R.id.action_telegram -> {
+                        launchUrl("https://bit.ly/ZachareeTG")
+                        true
+                    }
+                    R.id.action_discord -> {
+                        launchUrl("https://bit.ly/zwanderDiscord")
+                        true
+                    }
                     R.id.action_patreon -> {
-                        launchUrl("https//patreon.com/zacharywander")
+                        launchUrl("https://bit.ly/zwanderPatreon")
                         true
                     }
                     R.id.action_supporters -> {

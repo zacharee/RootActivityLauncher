@@ -46,6 +46,9 @@
     <string name="email">Email</string>
     <string name="patreon">Patreon</string>
     <string name="supporters">Supporters</string>
+    <string name="telegram">Telegram</string>
+    <string name="discord">Discord</string>
+    <string name="social">Social</string>
 
     <string name="device_admin_desc">Device Admin can be used on Samsung One UI devices to launch otherwise un-launchable components.</string>
     <string name="choose_extract_folder_msg">Choose a folder to extract the APK(s) to.</string>

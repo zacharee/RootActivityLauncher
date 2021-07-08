@@ -48,39 +48,59 @@
         />
 
     <item
-        android:id="@+id/action_twitter"
-        android:title="@string/twitter"
-        app:showAsAction="never"
-        />
+        android:id="@+id/social"
+        android:titleCondensed="@string/social"
+        android:title="@string/social"
+        app:showAsAction="never">
+        <menu>
+            <item
+                android:id="@+id/action_twitter"
+                android:title="@string/twitter"
+                app:showAsAction="never"
+                />
 
-    <item
-        android:id="@+id/action_web"
-        android:title="@string/website"
-        app:showAsAction="never"
-        />
+            <item
+                android:id="@+id/action_web"
+                android:title="@string/website"
+                app:showAsAction="never"
+                />
 
-    <item
-        android:id="@+id/action_github"
-        android:title="@string/github"
-        app:showAsAction="never"
-        />
+            <item
+                android:id="@+id/action_github"
+                android:title="@string/github"
+                app:showAsAction="never"
+                />
 
-    <item
-        android:id="@+id/action_email"
-        android:title="@string/email"
-        app:showAsAction="never"
-        />
+            <item
+                android:id="@+id/action_email"
+                android:title="@string/email"
+                app:showAsAction="never"
+                />
 
-    <item
-        android:id="@+id/action_patreon"
-        android:title="@string/patreon"
-        app:showAsAction="never"
-        />
+            <item
+                android:id="@+id/action_telegram"
+                android:title="@string/telegram"
+                app:showAsAction="never"
+                />
 
-    <item
-        android:id="@+id/action_supporters"
-        android:title="@string/supporters"
-        app:showAsAction="never"
-        />
+            <item
+                android:id="@+id/action_discord"
+                android:title="@string/discord"
+                app:showAsAction="never"
+                />
+
+            <item
+                android:id="@+id/action_patreon"
+                android:title="@string/patreon"
+                app:showAsAction="never"
+                />
+
+            <item
+                android:id="@+id/action_supporters"
+                android:title="@string/supporters"
+                app:showAsAction="never"
+                />
+        </menu>
+    </item>
 
 </menu>
