@@ -453,7 +453,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 )
             } else {
                 val packages = packageManager.getInstalledPackages(PackageManager.GET_DISABLED_COMPONENTS)
-                packages.map {
+                packages.mapNotNull {
                     try {
                         //Try to get all the components for this package at once.
                         packageManager.getPackageInfo(
@@ -476,7 +476,12 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                             PackageManager.GET_CONFIGURATIONS
                         ).map { flag ->
                             async {
-                                packageManager.getPackageInfo(it.packageName, flag)
+                                try {
+                                    packageManager.getPackageInfo(it.packageName, flag)
+                                } catch (e: Exception) {
+                                    Log.e("RootActivityLauncher", "Unable to get split info for ${it.packageName} for flag $flag", e)
+                                    null
+                                }
                             }
                         }.awaitAll()
 
