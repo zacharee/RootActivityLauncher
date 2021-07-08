@@ -412,58 +412,113 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             .start()
     }
 
-    private fun loadDataAsync(silent: Boolean = false) = async(Dispatchers.Main) {
-        if (!silent) {
-            updateProgress(0)
-            binding.scrim.isVisible = true
-            progress.isVisible = true
-            search.isVisible = false
-            filter.isVisible = false
-            scrollToTop.isVisible = false
-            scrollToBottom.isVisible = false
-            setSearchWrapperState(false)
-        }
-
-        val apps = packageManager.getInstalledPackages(
-            PackageManager.GET_ACTIVITIES or
-                    PackageManager.GET_SERVICES or
-                    PackageManager.GET_RECEIVERS or
-                    PackageManager.GET_PERMISSIONS or
-                    PackageManager.GET_CONFIGURATIONS or
-                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
-                    else PackageManager.GET_DISABLED_COMPONENTS
-        )
-        val max = apps.size - 1
-        val loaded = ConcurrentLinkedQueue<AppInfo>()
-
-        var progressIndex = 0
-
-        apps.forEachParallel { app ->
-            loadApp(app)?.let {
-                loaded.add(it)
+    private fun loadDataAsync(silent: Boolean = false): Deferred<*> {
+        return async(Dispatchers.Main) {
+            if (!silent) {
+                updateProgress(0)
+                binding.scrim.isVisible = true
+                progress.isVisible = true
+                search.isVisible = false
+                filter.isVisible = false
+                scrollToTop.isVisible = false
+                scrollToBottom.isVisible = false
+                setSearchWrapperState(false)
             }
+
+            //This mess is because of a bug in Marshmallow and possibly earlier that
+            //causes getInstalledPackages() to fail because one of the PackageInfo objects
+            //is to large. It'll throw a DeadObjectException internally and then just return
+            //as much as it already transferred before the error. The bug seems to be fixed in
+            //Nougat and later.
+            //If the device is on Marshmallow, retrieve a list of packages without any components
+            //attached. Attempt to retrieve all components at once per-app. If that fails, retrieve
+            //each set of components individually and combine them.
+            //https://twitter.com/Wander1236/status/1412928863798190083?s=20
+            val apps = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+                packageManager.getInstalledPackages(
+                    PackageManager.GET_ACTIVITIES or
+                            PackageManager.GET_SERVICES or
+                            PackageManager.GET_RECEIVERS or
+                            PackageManager.GET_PERMISSIONS or
+                            PackageManager.GET_CONFIGURATIONS or
+                            PackageManager.MATCH_DISABLED_COMPONENTS
+                )
+            } else {
+                val packages = packageManager.getInstalledPackages(PackageManager.GET_DISABLED_COMPONENTS)
+                packages.map {
+                    try {
+                        //Try to get all the components for this package at once.
+                        packageManager.getPackageInfo(
+                            it.packageName,
+                            PackageManager.GET_ACTIVITIES or
+                                    PackageManager.GET_SERVICES or
+                                    PackageManager.GET_RECEIVERS or
+                                    PackageManager.GET_PERMISSIONS or
+                                    PackageManager.GET_CONFIGURATIONS
+                        )
+                    } catch (e: Exception) {
+                        //The resulting PackageInfo was too large. Retrieve each set
+                        //separately and combine them.
+                        Log.e("RootActivityLauncher", "Unable to get full info, splitting ${it.packageName}", e)
+                        val awaits = listOf(
+                            PackageManager.GET_ACTIVITIES,
+                            PackageManager.GET_SERVICES,
+                            PackageManager.GET_RECEIVERS,
+                            PackageManager.GET_PERMISSIONS,
+                            PackageManager.GET_CONFIGURATIONS
+                        ).map { flag ->
+                            async {
+                                packageManager.getPackageInfo(it.packageName, flag)
+                            }
+                        }.awaitAll()
+
+                        it.apply {
+                            awaits.forEach { element ->
+                                element?.activities?.let { this.activities = it }
+                                element?.services?.let { this.services = it }
+                                element?.receivers?.let { this.receivers = it }
+                                element?.permissions?.let { this.permissions = it }
+                                element?.configPreferences?.let { this.configPreferences = it }
+                                element?.reqFeatures?.let { this.reqFeatures = it }
+                                element?.featureGroups?.let { this.featureGroups = it }
+                            }
+                        }
+                    }
+                }
+            }
+
+            val max = apps.size - 1
+            val loaded = ConcurrentLinkedQueue<AppInfo>()
+
+            var progressIndex = 0
+
+            apps.forEachParallel { app ->
+                loadApp(app)?.let {
+                    loaded.add(it)
+                }
+
+                if (!silent) {
+                    val p = (progressIndex++.toFloat() / max.toFloat() * 100f).toInt()
+                    updateProgress(p)
+                }
+            }
+
+            appAdapter.setItems(loaded)
 
             if (!silent) {
-                val p = (progressIndex++.toFloat() / max.toFloat() * 100f).toInt()
-                updateProgress(p)
+                progress.isVisible = false
+                binding.scrim.isVisible = false
+
+                binding.refresh.postDelayed({
+                    updateScrollButtonState()
+                    search.isVisible = true
+                    filter.isVisible = true
+                }, 10)
+            } else {
+                binding.refresh.postDelayed({
+                    updateScrollButtonState()
+                }, 10)
             }
-        }
-
-        appAdapter.setItems(loaded)
-
-        if (!silent) {
-            progress.isVisible = false
-            binding.scrim.isVisible = false
-
-            binding.refresh.postDelayed({
-                updateScrollButtonState()
-                search.isVisible = true
-                filter.isVisible = true
-            }, 10)
-        } else {
-            binding.refresh.postDelayed({
-                updateScrollButtonState()
-            }, 10)
         }
     }
 
