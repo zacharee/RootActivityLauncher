@@ -218,6 +218,8 @@ class AppAdapter(
                 binding.receivers.addItemDecoration(innerDividerItemDecoration)
 
                 binding.activitiesTitle.setOnClickListener {
+                    if (adapterPosition == -1) return@setOnClickListener
+
                     val d = async.currentList[adapterPosition]
                     d.activitiesExpanded = !d.activitiesExpanded
 
@@ -225,6 +227,8 @@ class AppAdapter(
                 }
 
                 binding.servicesTitle.setOnClickListener {
+                    if (adapterPosition == -1) return@setOnClickListener
+
                     val d = async.currentList[adapterPosition]
                     d.servicesExpanded = !d.servicesExpanded
 
@@ -232,6 +236,8 @@ class AppAdapter(
                 }
 
                 binding.receiversTitle.setOnClickListener {
+                    if (adapterPosition == -1) return@setOnClickListener
+
                     val d = async.currentList[adapterPosition]
                     d.receiversExpanded = !d.receiversExpanded
 
@@ -239,12 +245,16 @@ class AppAdapter(
                 }
 
                 binding.appInfo.setOnClickListener {
+                    if (adapterPosition == -1) return@setOnClickListener
+
                     val d = async.currentList[adapterPosition]
 
                     context.openAppInfo(d.info.packageName)
                 }
 
                 binding.globalExtras.setOnClickListener {
+                    if (adapterPosition == -1) return@setOnClickListener
+
                     val d = async.currentList[adapterPosition]
 
                     ExtrasDialog(context, d.info.packageName)
@@ -252,6 +262,8 @@ class AppAdapter(
                 }
 
                 binding.appComponentInfo.setOnClickListener {
+                    if (adapterPosition == -1) return@setOnClickListener
+
                     val d = async.currentList[adapterPosition]
 
                     ComponentInfoDialog(context, d.pInfo)
@@ -259,6 +271,8 @@ class AppAdapter(
                 }
 
                 binding.appExtract.setOnClickListener {
+                    if (adapterPosition == -1) return@setOnClickListener
+
                     val d = async.currentList[adapterPosition]
                     extractCallback(d)
                 }

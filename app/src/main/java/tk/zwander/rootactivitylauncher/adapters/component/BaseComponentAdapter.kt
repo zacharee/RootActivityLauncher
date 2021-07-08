@@ -112,7 +112,11 @@ abstract class BaseComponentAdapter<
                     if (hasRoot || (Shizuku.pingBinder() && itemView.context.hasShizukuPermission)) {
                         val result = withContext(Dispatchers.IO) {
                             if (hasRoot) {
-                                Shell.Pool.SU.run("pm ${if (isChecked) "enable" else "disable"} $currentComponentKey") == 0
+                                try {
+                                    Shell.Pool.SU.run("pm ${if (isChecked) "enable" else "disable"} $currentComponentKey") == 0
+                                } catch (e: Exception) {
+                                    false
+                                }
                             } else {
                                 val ipm = IPackageManager.Stub.asInterface(
                                     ShizukuBinderWrapper(
