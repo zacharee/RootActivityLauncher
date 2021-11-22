@@ -5,13 +5,14 @@ import android.content.pm.*
 import android.os.Build
 import android.text.Html
 import android.text.Spanned
+import android.util.Log
 import android.util.PrintWriterPrinter
+import android.util.Printer
 import androidx.appcompat.app.AlertDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textview.MaterialTextView
 import tk.zwander.rootactivitylauncher.R
-import tk.zwander.rootactivitylauncher.util.hexString
-import tk.zwander.rootactivitylauncher.util.map
+import tk.zwander.rootactivitylauncher.util.*
 import java.io.PrintWriter
 import java.io.StringWriter
 import kotlin.math.sign
@@ -63,7 +64,62 @@ class ComponentInfoDialog(context: Context, info: Any) : MaterialAlertDialogBuil
         val pWriter = PrintWriter(sWriter)
         val printer = PrintWriterPrinter(pWriter)
 
-        info.dump(printer, "")
+        if (Build.VERSION.SDK_INT < 31) {
+            info.dump(printer, "")
+        } else {
+            if (info.permission != null) {
+                printer.println("permission=${info.permission}")
+            }
+
+            printer.println("taskAffinity=${info.taskAffinity} " +
+                    "targetActivity=${info.targetActivity} " +
+                    "persistableMode=${info.persistableModeToString()}")
+
+            if (info.launchMode != 0 || info.flags != 0 || info.privateFlags != 0 || info.theme != 0) {
+                printer.println("launchMode=${info.launchMode} " +
+                        "flags=0x${info.flags.hexString} " +
+                        "privateFlags=0x${info.privateFlags.hexString} " +
+                        "theme=0x${info.theme.hexString}")
+            }
+
+            if (info.screenOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED || info.configChanges != 0 || info.softInputMode != 0) {
+                printer.println("screenOrientation=${info.screenOrientation} " +
+                        "configChanges=0x${info.configChanges.hexString} " +
+                        "softInputMode=0x${info.softInputMode.hexString}")
+            }
+
+            if (info.uiOptions != 0) {
+                printer.println("uiOptions=0x${info.uiOptions.hexString}")
+            }
+
+            printer.println("lockTaskLaunchMode=${ActivityInfo.lockTaskLaunchModeToString(info.lockTaskLaunchMode)}")
+
+            if (info.windowLayout != null) {
+                printer.println("windowLayout=${info.windowLayout.width}|${info.windowLayout.widthFraction}, ${info.windowLayout.height}|${info.windowLayout.heightFraction}, ${info.windowLayout.gravity}")
+            }
+
+            printer.println("resizeMode=${ActivityInfo.resizeModeToString(info.resizeMode)}")
+
+            if (info.requestedVrComponent != null) {
+                printer.println("requestedVrComponent=${info.requestedVrComponent}")
+            }
+
+            if (info.rMaxAspectRatio != 0f) {
+                printer.println("maxAspectRatio=${info.rMaxAspectRatio}")
+            }
+
+            if (info.manifestMinAspectRatio != 0f) {
+                printer.println("manifestMinAspectRatio=${info.manifestMinAspectRatio}")
+            }
+
+            if (info.supportsSizeChanges) {
+                printer.println("supportsSizeChanges=true")
+            }
+
+            ComponentInfo::class.java.getDeclaredMethod("dumpBack", Printer::class.java, String::class.java)
+                .apply { isAccessible = true }
+                .invoke(info, printer, "")
+        }
 
         val string = formatDump(sWriter.toString())
 

@@ -1,11 +1,13 @@
 package tk.zwander.rootactivitylauncher.util
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.IActivityManager
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageItemInfo
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -249,3 +251,26 @@ fun Context.showRootToast() {
         Toast.makeText(this, R.string.requires_root, Toast.LENGTH_SHORT).show()
     } catch (e: Exception) {}
 }
+
+fun ActivityInfo.persistableModeToString(): String {
+    return when (persistableMode) {
+        ActivityInfo.PERSIST_ROOT_ONLY -> "PERSIST_ROOT_ONLY"
+        ActivityInfo.PERSIST_NEVER -> "PERSIST_NEVER"
+        ActivityInfo.PERSIST_ACROSS_REBOOTS -> "PERSIST_ACROSS_REBOOTS"
+        else -> "UNKNOWN=$persistableMode"
+    }
+}
+
+val ActivityInfo.manifestMinAspectRatio: Float
+    @SuppressLint("PrivateApi")
+    get() = ActivityInfo::class.java
+        .getDeclaredField("mMinAspectRatio")
+        .apply { isAccessible = true }
+        .getFloat(this)
+
+val ActivityInfo.rMaxAspectRatio: Float
+    @SuppressLint("PrivateApi")
+    get() = ActivityInfo::class.java
+        .getDeclaredField("mMaxAspectRatio")
+        .apply { isAccessible = true }
+        .getFloat(this)

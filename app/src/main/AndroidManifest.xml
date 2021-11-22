@@ -41,6 +41,7 @@
         android:theme="@style/AppTheme"
         android:name=".App">
         <activity android:name=".MainActivity"
+            android:exported="true"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -74,6 +75,7 @@
             android:label="@string/app_name"
             android:description="@string/device_admin_desc"
             android:enabled="false"
+            android:exported="true"
             android:permission="android.permission.BIND_DEVICE_ADMIN">
             <meta-data android:name="android.app.device_admin"
                 android:resource="@xml/device_admin" />
@@ -81,7 +83,8 @@
                 <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".util.KnoxLicenseReceiver">
+        <receiver android:name=".util.KnoxLicenseReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="com.samsung.android.knox.intent.action.LICENSE_STATUS" />
             </intent-filter>
