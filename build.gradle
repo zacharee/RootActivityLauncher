@@ -1,11 +1,11 @@
 buildscript {
-    ext.kotlin_version = "1.5.31"
+    ext.kotlin_version = '1.6.0'
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.2.0-alpha04'
+        classpath 'com.android.tools.build:gradle:7.2.0-alpha05'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.google.gms:google-services:4.3.10'
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.8.0'
@@ -16,10 +16,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        maven { url 'https://dl.bintray.com/rikkaw/Libraries' }
         maven { url 'https://jitpack.io' }
-        maven { url 'https://dl.bintray.com/2hamed/maven' }
-        maven { url 'https://dl.bintray.com/chainfire/maven' }
     }
 }
 
