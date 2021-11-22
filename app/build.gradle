@@ -12,7 +12,7 @@ android {
         applicationId "tk.zwander.rootactivitylauncher"
         minSdkVersion 21
         targetSdkVersion 31
-        versionCode 14
+        versionCode 15
         versionName versionCode.toString()
     }
 
