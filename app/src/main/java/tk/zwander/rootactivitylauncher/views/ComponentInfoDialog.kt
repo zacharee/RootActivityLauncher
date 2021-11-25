@@ -1,65 +1,92 @@
 package tk.zwander.rootactivitylauncher.views
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.*
+import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Build
-import android.text.Html
-import android.text.Spanned
+import android.text.*
+import android.text.style.BackgroundColorSpan
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
 import android.util.Log
 import android.util.PrintWriterPrinter
 import android.util.Printer
+import android.view.LayoutInflater
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
+import androidx.core.text.toSpannable
+import androidx.core.text.toSpanned
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.internal.TextWatcherAdapter
 import com.google.android.material.textview.MaterialTextView
 import tk.zwander.rootactivitylauncher.R
+import tk.zwander.rootactivitylauncher.databinding.ComponentInfoDialogBinding
 import tk.zwander.rootactivitylauncher.util.*
 import java.io.PrintWriter
 import java.io.StringWriter
 import kotlin.math.sign
 
-class ComponentInfoDialog(context: Context, info: Any) : MaterialAlertDialogBuilder(context) {
+class ComponentInfoDialog(context: Context, private val info: Any) : MaterialAlertDialogBuilder(context), TextWatcher {
+    private val view = ComponentInfoDialogBinding.inflate(LayoutInflater.from(context))
+    private val highlightColor = ContextCompat.getColor(context, R.color.colorPrimaryDark)
+
     init {
         setTitle(R.string.component_info)
         setPositiveButton(android.R.string.ok, null)
 
+        setView(view.root)
+
+        handleQuery("")
+    }
+
+    override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+        handleQuery(s)
+    }
+
+    override fun afterTextChanged(s: Editable?) {}
+    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+    private fun handleQuery(query: CharSequence) {
         val message = when (info) {
-            is ActivityInfo -> processActivityInfo(info)
-            is ServiceInfo -> processServiceInfo(info)
-            is PackageInfo -> processPackageInfo(info)
+            is ActivityInfo -> processActivityInfo(info, query)
+            is ServiceInfo -> processServiceInfo(info, query)
+            is PackageInfo -> processPackageInfo(info, query)
             else -> null
         }
 
-        setMessage(message)
+        view.message.text = message
     }
 
     override fun create(): AlertDialog {
         return super.create().apply {
             setOnShowListener {
-                window?.findViewById<MaterialTextView>(android.R.id.message)?.apply {
-                    setTextIsSelectable(true)
-                }
+                view.infoSearchInput.addTextChangedListener(this@ComponentInfoDialog)
+            }
+
+            setOnDismissListener {
+                view.infoSearchInput.removeTextChangedListener(this@ComponentInfoDialog)
             }
         }
     }
 
-    fun processServiceInfo(info: ServiceInfo): Spanned {
+    private fun processServiceInfo(info: ServiceInfo, query: CharSequence): CharSequence {
         val sWriter = StringWriter()
         val pWriter = PrintWriter(sWriter)
         val printer = PrintWriterPrinter(pWriter)
 
         info.dump(printer, "")
 
-        val string = formatDump(sWriter.toString())
+        val string = formatDump(sWriter.toString(), query)
 
         sWriter.close()
         pWriter.close()
 
-        return Html.fromHtml(
-            string
-        )
+        return string
     }
 
-    fun processActivityInfo(info: ActivityInfo): Spanned {
+    private fun processActivityInfo(info: ActivityInfo, query: CharSequence): CharSequence {
         val sWriter = StringWriter()
         val pWriter = PrintWriter(sWriter)
         val printer = PrintWriterPrinter(pWriter)
@@ -121,17 +148,16 @@ class ComponentInfoDialog(context: Context, info: Any) : MaterialAlertDialogBuil
                 .invoke(info, printer, "")
         }
 
-        val string = formatDump(sWriter.toString())
+        val string = formatDump(sWriter.toString(), query)
 
         sWriter.close()
         pWriter.close()
 
-        return Html.fromHtml(
-            string
-        )
+        return string
     }
 
-    fun processPackageInfo(info: PackageInfo): Spanned {
+    @SuppressLint("PrivateApi")
+    private fun processPackageInfo(info: PackageInfo, query: CharSequence): CharSequence {
         val sWriter = StringWriter()
         val pWriter = PrintWriter(sWriter)
         val printer = PrintWriterPrinter(pWriter)
@@ -466,46 +492,47 @@ class ComponentInfoDialog(context: Context, info: Any) : MaterialAlertDialogBuil
             it.dump(printer, "  ")
         }
 
-        val string = formatDump(sWriter.toString())
+        val string = formatDump(sWriter.toString(), query)
 
         sWriter.close()
         pWriter.close()
 
-        return Html.fromHtml(
-                string
-        )
+        return string
     }
 
-    private fun formatDump(dump: String): String {
-        val string = StringBuilder()
-        dump.lines().apply {
-            forEachIndexed { index, it ->
-                val startsWithTwoSpaces = it.startsWith("  ")
-                val formatted = it
-                    .replace("  ", "&nbsp;&nbsp;")
-                    .replace(", ", ",&nbsp;")
-                    .replace(Regex(" "), "<br />${if (startsWithTwoSpaces) "&nbsp;&nbsp;" else ""}<b>")
-                    .replace(Regex("(\r\n|\n)"), "<br />")
-                    .replace(Regex("^&nbsp;&nbsp;"), "&nbsp;&nbsp;<b>")
-                    .replaceFirst(Regex("^(?!&nbsp;&nbsp;)"), "<b>")
-                    .replace("=", "</b>=")
-                    .replace(Regex(":$"), "</b>:")
-                    .run {
-                        if (!contains("=") && !contains(":")) "$this</b>"
-                        else this
-                    }
+    private fun formatDump(dump: String, query: CharSequence): CharSequence {
+        val string = SpannableStringBuilder(dump)
 
-                when {
-                    index == lastIndex -> string.append(formatted)
-                    formatted.indexOf(":") == formatted.lastIndex -> string.append("$formatted<br />")
-                    else -> string.appendHtmlLn(formatted)
-                }
+        Regex("[a-zA-Z0-9]+(=|: |:\n)")
+            .findAll(string)
+            .forEach { result ->
+                string.setSpan(StyleSpan(Typeface.BOLD),
+                    result.range.first, result.range.last,
+                    Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
             }
-        }
-        return string.toString()
-    }
 
-    private fun StringBuilder.appendHtmlLn(line: Any?): StringBuilder {
-        return append("$line<br><br>")
+        val regex = Regex("[^:]\n")
+        var lastIndex = 0
+
+        while (lastIndex < string.length) {
+            val result = regex.find(string, lastIndex) ?: break
+            val range = result.range
+
+            string.replace(range.first + 1, range.last + 1, "\n\n")
+
+            lastIndex = range.last + 2
+        }
+
+        if (query.isNotBlank()) {
+            Regex(Regex.escape(query.toString()), RegexOption.IGNORE_CASE)
+                .findAll(string)
+                .forEach { result ->
+                    string.setSpan(ForegroundColorSpan(highlightColor),
+                        result.range.first, result.range.last + 1,
+                        Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                }
+        }
+
+        return string
     }
 }
