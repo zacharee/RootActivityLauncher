@@ -67,6 +67,8 @@ private fun tryShizukuServiceLaunch(intent: Intent, extras: List<ExtraInfo>): Bo
             )
             true
         } catch (e: Throwable) {
+            Log.e("RootActivityLauncher", "Failure to launch through Shizuku binder, trying command line.", e)
+
             val command = StringBuilder("am startservice ${intent.component}")
 
             command.append(" -a ${intent.action}")
@@ -78,6 +80,8 @@ private fun tryShizukuServiceLaunch(intent: Intent, extras: List<ExtraInfo>): Bo
             Shizuku.newProcess(arrayOf("sh", "-c", command.toString()), null, null).exitValue() == 0
         }
     } catch (e: Throwable) {
+        Log.e("RootActivityLauncher", "Failure to launch through Shizuku.", e)
+
         false
     }
 }
@@ -117,6 +121,8 @@ private fun tryShizukuActivityLaunch(intent: Intent, extras: List<ExtraInfo>): B
             )
             true
         } catch (e: Throwable) {
+            Log.e("RootActivityLauncher", "Failure to launch through Shizuku binder, trying command line.", e)
+
             val command = StringBuilder("am start -n ${intent.component}")
 
             command.append(" -a ${intent.action}")
@@ -128,6 +134,8 @@ private fun tryShizukuActivityLaunch(intent: Intent, extras: List<ExtraInfo>): B
             Shizuku.newProcess(arrayOf("sh", "-c", command.toString()), null, null).exitValue() == 0
         }
     } catch (e: Throwable) {
+        Log.e("RootActivityLauncher", "Failure to launch through Shizuku.", e)
+
         false
     }
 }
@@ -145,6 +153,8 @@ private fun tryShizukuBroadcastLaunch(intent: Intent, extras: List<ExtraInfo>): 
             )
             true
         } catch (e: Throwable) {
+            Log.e("RootActivityLauncher", "Failure to launch through Shizuku binder, trying command line.", e)
+
             val command = StringBuilder("am broadcast -n ${intent.component}")
 
             command.append(" -a ${intent.action}")
@@ -156,6 +166,8 @@ private fun tryShizukuBroadcastLaunch(intent: Intent, extras: List<ExtraInfo>): 
             Shizuku.newProcess(arrayOf("sh", "-c", command.toString()), null, null).exitValue() == 0
         }
     } catch (e: Exception) {
+        Log.e("RootActivityLauncher", "Failure to launch through Shizuku binder.", e)
+
         false
     }
 }
@@ -172,6 +184,7 @@ fun Context.launchService(extras: List<ExtraInfo>, componentKey: String): Boolea
         ContextCompat.startForegroundService(this, intent)
         return true
     } catch (e: SecurityException) {
+        Log.e("RootActivityLauncher", "Failure to normally start Service", e)
     }
 
     if (Shizuku.pingBinder() && hasShizukuPermission) {
@@ -202,7 +215,9 @@ fun Context.launchActivity(extras: List<ExtraInfo>, componentKey: String): Boole
         startActivity(intent)
         return true
     } catch (e: SecurityException) {
+        Log.e("RootActivityLauncher", "Failure to normally start Activity", e)
     } catch (e: ActivityNotFoundException) {
+        Log.e("RootActivityLauncher", "Failure to normally start Activity", e)
     }
 
     if (Shizuku.pingBinder() && hasShizukuPermission) {
@@ -239,6 +254,7 @@ fun Context.launchReceiver(extras: List<ExtraInfo>, componentKey: String): Boole
     try {
         sendBroadcast(intent)
     } catch (e: SecurityException) {
+        Log.e("RootActivityLauncher", "Failure to normally send broadcast.", e)
     }
 
     if (Shizuku.pingBinder() && hasShizukuPermission) {
