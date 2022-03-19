@@ -49,7 +49,7 @@ dependencies {
 //
     implementation 'com.google.android.material:material:1.5.0'
     implementation 'com.google.code.gson:gson:2.8.9'
-    implementation 'com.google.firebase:firebase-crashlytics:18.2.8'
+    implementation 'com.google.firebase:firebase-crashlytics:18.2.9'
     //Crashlytics doesn't seem to work without this added (wtf)
     implementation 'com.google.firebase:firebase-analytics:20.1.0'
     implementation "dev.rikka.shizuku:api:12.1.0"
