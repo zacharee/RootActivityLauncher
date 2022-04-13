@@ -51,7 +51,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'com.google.firebase:firebase-crashlytics:18.2.9'
     //Crashlytics doesn't seem to work without this added (wtf)
-    implementation 'com.google.firebase:firebase-analytics:20.1.0'
+    implementation 'com.google.firebase:firebase-analytics:20.1.2'
     implementation "dev.rikka.shizuku:api:12.1.0"
     implementation "dev.rikka.shizuku:provider:12.1.0"
     implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:4.2'
