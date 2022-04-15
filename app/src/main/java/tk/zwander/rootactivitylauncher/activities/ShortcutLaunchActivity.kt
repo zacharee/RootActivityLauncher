@@ -4,6 +4,9 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.util.*
+import tk.zwander.rootactivitylauncher.util.launch.launchActivity
+import tk.zwander.rootactivitylauncher.util.launch.launchReceiver
+import tk.zwander.rootactivitylauncher.util.launch.launchService
 
 class ShortcutLaunchActivity : AppCompatActivity() {
     companion object {

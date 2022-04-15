@@ -8,7 +8,7 @@ import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.data.component.ReceiverInfo
 import tk.zwander.rootactivitylauncher.picasso.ReceiverIconHandler
-import tk.zwander.rootactivitylauncher.util.launchReceiver
+import tk.zwander.rootactivitylauncher.util.launch.launchReceiver
 
 class ReceiverAdapter(isForTasker: Boolean, selectionCallback: (BaseComponentInfo) -> Unit) :
     BaseComponentAdapter<ReceiverAdapter, ReceiverInfo, ReceiverAdapter.ReceiverVH>(

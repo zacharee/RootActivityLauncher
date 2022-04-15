@@ -3,13 +3,12 @@ package tk.zwander.rootactivitylauncher.adapters.component
 import android.content.Context
 import android.net.Uri
 import android.view.View
-import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
-import tk.zwander.rootactivitylauncher.util.launchActivity
+import tk.zwander.rootactivitylauncher.util.launch.launchActivity
 
 class ActivityAdapter(isForTasker: Boolean, selectionCallback: (BaseComponentInfo) -> Unit) :
     BaseComponentAdapter<ActivityAdapter, ActivityInfo, ActivityAdapter.ActivityVH>(

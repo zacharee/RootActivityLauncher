@@ -274,3 +274,6 @@ val ActivityInfo.rMaxAspectRatio: Float
         .getDeclaredField("mMaxAspectRatio")
         .apply { isAccessible = true }
         .getFloat(this)
+
+val Context.isTouchWiz: Boolean
+    get() = packageManager.hasSystemFeature("com.samsung.feature.samsung_experience_mobile")

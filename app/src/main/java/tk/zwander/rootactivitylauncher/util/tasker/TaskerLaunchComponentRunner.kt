@@ -10,9 +10,9 @@ import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultSucess
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.data.tasker.TaskerLaunchComponentInfo
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
-import tk.zwander.rootactivitylauncher.util.launchActivity
-import tk.zwander.rootactivitylauncher.util.launchReceiver
-import tk.zwander.rootactivitylauncher.util.launchService
+import tk.zwander.rootactivitylauncher.util.launch.launchActivity
+import tk.zwander.rootactivitylauncher.util.launch.launchReceiver
+import tk.zwander.rootactivitylauncher.util.launch.launchService
 
 class TaskerLaunchComponentRunner : TaskerPluginRunnerActionNoOutput<TaskerLaunchComponentInfo>() {
     override fun run(
