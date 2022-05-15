@@ -24,7 +24,7 @@ import kotlin.Comparator
 import kotlin.collections.HashMap
 
 class AppAdapter(
-    context: Context,
+    private val context: Context,
     private val isForTasker: Boolean,
     private val extractCallback: (AppInfo) -> Unit
 ) : RecyclerView.Adapter<AppAdapter.AppVH>(),
@@ -143,6 +143,7 @@ class AppAdapter(
 
             orig.values.forEachParallelBlocking {
                 it.onFilterChange(
+                    context,
                     currentQuery,
                     useRegex,
                     includeComponents,

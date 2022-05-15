@@ -47,26 +47,23 @@ dependencies {
     implementation "androidx.core:core-ktx:1.7.0"
     implementation 'androidx.preference:preference-ktx:1.2.0'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-alpha01'
-//
-    implementation 'com.google.android.material:material:1.5.0'
+
+    implementation 'com.google.android.material:material:1.6.0'
     implementation 'com.google.code.gson:gson:2.8.9'
-    implementation 'com.google.firebase:firebase-crashlytics:18.2.9'
+    implementation 'com.google.firebase:firebase-crashlytics:18.2.10'
     //Crashlytics doesn't seem to work without this added (wtf)
-    implementation 'com.google.firebase:firebase-analytics:20.1.2'
+    implementation 'com.google.firebase:firebase-analytics:21.0.0'
     implementation "dev.rikka.shizuku:api:12.1.0"
     implementation "dev.rikka.shizuku:provider:12.1.0"
-    implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:4.2'
+    implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:4.3'
     implementation 'com.github.zacharee:PatreonSupportersRetrieval:4ce71eb5bf'
     implementation 'com.github.zacharee:RecyclerView-FastScroll:224bd6f8e8'
     implementation 'com.joaomgcd:taskerpluginlibrary:0.4.2'
-//
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0'
+
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1'
     implementation 'com.github.Chainfire:libsuperuser:1.1.0.201907261845'
-//    implementation 'eu.chainfire:libsuperuser:1.1.0.+'
-//    implementation 'com.hmomeni.progresscircula:progresscircula:0.2.1'
     implementation 'com.github.2hamed:ProgressCircula:0.2.1'
     implementation 'com.squareup.picasso:picasso:2.71828'
-//    implementation 'com.simplecityapps:recyclerview-fastscroll:2.0.1'
     implementation 'com.github.skydoves:balloon:1.4.0'
 }

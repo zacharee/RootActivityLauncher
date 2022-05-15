@@ -148,7 +148,6 @@ abstract class BaseComponentAdapter<
                         }
 
                         if (result) {
-                            d.info.enabled = isChecked
                             updateLaunchVisibility(d)
                         } else {
                             buttonView.setOnCheckedChangeListener(null)
@@ -258,7 +257,7 @@ abstract class BaseComponentAdapter<
                 }
 
                 binding.enabled.setOnCheckedChangeListener(null)
-                if (binding.enabled.isChecked != data.info.enabled) binding.enabled.isChecked = data.info.enabled
+                if (binding.enabled.isChecked != data.info.isActuallyEnabled(context)) binding.enabled.isChecked = data.info.isActuallyEnabled(context)
                 updateLaunchVisibility(data)
                 binding.enabled.setOnCheckedChangeListener(componentEnabledListener)
             }
@@ -270,7 +269,7 @@ abstract class BaseComponentAdapter<
 
         private fun updateLaunchVisibility(data: DataClass) {
             itemView.apply {
-                if (binding.launch.isVisible != data.info.enabled) binding.launch.isVisible = data.info.enabled
+                if (binding.launch.isVisible != data.info.isActuallyEnabled(context)) binding.launch.isVisible = data.info.isActuallyEnabled(context)
             }
         }
     }

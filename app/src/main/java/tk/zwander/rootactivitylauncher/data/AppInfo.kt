@@ -1,5 +1,6 @@
 package tk.zwander.rootactivitylauncher.data
 
+import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import tk.zwander.rootactivitylauncher.adapters.component.ActivityAdapter
@@ -10,6 +11,7 @@ import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ReceiverInfo
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.util.AdvancedSearcher
+import tk.zwander.rootactivitylauncher.util.isActuallyEnabled
 import tk.zwander.rootactivitylauncher.util.isValidRegex
 import kotlin.collections.ArrayList
 
@@ -42,9 +44,9 @@ data class AppInfo(
     internal var includeComponents: Boolean = true
 
     init {
-        onFilterChange(
-            override = true
-        )
+        filteredActivities.addAll(activities)
+        filteredServices.addAll(services)
+        filteredReceivers.addAll(receivers)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -57,12 +59,13 @@ data class AppInfo(
     }
 
     fun onFilterChange(
+        context: Context,
         query: String = currentQuery,
         useRegex: Boolean = this.useRegex,
         includeComponents: Boolean = this.includeComponents,
         enabledMode: EnabledFilterMode = enabledFilterMode,
         exportedMode: ExportedFilterMode = exportedFilterMode,
-        override: Boolean = false
+        override: Boolean = false,
     ) {
         if (override
             || currentQuery != query
@@ -80,16 +83,16 @@ data class AppInfo(
             filteredActivities.clear()
             filteredServices.clear()
             filteredReceivers.clear()
-            activities.filterTo(filteredActivities) { matches(it) }
-            services.filterTo(filteredServices) { matches(it) }
-            receivers.filterTo(filteredReceivers) { matches(it) }
+            activities.filterTo(filteredActivities) { matches(it, context) }
+            services.filterTo(filteredServices) { matches(it, context) }
+            receivers.filterTo(filteredReceivers) { matches(it, context) }
         }
     }
 
-    private fun matches(data: BaseComponentInfo): Boolean {
+    private fun matches(data: BaseComponentInfo, context: Context): Boolean {
         when (enabledFilterMode) {
-            EnabledFilterMode.SHOW_DISABLED -> if (data.info.enabled) return false
-            EnabledFilterMode.SHOW_ENABLED -> if (!data.info.enabled) return false
+            EnabledFilterMode.SHOW_DISABLED -> if (data.info.isActuallyEnabled(context)) return false
+            EnabledFilterMode.SHOW_ENABLED -> if (!data.info.isActuallyEnabled(context)) return false
             else -> {
                 //no-op
             }
