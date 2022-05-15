@@ -1,11 +1,11 @@
 package tk.zwander.rootactivitylauncher
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.*
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -58,11 +58,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     private val appAdapter by lazy {
         fun onExtract(d: AppInfo) {
             extractInfo = d
-
-            val extractIntent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-            extractIntent.putExtra(Intent.EXTRA_TITLE, getString(R.string.choose_extract_folder_msg))
-
-            extractLauncher.launch(extractIntent)
+            extractLauncher.launch(null)
         }
 
         AppAdapter(this, isForTasker, ::onExtract)
@@ -125,12 +121,22 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         }
     }
 
-    private val extractLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK && extractInfo != null) {
-            val dirUri = result.data?.data ?: return@registerForActivityResult
+    private val extractLauncher = registerForActivityResult(
+        object : ActivityResultContracts.OpenDocumentTree() {
+            override fun createIntent(context: Context, input: Uri?): Intent {
+                return super.createIntent(context, input).also {
+                    it.putExtra(Intent.EXTRA_TITLE, getString(R.string.choose_extract_folder_msg))
+                }
+            }
+        }
+    ) { result ->
+        if (extractInfo != null) {
+            val dirUri = result ?: return@registerForActivityResult
             val dir = DocumentFile.fromTreeUri(this, dirUri) ?: return@registerForActivityResult
 
             val extractInfo = extractInfo!!
+            this.extractInfo = null
+
             val baseDir = File(extractInfo.info.sourceDir)
 
             val splits = extractInfo.info.splitSourceDirs?.mapIndexed { index, s ->
