@@ -20,7 +20,7 @@ class AppIconHandler(private val context: Context) : RequestHandler() {
         return data.uri != null && data.uri.scheme == SCHEME
     }
 
-    override fun load(request: Request, networkPolicy: Int): Result? {
+    override fun load(request: Request, networkPolicy: Int): Result {
         return Result(
             context.packageManager.getApplicationIcon(request.uri.schemeSpecificPart)
                 .toBitmap().run { copy(config, false) },

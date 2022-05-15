@@ -23,7 +23,7 @@ class ReceiverAdapter(isForTasker: Boolean, selectionCallback: (BaseComponentInf
     inner class ReceiverVH(view: View) : BaseComponentVH(view) {
         override val componentType = ComponentType.RECEIVER
 
-        override fun getPicassoUri(data: ReceiverInfo): Uri? {
+        override fun getPicassoUri(data: ReceiverInfo): Uri {
             return ReceiverIconHandler.createUri(data.info.packageName, data.info.name)
         }
 

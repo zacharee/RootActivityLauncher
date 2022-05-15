@@ -23,7 +23,7 @@ class ActivityAdapter(isForTasker: Boolean, selectionCallback: (BaseComponentInf
     inner class ActivityVH(view: View) : BaseComponentVH(view) {
         override val componentType: ComponentType = ComponentType.ACTIVITY
 
-        override fun getPicassoUri(data: ActivityInfo): Uri? {
+        override fun getPicassoUri(data: ActivityInfo): Uri {
             return ActivityIconHandler.createUri(data.info.packageName, data.info.name)
         }
 

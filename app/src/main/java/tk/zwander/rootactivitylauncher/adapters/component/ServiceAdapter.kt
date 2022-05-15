@@ -23,7 +23,7 @@ class ServiceAdapter(isForTasker: Boolean, selectionCallback: (BaseComponentInfo
     inner class ServiceVH(view: View) : BaseComponentVH(view) {
         override val componentType: ComponentType = ComponentType.SERVICE
 
-        override fun getPicassoUri(data: ServiceInfo): Uri? {
+        override fun getPicassoUri(data: ServiceInfo): Uri {
             return ServiceIconHandler.createUri(data.info.packageName, data.info.name)
         }
 

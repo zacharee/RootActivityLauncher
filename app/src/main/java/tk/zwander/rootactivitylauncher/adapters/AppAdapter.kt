@@ -111,13 +111,15 @@ class AppAdapter(
             orig[it.info.packageName] = it
         }
 
-        onFilterChange(override = true)
+        sortAndSubmitList(orig.values.toList())
+
+//        onFilterChange(override = true)
     }
 
     private fun sortAndSubmitList(items: List<AppInfo>) {
-        async.submitList(items.sortedWith(Comparator { o1, o2 ->
+        async.submitList(items.sortedWith { o1, o2 ->
             o1.label.toString().compareTo(o2.label.toString(), true)
-        }))
+        })
     }
 
     fun onFilterChange(
@@ -310,20 +312,35 @@ class AppAdapter(
 
                 if (binding.activities.isVisible != data.activitiesExpanded) {
                     binding.activities.isVisible = data.activitiesExpanded
+
+                    if (binding.activities.isVisible) {
+                        data.activities
+                        data.activityAdapter.setItems(data.filteredActivities)
+                    }
                 }
                 if (binding.services.isVisible != data.servicesExpanded) {
                     binding.services.isVisible = data.servicesExpanded
+
+                    if (binding.services.isVisible) {
+                        data.services
+                        data.serviceAdapter.setItems(data.filteredServices)
+                    }
                 }
                 if (binding.receivers.isVisible != data.receiversExpanded) {
                     binding.receivers.isVisible = data.receiversExpanded
+
+                    if (binding.receivers.isVisible) {
+                        data.receivers
+                        data.receiverAdapter.setItems(data.filteredReceivers)
+                    }
                 }
 
                 binding.activitiesTitle.text =
-                    resources.getString(R.string.activities, data.filteredActivities.size)
+                    resources.getString(R.string.activities, data.activitiesSize)
                 binding.servicesTitle.text =
-                    resources.getString(R.string.services, data.filteredServices.size)
+                    resources.getString(R.string.services, data.servicesSize)
                 binding.receiversTitle.text =
-                    resources.getString(R.string.receivers, data.filteredReceivers.size)
+                    resources.getString(R.string.receivers, data.receiversSize)
 
                 binding.activitiesTitle.setCompoundDrawablesRelative(
                     null,
@@ -344,19 +361,9 @@ class AppAdapter(
                     null
                 )
 
-                if (binding.activities.isVisible) {
-                    data.activityAdapter.setItems(data.filteredActivities)
-                }
-                if (binding.services.isVisible) {
-                    data.serviceAdapter.setItems(data.filteredServices)
-                }
-                if (binding.receivers.isVisible) {
-                    data.receiverAdapter.setItems(data.filteredReceivers)
-                }
-
-                binding.activitiesTitle.isVisible = data.filteredActivities.isNotEmpty()
-                binding.servicesTitle.isVisible = data.filteredServices.isNotEmpty()
-                binding.receiversTitle.isVisible = data.filteredReceivers.isNotEmpty()
+                binding.activitiesTitle.isVisible = data.activitiesSize > 0
+                binding.servicesTitle.isVisible = data.servicesSize > 0
+                binding.receiversTitle.isVisible = data.receiversSize > 0
             }
         }
     }

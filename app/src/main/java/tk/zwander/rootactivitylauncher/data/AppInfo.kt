@@ -19,9 +19,12 @@ data class AppInfo(
     val pInfo: PackageInfo,
     val info: ApplicationInfo = pInfo.applicationInfo,
     val label: CharSequence,
-    val activities: Collection<ActivityInfo>,
-    val services: Collection<ServiceInfo>,
-    val receivers: Collection<ReceiverInfo>,
+    private val activitiesLoader: () -> Collection<ActivityInfo>,
+    private val servicesLoader: () -> Collection<ServiceInfo>,
+    private val receiversLoader: () -> Collection<ReceiverInfo>,
+    private val _activitiesSize: Int,
+    private val _servicesSize: Int,
+    private val _receiversSize: Int,
     val isForTasker: Boolean,
     val selectionCallback: (BaseComponentInfo) -> Unit
 ) {
@@ -29,9 +32,51 @@ data class AppInfo(
     val serviceAdapter = ServiceAdapter(isForTasker, selectionCallback)
     val receiverAdapter = ReceiverAdapter(isForTasker, selectionCallback)
 
-    val filteredActivities = ArrayList<ActivityInfo>(activities.size)
-    val filteredServices = ArrayList<ServiceInfo>(services.size)
-    val filteredReceivers = ArrayList<ReceiverInfo>(receivers.size)
+    val filteredActivities = ArrayList<ActivityInfo>(_activitiesSize)
+    val filteredServices = ArrayList<ServiceInfo>(_servicesSize)
+    val filteredReceivers = ArrayList<ReceiverInfo>(_receiversSize)
+
+    val activitiesSize: Int
+        get() = if (!hasLoadedActivities) _activitiesSize else filteredActivities.size
+    val servicesSize: Int
+        get() = if (!hasLoadedServices) _servicesSize else filteredServices.size
+    val receiversSize: Int
+        get() = if (!hasLoadedReceivers) _receiversSize else filteredReceivers.size
+
+    val activities: Collection<ActivityInfo>
+        get() {
+            if (_activitiesSize > 0 && _loadedActivities.isEmpty()) {
+                _loadedActivities.addAll(activitiesLoader())
+                filteredActivities.addAll(_loadedActivities)
+                hasLoadedActivities = true
+            }
+
+            return _loadedActivities
+        }
+    val services: Collection<ServiceInfo>
+        get() {
+            if (_servicesSize > 0 && _loadedServices.isEmpty()) {
+                _loadedServices.addAll(servicesLoader())
+                filteredServices.addAll(_loadedServices)
+                hasLoadedServices = true
+            }
+
+            return _loadedServices
+        }
+    val receivers: Collection<ReceiverInfo>
+        get() {
+            if (_receiversSize > 0 && _loadedReceivers.isEmpty()) {
+                _loadedReceivers.addAll(receiversLoader())
+                filteredReceivers.addAll(_loadedReceivers)
+                hasLoadedReceivers = true
+            }
+
+            return _loadedReceivers
+        }
+
+    private val _loadedActivities = arrayListOf<ActivityInfo>()
+    private val _loadedServices = arrayListOf<ServiceInfo>()
+    private val _loadedReceivers = arrayListOf<ReceiverInfo>()
 
     var activitiesExpanded: Boolean = false
     var servicesExpanded: Boolean = false
@@ -43,10 +88,14 @@ data class AppInfo(
     internal var useRegex: Boolean = false
     internal var includeComponents: Boolean = true
 
+    private var hasLoadedActivities = false
+    private var hasLoadedServices = false
+    private var hasLoadedReceivers = false
+
     init {
-        filteredActivities.addAll(activities)
-        filteredServices.addAll(services)
-        filteredReceivers.addAll(receivers)
+//        filteredActivities.addAll(activities)
+//        filteredServices.addAll(services)
+//        filteredReceivers.addAll(receivers)
     }
 
     override fun equals(other: Any?): Boolean {

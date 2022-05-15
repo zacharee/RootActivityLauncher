@@ -27,7 +27,6 @@ import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
-import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.ComponentInfoDialog
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
@@ -227,11 +226,6 @@ abstract class BaseComponentAdapter<
 
         open fun onBind(data: DataClass) {
             itemView.apply {
-                picasso.load(ActivityIconHandler.createUri(data.info.packageName, data.info.name))
-                    .fit()
-                    .centerInside()
-                    .into(binding.icon)
-
                 binding.name.text = data.label
                 binding.cmp.text = data.info.name
 

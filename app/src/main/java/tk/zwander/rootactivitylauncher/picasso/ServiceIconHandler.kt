@@ -23,7 +23,7 @@ class ServiceIconHandler(private val context: Context) : RequestHandler() {
         return data.uri != null && data.uri.scheme == SCHEME
     }
 
-    override fun load(request: Request, networkPolicy: Int): Result? {
+    override fun load(request: Request, networkPolicy: Int): Result {
         val component = ComponentName.unflattenFromString(request.uri.schemeSpecificPart)!!
 
         return Result(
