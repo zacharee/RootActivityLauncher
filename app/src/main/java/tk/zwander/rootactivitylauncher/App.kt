@@ -6,6 +6,7 @@ import com.squareup.picasso.Picasso
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 import tk.zwander.rootactivitylauncher.picasso.ActivityIconHandler
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
+import tk.zwander.rootactivitylauncher.picasso.ReceiverIconHandler
 import tk.zwander.rootactivitylauncher.picasso.ServiceIconHandler
 
 class App : Application() {
@@ -21,6 +22,7 @@ class App : Application() {
                 .addRequestHandler(AppIconHandler(this))
                 .addRequestHandler(ActivityIconHandler(this))
                 .addRequestHandler(ServiceIconHandler(this))
+                .addRequestHandler(ReceiverIconHandler(this))
                 .build()
         )
     }
