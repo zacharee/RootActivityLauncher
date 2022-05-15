@@ -43,37 +43,6 @@ data class AppInfo(
     val receiversSize: Int
         get() = if (!hasLoadedReceivers) _receiversSize else filteredReceivers.size
 
-    val activities: Collection<ActivityInfo>
-        get() {
-            if (_activitiesSize > 0 && _loadedActivities.isEmpty()) {
-                _loadedActivities.addAll(activitiesLoader())
-                filteredActivities.addAll(_loadedActivities)
-                hasLoadedActivities = true
-            }
-
-            return _loadedActivities
-        }
-    val services: Collection<ServiceInfo>
-        get() {
-            if (_servicesSize > 0 && _loadedServices.isEmpty()) {
-                _loadedServices.addAll(servicesLoader())
-                filteredServices.addAll(_loadedServices)
-                hasLoadedServices = true
-            }
-
-            return _loadedServices
-        }
-    val receivers: Collection<ReceiverInfo>
-        get() {
-            if (_receiversSize > 0 && _loadedReceivers.isEmpty()) {
-                _loadedReceivers.addAll(receiversLoader())
-                filteredReceivers.addAll(_loadedReceivers)
-                hasLoadedReceivers = true
-            }
-
-            return _loadedReceivers
-        }
-
     private val _loadedActivities = arrayListOf<ActivityInfo>()
     private val _loadedServices = arrayListOf<ServiceInfo>()
     private val _loadedReceivers = arrayListOf<ReceiverInfo>()
@@ -92,12 +61,6 @@ data class AppInfo(
     private var hasLoadedServices = false
     private var hasLoadedReceivers = false
 
-    init {
-//        filteredActivities.addAll(activities)
-//        filteredServices.addAll(services)
-//        filteredReceivers.addAll(receivers)
-    }
-
     override fun equals(other: Any?): Boolean {
         return other is AppInfo
                 && info.packageName == other.info.packageName
@@ -107,7 +70,7 @@ data class AppInfo(
         return info.packageName.hashCode()
     }
 
-    fun onFilterChange(
+    suspend fun onFilterChange(
         context: Context,
         query: String = currentQuery,
         useRegex: Boolean = this.useRegex,
@@ -129,13 +92,62 @@ data class AppInfo(
             this.useRegex = useRegex
             this.includeComponents = includeComponents
 
-            filteredActivities.clear()
-            filteredServices.clear()
-            filteredReceivers.clear()
-            activities.filterTo(filteredActivities) { matches(it, context) }
-            services.filterTo(filteredServices) { matches(it, context) }
-            receivers.filterTo(filteredReceivers) { matches(it, context) }
+            getLoadedActivities().apply {
+                filteredActivities.clear()
+                filterTo(filteredActivities) { matches(it, context) }
+            }
+            getLoadedServices().apply {
+                filteredServices.clear()
+                filterTo(filteredServices) { matches(it, context) }
+            }
+            getLoadedReceivers().apply {
+                filteredReceivers.clear()
+                filterTo(filteredReceivers) { matches(it, context) }
+            }
         }
+    }
+
+    // Keep these as suspend functions
+    suspend fun loadActivities() {
+        if (activitiesSize > 0 && _loadedActivities.isEmpty()) {
+            _loadedActivities.addAll(activitiesLoader())
+            filteredActivities.addAll(_loadedActivities)
+            hasLoadedActivities = true
+        }
+    }
+
+    suspend fun loadServices() {
+        if (servicesSize > 0 && _loadedServices.isEmpty()) {
+            _loadedServices.addAll(servicesLoader())
+            filteredServices.addAll(_loadedServices)
+            hasLoadedServices = true
+        }
+    }
+
+    suspend fun loadReceivers() {
+        if (receiversSize > 0 && _loadedReceivers.isEmpty()) {
+            _loadedReceivers.addAll(receiversLoader())
+            filteredReceivers.addAll(_loadedReceivers)
+            hasLoadedReceivers = true
+        }
+    }
+
+    private suspend fun getLoadedActivities(): Collection<ActivityInfo> {
+        loadActivities()
+
+        return _loadedActivities
+    }
+
+    private suspend fun getLoadedServices(): Collection<ServiceInfo> {
+        loadServices()
+
+        return _loadedServices
+    }
+
+    private suspend fun getLoadedReceivers(): Collection<ReceiverInfo> {
+        loadReceivers()
+
+        return _loadedReceivers
     }
 
     private fun matches(data: BaseComponentInfo, context: Context): Boolean {

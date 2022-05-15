@@ -31,6 +31,8 @@ import rikka.shizuku.Shizuku
 import tk.zwander.patreonsupportersretrieval.view.SupporterView
 import tk.zwander.rootactivitylauncher.adapters.AppAdapter
 import tk.zwander.rootactivitylauncher.data.AppInfo
+import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
+import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.data.component.*
 import tk.zwander.rootactivitylauncher.databinding.ActivityMainBinding
 import tk.zwander.rootactivitylauncher.util.*
@@ -57,7 +59,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             extractLauncher.launch(null)
         }
 
-        AppAdapter(this, isForTasker, ::onExtract)
+        AppAdapter(this, this, isForTasker, ::onExtract)
     }
     private val appListLayoutManager: RecyclerView.LayoutManager
         get() = binding.appList.layoutManager as RecyclerView.LayoutManager
@@ -213,11 +215,15 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             setSearchWrapperState(binding.searchOptionsWrapper.translationX != 0f)
         }
         binding.useRegex.setOnCheckedChangeListener { _, isChecked ->
-            appAdapter.onFilterChange(useRegex = isChecked)
+            launch {
+                onFilterChangeWithLoader(useRegex = isChecked)
+            }
             binding.appList.scrollToPosition(0)
         }
         binding.includeComponents.setOnCheckedChangeListener { _, isChecked ->
-            appAdapter.onFilterChange(includeComponents = isChecked)
+            launch {
+                onFilterChangeWithLoader(includeComponents = isChecked)
+            }
             binding.appList.scrollToPosition(0)
         }
 
@@ -237,10 +243,12 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                             appAdapter.enabledFilterMode,
                             appAdapter.exportedFilterMode
                         ) { enabledMode, exportedMode ->
-                            appAdapter.onFilterChange(
-                                enabledMode = enabledMode,
-                                exportedMode = exportedMode
-                            )
+                            launch {
+                                onFilterChangeWithLoader(
+                                    enabledMode = enabledMode,
+                                    exportedMode = exportedMode
+                                )
+                            }
                         }.show()
                         true
                     }
@@ -316,6 +324,9 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
         searchView?.setOnQueryTextListener(this)
         searchView?.setOnSearchClickListener {
+            launch {
+                onFilterChangeWithLoader(override = !appAdapter.hasLoadedItems)
+            }
             binding.searchOptionsWrapper.isVisible = true
         }
         searchView?.setOnCloseListener {
@@ -343,7 +354,9 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     }
 
     override fun onQueryTextChange(newText: String?): Boolean {
-        appAdapter.onFilterChange(query = newText ?: "")
+        launch {
+            onFilterChangeWithLoader(query = newText ?: "")
+        }
         binding.appList.scrollToPosition(0)
         return true
     }
@@ -533,6 +546,12 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                     updateScrollButtonState()
                 }, 10)
             }
+
+            if (appAdapter.hasFilters) {
+                launch(Dispatchers.Main) {
+                    onFilterChangeWithLoader(override = true)
+                }
+            }
         }
     }
 
@@ -548,6 +567,36 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                     if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
                     else PackageManager.GET_DISABLED_COMPONENTS
         )
+    }
+
+    private suspend fun onFilterChangeWithLoader(
+        query: String = appAdapter.currentQuery,
+        useRegex: Boolean = appAdapter.useRegex,
+        includeComponents: Boolean = appAdapter.includeComponents,
+        enabledMode: EnabledFilterMode = appAdapter.enabledFilterMode,
+        exportedMode: ExportedFilterMode = appAdapter.exportedFilterMode,
+        override: Boolean = false
+    ) {
+        if (!appAdapter.hasLoadedItems) {
+            binding.scrim.isVisible = true
+            progress.isVisible = true
+            progressView?.indeterminate = true
+            binding.scrimProgress.indeterminate = true
+        }
+
+        appAdapter.onFilterChange(
+            query,
+            useRegex,
+            includeComponents,
+            enabledMode,
+            exportedMode,
+            override
+        )
+
+        binding.scrim.isVisible = false
+        progress.isVisible = false
+        progressView?.indeterminate = false
+        binding.scrimProgress.indeterminate = false
     }
 
     private suspend fun loadApp(app: PackageInfo): AppInfo? = coroutineScope {

@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
+import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
@@ -20,11 +21,11 @@ import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.ComponentInfoDialog
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
-import kotlin.Comparator
 import kotlin.collections.HashMap
 
 class AppAdapter(
     private val context: Context,
+    private val scope: CoroutineScope,
     private val isForTasker: Boolean,
     private val extractCallback: (AppInfo) -> Unit
 ) : RecyclerView.Adapter<AppAdapter.AppVH>(),
@@ -54,7 +55,8 @@ class AppAdapter(
                 setBounds(0, 0, intrinsicWidth, intrinsicHeight)
             }
 
-    private var currentQuery: String = ""
+    var currentQuery: String = ""
+        private set
     var enabledFilterMode = EnabledFilterMode.SHOW_ALL
         private set
     var exportedFilterMode = ExportedFilterMode.SHOW_ALL
@@ -63,6 +65,12 @@ class AppAdapter(
         private set
     var includeComponents: Boolean = true
         private set
+
+    var hasLoadedItems = false
+        private set
+
+    val hasFilters: Boolean
+        get() = currentQuery.isNotBlank() || enabledFilterMode != EnabledFilterMode.SHOW_ALL || exportedFilterMode != ExportedFilterMode.SHOW_ALL
 
     override fun getItemCount(): Int {
         return async.currentList.size
@@ -80,23 +88,20 @@ class AppAdapter(
         return async.currentList.getOrNull(position)?.label?.substring(0, 1) ?: ""
     }
 
-    fun addItem(item: AppInfo) {
+    suspend fun addItem(item: AppInfo) {
         orig[item.info.packageName] = item
 
         onFilterChange(override = true)
     }
 
-    fun removeItem(packageName: String) {
+    suspend fun removeItem(packageName: String) {
         orig.remove(packageName)
 
         onFilterChange(override = true)
     }
 
-    fun removeItem(item: AppInfo) {
-        removeItem(item.info.packageName)
-    }
-
     fun updateItem(item: AppInfo) {
+        hasLoadedItems = false
         orig[item.info.packageName] = item
 
         val index = async.currentList.indexOf(item)
@@ -106,14 +111,13 @@ class AppAdapter(
     }
 
     fun setItems(items: Collection<AppInfo>) {
+        hasLoadedItems = false
         orig.clear()
         items.forEachParallelBlocking {
             orig[it.info.packageName] = it
         }
 
         sortAndSubmitList(orig.values.toList())
-
-//        onFilterChange(override = true)
     }
 
     private fun sortAndSubmitList(items: List<AppInfo>) {
@@ -122,7 +126,7 @@ class AppAdapter(
         })
     }
 
-    fun onFilterChange(
+    suspend fun onFilterChange(
         query: String = currentQuery,
         useRegex: Boolean = this.useRegex,
         includeComponents: Boolean = this.includeComponents,
@@ -143,17 +147,19 @@ class AppAdapter(
             this.useRegex = useRegex
             this.includeComponents = includeComponents
 
-            orig.values.forEachParallelBlocking {
+            orig.values.forEachParallel {
                 it.onFilterChange(
                     context,
                     currentQuery,
                     useRegex,
                     includeComponents,
                     enabledFilterMode,
-                    exportedFilterMode
+                    exportedFilterMode,
+                    override
                 )
             }
             sortAndSubmitList(filter())
+            hasLoadedItems = true
         }
     }
 
@@ -190,7 +196,7 @@ class AppAdapter(
             }
         }
 
-        if (includeComponents && (!activityFilterEmpty || !serviceFilterEmpty || !receiverFilterEmpty))
+        if (includeComponents /* filters won't be empty by this point (if changing code, make sure they still won't be) */)
             return true
 
         return false
@@ -314,24 +320,44 @@ class AppAdapter(
                     binding.activities.isVisible = data.activitiesExpanded
 
                     if (binding.activities.isVisible) {
-                        data.activities
-                        data.activityAdapter.setItems(data.filteredActivities)
+                        data.activityAdapter.setItems(listOf())
+
+                        scope.launch {
+                            withContext(Dispatchers.IO) {
+                                data.loadActivities()
+                            }
+                            data.activityAdapter.setItems(data.filteredActivities)
+                        }
                     }
                 }
                 if (binding.services.isVisible != data.servicesExpanded) {
                     binding.services.isVisible = data.servicesExpanded
 
                     if (binding.services.isVisible) {
-                        data.services
-                        data.serviceAdapter.setItems(data.filteredServices)
+                        data.serviceAdapter.setItems(listOf())
+
+                        scope.launch {
+                            withContext(Dispatchers.IO) {
+                                data.loadServices()
+                            }
+
+                            data.serviceAdapter.setItems(data.filteredServices)
+                        }
                     }
                 }
                 if (binding.receivers.isVisible != data.receiversExpanded) {
                     binding.receivers.isVisible = data.receiversExpanded
 
                     if (binding.receivers.isVisible) {
-                        data.receivers
-                        data.receiverAdapter.setItems(data.filteredReceivers)
+                        data.receiverAdapter.setItems(listOf())
+
+                        scope.launch {
+                            withContext(Dispatchers.IO) {
+                                data.loadReceivers()
+                            }
+
+                            data.receiverAdapter.setItems(data.filteredReceivers)
+                        }
                     }
                 }
 
