@@ -1,6 +1,5 @@
 package tk.zwander.rootactivitylauncher
 
-import android.animation.TimeInterpolator
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.*
@@ -15,6 +14,7 @@ import android.view.ViewTreeObserver
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.SearchView
@@ -46,7 +46,6 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener, Shizuku.OnRequestPermissionResultListener {
     companion object {
         const val REQ_SHIZUKU = 10001
-        const val REQ_EXTRACT = 1001
     }
 
     protected open val isForTasker = false
@@ -63,7 +62,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             val extractIntent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
             extractIntent.putExtra(Intent.EXTRA_TITLE, getString(R.string.choose_extract_folder_msg))
 
-            startActivityForResult(extractIntent, REQ_EXTRACT)
+            extractLauncher.launch(extractIntent)
         }
 
         AppAdapter(this, isForTasker, ::onExtract)
@@ -120,6 +119,55 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                         if (host != null) {
                             appAdapter.updateItem(loadApp(getPackageInfo(host)) ?: return@launch)
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    private val extractLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK && extractInfo != null) {
+            val dirUri = result.data?.data ?: return@registerForActivityResult
+            val dir = DocumentFile.fromTreeUri(this, dirUri) ?: return@registerForActivityResult
+
+            val extractInfo = extractInfo!!
+            val baseDir = File(extractInfo.info.sourceDir)
+
+            val splits = extractInfo.info.splitSourceDirs?.mapIndexed { index, s ->
+                val splitApk = File(s)
+                val splitName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    extractInfo.info.splitNames[index]
+                } else splitApk.nameWithoutExtension
+
+                splitName to s
+            }
+
+            val baseFile = dir.createFile("application/vnd.android.package-archive", extractInfo.info.packageName) ?: return@registerForActivityResult
+            contentResolver.openOutputStream(baseFile.uri).use { writer ->
+                Log.e("RootActivityLauncher", "$baseDir")
+                try {
+                    baseDir.inputStream().use { reader ->
+                        reader.copyTo(writer!!)
+                    }
+                } catch (e: Exception) {
+                    Log.e("RootActivityLauncher", "Extraction failed", e)
+                    Toast.makeText(this, resources.getString(R.string.extraction_failed, e.message), Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            splits?.forEach { split ->
+                val name = split.first
+                val path = File(split.second)
+
+                val file = dir.createFile("application/vnd.android.package-archive", "${extractInfo.info.packageName}_$name") ?: return@registerForActivityResult
+                contentResolver.openOutputStream(file.uri).use { writer ->
+                    try {
+                        path.inputStream().use { reader ->
+                            reader.copyTo(writer!!)
+                        }
+                    } catch (e: Exception) {
+                        Log.e("RootActivityLauncher", "Extraction failed", e)
+                        Toast.makeText(this, resources.getString(R.string.extraction_failed, e.message), Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -302,58 +350,6 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         onRequestPermissionResult(requestCode, grantResults[0])
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (requestCode == REQ_EXTRACT && resultCode == Activity.RESULT_OK
-            && extractInfo != null) {
-            val dirUri = data?.data ?: return
-            val dir = DocumentFile.fromTreeUri(this, dirUri) ?: return
-
-            val extractInfo = extractInfo!!
-            val baseDir = File(extractInfo.info.sourceDir)
-
-            val splits = extractInfo.info.splitSourceDirs?.mapIndexed { index, s ->
-                val splitApk = File(s)
-                val splitName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    extractInfo.info.splitNames[index]
-                } else splitApk.nameWithoutExtension
-
-                splitName to s
-            }
-
-            val baseFile = dir.createFile("application/vnd.android.package-archive", extractInfo.info.packageName) ?: return
-            contentResolver.openOutputStream(baseFile.uri).use { writer ->
-                Log.e("RootActivityLauncher", "$baseDir")
-                try {
-                    baseDir.inputStream().use { reader ->
-                        reader.copyTo(writer!!)
-                    }
-                } catch (e: Exception) {
-                    Log.e("RootActivityLauncher", "Extraction failed", e)
-                    Toast.makeText(this, resources.getString(R.string.extraction_failed, e.message), Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            splits?.forEach { split ->
-                val name = split.first
-                val path = File(split.second)
-
-                val file = dir.createFile("application/vnd.android.package-archive", "${extractInfo.info.packageName}_$name") ?: return
-                contentResolver.openOutputStream(file.uri).use { writer ->
-                    try {
-                        path.inputStream().use { reader ->
-                            reader.copyTo(writer!!)
-                        }
-                    } catch (e: Exception) {
-                        Log.e("RootActivityLauncher", "Extraction failed", e)
-                        Toast.makeText(this, resources.getString(R.string.extraction_failed, e.message), Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-        }
-    }
-
     override fun onQueryTextChange(newText: String?): Boolean {
         appAdapter.onFilterChange(query = newText ?: "")
         binding.appList.scrollToPosition(0)
@@ -419,10 +415,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 })
                 .apply {
                     duration = resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
-
-                    //Casts are required here for some reason
-                    interpolator =
-                        if (open) DecelerateInterpolator() as TimeInterpolator else AccelerateInterpolator() as TimeInterpolator
+                    interpolator = if (open) DecelerateInterpolator() else AccelerateInterpolator()
                 }
                 .start()
         }
@@ -463,12 +456,13 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                             PackageManager.MATCH_DISABLED_COMPONENTS
                 )
             } else {
+                @Suppress("DEPRECATION")
                 val packages = packageManager.getInstalledPackages(PackageManager.GET_DISABLED_COMPONENTS)
-                packages.mapNotNull {
+                packages.mapNotNull { info ->
                     try {
                         //Try to get all the components for this package at once.
                         packageManager.getPackageInfo(
-                            it.packageName,
+                            info.packageName,
                             PackageManager.GET_ACTIVITIES or
                                     PackageManager.GET_SERVICES or
                                     PackageManager.GET_RECEIVERS or
@@ -478,7 +472,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                     } catch (e: Exception) {
                         //The resulting PackageInfo was too large. Retrieve each set
                         //separately and combine them.
-                        Log.e("RootActivityLauncher", "Unable to get full info, splitting ${it.packageName}", e)
+                        Log.e("RootActivityLauncher", "Unable to get full info, splitting ${info.packageName}", e)
                         val awaits = listOf(
                             PackageManager.GET_ACTIVITIES,
                             PackageManager.GET_SERVICES,
@@ -488,15 +482,15 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                         ).map { flag ->
                             async {
                                 try {
-                                    packageManager.getPackageInfo(it.packageName, flag)
+                                    packageManager.getPackageInfo(info.packageName, flag)
                                 } catch (e: Exception) {
-                                    Log.e("RootActivityLauncher", "Unable to get split info for ${it.packageName} for flag $flag", e)
+                                    Log.e("RootActivityLauncher", "Unable to get split info for ${info.packageName} for flag $flag", e)
                                     null
                                 }
                             }
                         }.awaitAll()
 
-                        it.apply {
+                        info.apply {
                             awaits.forEach { element ->
                                 element?.activities?.let { this.activities = it }
                                 element?.services?.let { this.services = it }
@@ -547,6 +541,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     }
 
     private fun getPackageInfo(packageName: String): PackageInfo {
+        @Suppress("DEPRECATION")
         return packageManager.getPackageInfo(
             packageName,
             PackageManager.GET_ACTIVITIES or
@@ -575,7 +570,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             val appLabel = app.applicationInfo.loadLabel(packageManager)
 
             activities?.forEach { act ->
-                val label = act.loadLabel(packageManager).run { if (isBlank()) appLabel else this }
+                val label = act.loadLabel(packageManager).ifBlank { appLabel }
                 activityInfos.add(
                     ActivityInfo(
                         act,
@@ -585,7 +580,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             }
 
             services?.forEach { srv ->
-                val label = srv.loadLabel(packageManager).run { if (isBlank()) appLabel else this }
+                val label = srv.loadLabel(packageManager).ifBlank { appLabel }
                 serviceInfos.add(
                     ServiceInfo(
                         srv,
@@ -595,7 +590,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             }
 
             receivers?.forEach { rec ->
-                val label = rec.loadLabel(packageManager).run { if (isBlank()) appLabel else this }
+                val label = rec.loadLabel(packageManager).ifBlank { appLabel }
                 receiverInfos.add(
                         ReceiverInfo(
                             rec,
