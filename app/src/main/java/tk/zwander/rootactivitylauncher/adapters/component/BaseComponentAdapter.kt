@@ -202,7 +202,7 @@ abstract class BaseComponentAdapter<
                 binding.shortcut.setOnClickListener {
                     val d = currentList[adapterPosition]
                     context.createShortcut(
-                        d.label,
+                        d.label.run { if (!isNullOrBlank()) this else d.info.applicationInfo.loadLabel(context.packageManager) },
                         IconCompat.createWithBitmap(
                             (binding.icon.drawable ?: ContextCompat.getDrawable(
                                 context,

@@ -77,7 +77,7 @@ class AppAdapter(
     }
 
     override fun getSectionName(position: Int): String {
-        return async.currentList[position].label.substring(0, 1)
+        return async.currentList.getOrNull(position)?.label?.substring(0, 1) ?: ""
     }
 
     fun addItem(item: AppInfo) {

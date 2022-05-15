@@ -14,6 +14,7 @@ import android.view.MenuItem
 import android.view.ViewTreeObserver
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.SearchView
@@ -324,8 +325,13 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             val baseFile = dir.createFile("application/vnd.android.package-archive", extractInfo.info.packageName) ?: return
             contentResolver.openOutputStream(baseFile.uri).use { writer ->
                 Log.e("RootActivityLauncher", "$baseDir")
-                baseDir.inputStream().use { reader ->
-                    reader.copyTo(writer!!)
+                try {
+                    baseDir.inputStream().use { reader ->
+                        reader.copyTo(writer!!)
+                    }
+                } catch (e: Exception) {
+                    Log.e("RootActivityLauncher", "Extraction failed", e)
+                    Toast.makeText(this, resources.getString(R.string.extraction_failed, e.message), Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -335,8 +341,13 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
                 val file = dir.createFile("application/vnd.android.package-archive", "${extractInfo.info.packageName}_$name") ?: return
                 contentResolver.openOutputStream(file.uri).use { writer ->
-                    path.inputStream().use { reader ->
-                        reader.copyTo(writer!!)
+                    try {
+                        path.inputStream().use { reader ->
+                            reader.copyTo(writer!!)
+                        }
+                    } catch (e: Exception) {
+                        Log.e("RootActivityLauncher", "Extraction failed", e)
+                        Toast.makeText(this, resources.getString(R.string.extraction_failed, e.message), Toast.LENGTH_SHORT).show()
                     }
                 }
             }
