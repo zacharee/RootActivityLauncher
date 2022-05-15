@@ -1,9 +1,6 @@
 package tk.zwander.rootactivitylauncher.util
 
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.app.IActivityManager
-import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -13,23 +10,19 @@ import android.content.pm.PackageItemInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.os.UserHandle
 import android.provider.Settings
 import android.util.SparseArray
 import android.util.TypedValue
 import android.widget.Toast
-import androidx.core.content.ContextCompat
+import androidx.activity.result.ActivityResultLauncher
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.util.forEach
 import com.squareup.picasso.Picasso
-import eu.chainfire.libsuperuser.Shell
 import kotlinx.coroutines.*
 import rikka.shizuku.Shizuku
-import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.ShizukuProvider
-import rikka.shizuku.SystemServiceHelper
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.activities.ShortcutLaunchActivity
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
@@ -38,6 +31,7 @@ import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import java.util.regex.PatternSyntaxException
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.roundToInt
+import kotlin.random.Random
 
 
 inline fun <T, R> SparseArray<out T>.map(transform: (T) -> R): List<R> {
@@ -225,12 +219,18 @@ val Context.hasShizukuPermission: Boolean
         }
     }
 
-fun Activity.requestShizukuPermission(code: Int) {
+fun requestShizukuPermission(resultListener: (Boolean) -> Unit, permissionLauncher: ActivityResultLauncher<String>) {
     if (Shizuku.isPreV11() || Shizuku.getVersion() < 11) {
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
-            requestPermissions(arrayOf(ShizukuProvider.PERMISSION), code)
-        }
+        permissionLauncher.launch(ShizukuProvider.PERMISSION)
     } else {
+        val code = Random(System.currentTimeMillis()).nextInt()
+        val listener = object : Shizuku.OnRequestPermissionResultListener {
+            override fun onRequestPermissionResult(requestCode: Int, grantResult: Int) {
+                resultListener(grantResult == PackageManager.PERMISSION_GRANTED)
+                Shizuku.removeRequestPermissionResultListener(this)
+            }
+        }
+        Shizuku.addRequestPermissionResultListener(listener)
         Shizuku.requestPermission(code)
     }
 }

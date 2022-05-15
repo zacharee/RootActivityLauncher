@@ -43,11 +43,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 @SuppressLint("RestrictedApi")
 open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
-    SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener, Shizuku.OnRequestPermissionResultListener {
-    companion object {
-        const val REQ_SHIZUKU = 10001
-    }
-
+    SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener, PermissionResultListener {
     protected open val isForTasker = false
     protected open var selectedItem: Pair<ComponentType, ComponentName>? = null
     protected val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
@@ -165,7 +161,8 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 val name = split.first
                 val path = File(split.second)
 
-                val file = dir.createFile("application/vnd.android.package-archive", "${extractInfo.info.packageName}_$name") ?: return@registerForActivityResult
+                val file = dir.createFile("application/vnd.android.package-archive", "${extractInfo.info.packageName}_$name")
+                    ?: return@registerForActivityResult
                 contentResolver.openOutputStream(file.uri).use { writer ->
                     try {
                         path.inputStream().use { reader ->
@@ -179,6 +176,8 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             }
         }
     }
+
+    private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission(), ::onPermissionResult)
 
     private var currentDataJob: Deferred<*>? = null
 
@@ -224,8 +223,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
         if (Shizuku.pingBinder()) {
             if (!hasShizukuPermission) {
-                Shizuku.addRequestPermissionResultListener(this)
-                requestShizukuPermission(REQ_SHIZUKU)
+                requestShizukuPermission(::onPermissionResult, permissionLauncher)
             }
         }
 
@@ -344,18 +342,6 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         binding.appList.layoutManager = getAppropriateLayoutManager(newConfig.screenWidthDp)
     }
 
-    override fun onRequestPermissionResult(requestCode: Int, grantResult: Int) {
-        if (requestCode == REQ_SHIZUKU && grantResult == PackageManager.PERMISSION_GRANTED) {
-            //Nothing yet
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-        onRequestPermissionResult(requestCode, grantResults[0])
-    }
-
     override fun onQueryTextChange(newText: String?): Boolean {
         appAdapter.onFilterChange(query = newText ?: "")
         binding.appList.scrollToPosition(0)
@@ -364,6 +350,10 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
     override fun onQueryTextSubmit(query: String?): Boolean {
         return false
+    }
+
+    override fun onPermissionResult(granted: Boolean) {
+        // Currently no-op
     }
 
     override fun onRefresh() {
