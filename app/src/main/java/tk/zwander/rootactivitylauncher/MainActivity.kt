@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.hmomeni.progresscircula.ProgressCircula
+import jp.wasabeef.recyclerview.animators.FadeInAnimator
 import kotlinx.coroutines.*
 import rikka.shizuku.Shizuku
 import tk.zwander.patreonsupportersretrieval.view.SupporterView
@@ -41,7 +42,6 @@ import tk.zwander.rootactivitylauncher.views.FilterDialog
 import java.io.File
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
-
 
 @SuppressLint("RestrictedApi")
 open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
@@ -335,9 +335,9 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             false
         }
 
-        binding.appList.adapter = appAdapter
+        binding.appList.adapter = CustomAnimationAdapter(appAdapter)
+        binding.appList.itemAnimator = FadeInAnimator()
         binding.appList.layoutManager = getAppropriateLayoutManager(resources.configuration.screenWidthDp)
-        binding.appList.setItemViewCacheSize(20)
         binding.appList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 updateScrollButtonState()

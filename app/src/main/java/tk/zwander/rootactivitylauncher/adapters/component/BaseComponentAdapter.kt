@@ -33,7 +33,6 @@ import tk.zwander.rootactivitylauncher.views.ExtrasDialog
 import android.util.TypedValue
 import tk.zwander.rootactivitylauncher.databinding.ComponentItemBinding
 
-
 abstract class BaseComponentAdapter<
         Self : BaseComponentAdapter<Self, DataClass, VHClass>,
         DataClass : BaseComponentInfo,
@@ -42,6 +41,10 @@ abstract class BaseComponentAdapter<
     private val isForTasker: Boolean,
     private val selectionCallback: (BaseComponentInfo) -> Unit
 ) : RecyclerView.Adapter<VHClass>(), CoroutineScope by MainScope() {
+    init {
+        setHasStableIds(true)
+    }
+
     val currentList = SortedList(dataClass, object : SortedListAdapterCallback<DataClass>(this) {
         override fun areItemsTheSame(item1: DataClass, item2: DataClass): Boolean {
             return constructComponentKey(item1.info) == constructComponentKey(item2.info)
@@ -59,6 +62,10 @@ abstract class BaseComponentAdapter<
 
     override fun getItemCount(): Int {
         return currentList.size()
+    }
+
+    override fun getItemId(position: Int): Long {
+        return currentList[position].component.hashCode().toLong()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VHClass {

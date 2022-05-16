@@ -66,4 +66,5 @@ dependencies {
     implementation 'com.github.2hamed:ProgressCircula:0.2.1'
     implementation 'com.squareup.picasso:picasso:2.71828'
     implementation 'com.github.skydoves:balloon:1.4.0'
+    implementation 'jp.wasabeef:recyclerview-animators:4.0.2'
 }

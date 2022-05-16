@@ -28,8 +28,11 @@ class AppAdapter(
     private val scope: CoroutineScope,
     private val isForTasker: Boolean,
     private val extractCallback: (AppInfo) -> Unit
-) : RecyclerView.Adapter<AppAdapter.AppVH>(),
-    FastScrollRecyclerView.SectionedAdapter {
+) : RecyclerView.Adapter<AppAdapter.AppVH>(), FastScrollRecyclerView.SectionedAdapter {
+    init {
+        setHasStableIds(true)
+    }
+
     val async = AsyncListDiffer(this, object : DiffUtil.ItemCallback<AppInfo>() {
         override fun areContentsTheSame(oldItem: AppInfo, newItem: AppInfo): Boolean {
             return false
@@ -76,6 +79,10 @@ class AppAdapter(
         return async.currentList.size
     }
 
+    override fun getItemId(position: Int): Long {
+        return async.currentList[position].info.packageName.hashCode().toLong()
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppVH {
         return AppVH(LayoutInflater.from(parent.context).inflate(R.layout.app_item, parent, false))
     }
@@ -106,7 +113,7 @@ class AppAdapter(
 
         val index = async.currentList.indexOf(item)
         if (index != -1) {
-            notifyItemChanged(index)
+            notifyItemChanged(index, listOf(Unit))
         }
     }
 
@@ -232,7 +239,7 @@ class AppAdapter(
                     val d = async.currentList[adapterPosition]
                     d.activitiesExpanded = !d.activitiesExpanded
 
-                    notifyItemChanged(adapterPosition)
+                    notifyItemChanged(adapterPosition, listOf(Unit))
                 }
 
                 binding.servicesTitle.setOnClickListener {
@@ -241,7 +248,7 @@ class AppAdapter(
                     val d = async.currentList[adapterPosition]
                     d.servicesExpanded = !d.servicesExpanded
 
-                    notifyItemChanged(adapterPosition)
+                    notifyItemChanged(adapterPosition, listOf(Unit))
                 }
 
                 binding.receiversTitle.setOnClickListener {
@@ -250,7 +257,7 @@ class AppAdapter(
                     val d = async.currentList[adapterPosition]
                     d.receiversExpanded = !d.receiversExpanded
 
-                    notifyItemChanged(adapterPosition)
+                    notifyItemChanged(adapterPosition, listOf(Unit))
                 }
 
                 binding.appInfo.setOnClickListener {
@@ -305,9 +312,9 @@ class AppAdapter(
                     binding.appEnabled.setOnCheckedChangeListener(enabledListener)
                 }
 
-                binding.activities.adapter = data.activityAdapter
-                binding.services.adapter = data.serviceAdapter
-                binding.receivers.adapter = data.receiverAdapter
+                binding.activities.adapter = CustomAnimationAdapter(data.activityAdapter)
+                binding.services.adapter = CustomAnimationAdapter(data.serviceAdapter)
+                binding.receivers.adapter = CustomAnimationAdapter(data.receiverAdapter)
 
                 binding.activities.layoutManager =
                     context.getAppropriateLayoutManager(context.pxAsDp(width).toInt())
@@ -317,7 +324,7 @@ class AppAdapter(
                     context.getAppropriateLayoutManager(context.pxAsDp(width).toInt())
 
                 if (binding.activities.isVisible != data.activitiesExpanded) {
-                    binding.activities.isVisible = data.activitiesExpanded
+                    binding.activities.isVisibleAnimated = data.activitiesExpanded
 
                     if (binding.activities.isVisible) {
                         data.activityAdapter.setItems(listOf())
@@ -333,7 +340,7 @@ class AppAdapter(
                     }
                 }
                 if (binding.services.isVisible != data.servicesExpanded) {
-                    binding.services.isVisible = data.servicesExpanded
+                    binding.services.isVisibleAnimated = data.servicesExpanded
 
                     if (binding.services.isVisible) {
                         data.serviceAdapter.setItems(listOf())
@@ -349,7 +356,7 @@ class AppAdapter(
                     }
                 }
                 if (binding.receivers.isVisible != data.receiversExpanded) {
-                    binding.receivers.isVisible = data.receiversExpanded
+                    binding.receivers.isVisibleAnimated = data.receiversExpanded
 
                     if (binding.receivers.isVisible) {
                         data.receiverAdapter.setItems(listOf())

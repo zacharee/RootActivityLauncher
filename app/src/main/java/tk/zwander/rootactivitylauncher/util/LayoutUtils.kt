@@ -1,8 +1,10 @@
 package tk.zwander.rootactivitylauncher.util
 
 import android.content.Context
+import android.view.View
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -14,7 +16,7 @@ private fun Context.linearLayoutManager(): LinearLayoutManager {
     return LinearLayoutManager(this)
 }
 
-private fun Context.gridLayoutManager(spans: Int): StaggeredGridLayoutManager {
+private fun gridLayoutManager(spans: Int): StaggeredGridLayoutManager {
     return StaggeredGridLayoutManager(spans, StaggeredGridLayoutManager.VERTICAL)
 }
 
@@ -52,3 +54,22 @@ fun RecyclerView.setHeightParams(size: Int) {
             context.resources.getDimensionPixelSize(R.dimen.item_recycler_max_height)
     }
 }
+
+var View.isVisibleAnimated: Boolean
+    get() = isVisible
+    set(value) {
+        pivotY = 0f
+
+        if (value) {
+            alpha = 0f
+            scaleY = 0f
+            isVisible = value
+            animate().alpha(1f).scaleY(1f)
+        } else {
+            alpha = 1f
+            scaleY = 1f
+            animate().alpha(0f).scaleY(0f).withEndAction {
+                isVisible = value
+            }
+        }
+    }
