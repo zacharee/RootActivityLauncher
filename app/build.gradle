@@ -1,7 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
-//apply plugin: 'kotlin-android-extensions'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.crashlytics'
 
@@ -12,7 +11,7 @@ android {
         applicationId "tk.zwander.rootactivitylauncher"
         minSdkVersion 21
         targetSdkVersion 31
-        versionCode 15
+        versionCode 16
         versionName versionCode.toString()
     }
 
