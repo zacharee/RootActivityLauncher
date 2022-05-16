@@ -55,7 +55,7 @@ abstract class BaseComponentAdapter<
         }
 
         override fun areContentsTheSame(oldItem: DataClass, newItem: DataClass): Boolean {
-            return false
+            return true
         }
 
     })

@@ -39,11 +39,10 @@
 
     </LinearLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
+    <tk.zwander.rootactivitylauncher.views.ShadowFadingEdgeRecyclerView
         android:id="@+id/recycler"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginStart="32dp"
         android:visibility="gone"
         android:scrollbars="vertical"
         android:scrollbarThumbVertical="@drawable/scroll_thumb"
@@ -53,6 +52,7 @@
         android:nestedScrollingEnabled="true"
         tools:listitem="@layout/component_item"
         tools:visibility="visible"
+        tools:ignore="RtlSymmetry"
         />
 
 </merge>

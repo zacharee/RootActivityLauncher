@@ -288,8 +288,6 @@ class AppAdapter(
             binding.receiversComponent.isVisible = data.receiversSize > 0
 
             if (data.activitiesExpanded) {
-                data.activityAdapter.setItems(listOf())
-
                 scope.launch {
                     withContext(Dispatchers.IO) {
                         data.loadActivities()
@@ -302,8 +300,6 @@ class AppAdapter(
             binding.activitiesComponent.expanded = data.activitiesExpanded
 
             if (data.servicesExpanded) {
-                data.serviceAdapter.setItems(listOf())
-
                 scope.launch {
                     withContext(Dispatchers.IO) {
                         data.loadServices()
@@ -316,8 +312,6 @@ class AppAdapter(
             binding.servicesComponent.expanded = data.servicesExpanded
 
             if (data.receiversExpanded) {
-                data.receiverAdapter.setItems(listOf())
-
                 scope.launch {
                     withContext(Dispatchers.IO) {
                         data.loadReceivers()

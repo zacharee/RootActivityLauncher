@@ -31,6 +31,7 @@ import kotlinx.coroutines.*
 import rikka.shizuku.Shizuku
 import tk.zwander.patreonsupportersretrieval.view.SupporterView
 import tk.zwander.rootactivitylauncher.adapters.AppAdapter
+import tk.zwander.rootactivitylauncher.adapters.CustomAnimationAdapter
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.component.*
 import tk.zwander.rootactivitylauncher.databinding.ActivityMainBinding

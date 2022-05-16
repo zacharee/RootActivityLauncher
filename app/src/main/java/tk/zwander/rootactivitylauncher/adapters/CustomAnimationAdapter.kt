@@ -1,4 +1,4 @@
-package tk.zwander.rootactivitylauncher.util
+package tk.zwander.rootactivitylauncher.adapters
 
 import android.animation.Animator
 import android.animation.ObjectAnimator

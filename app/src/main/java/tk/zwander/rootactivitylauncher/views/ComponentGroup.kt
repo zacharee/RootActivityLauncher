@@ -7,6 +7,7 @@ import android.widget.LinearLayout
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import androidx.recyclerview.widget.RecyclerView.LayoutManager
+import jp.wasabeef.recyclerview.animators.FadeInAnimator
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.databinding.ComponentGroupBinding
 import tk.zwander.rootactivitylauncher.util.*
@@ -25,10 +26,12 @@ sealed class ComponentGroup(context: Context, attrs: AttributeSet) : LinearLayou
 
     var expanded: Boolean = false
         set(value) {
-            field = value
+            if (field != value) {
+                binding.arrow.animate().rotation(if (value) 180f else 0f).start()
+                binding.recycler.isVisibleAnimated = value
+            }
 
-            binding.arrow.animate().rotation(if (value) 180f else 0f).start()
-            binding.recycler.isVisibleAnimated = value
+            field = value
         }
 
     var title: CharSequence
@@ -46,11 +49,17 @@ sealed class ComponentGroup(context: Context, attrs: AttributeSet) : LinearLayou
     var adapter: RecyclerView.Adapter<*>?
         get() = binding.recycler.adapter
         set(value) {
-            binding.recycler.adapter = value?.let { CustomAnimationAdapter(value) }
+            binding.recycler.adapter = value
         }
 
     init {
         orientation = VERTICAL
+    }
+
+    override fun onFinishInflate() {
+        super.onFinishInflate()
+
+        binding.recycler.itemAnimator = null
     }
 
     fun updateHeight(size: Int) {
