@@ -326,6 +326,8 @@ class AppAdapter(
                             withContext(Dispatchers.IO) {
                                 data.loadActivities()
                             }
+
+                            binding.activities.setHeightParams(data.activitiesSize)
                             data.activityAdapter.setItems(data.filteredActivities)
                         }
                     }
@@ -341,6 +343,7 @@ class AppAdapter(
                                 data.loadServices()
                             }
 
+                            binding.services.setHeightParams(data.servicesSize)
                             data.serviceAdapter.setItems(data.filteredServices)
                         }
                     }
@@ -356,6 +359,7 @@ class AppAdapter(
                                 data.loadReceivers()
                             }
 
+                            binding.receivers.setHeightParams(data.receiversSize)
                             data.receiverAdapter.setItems(data.filteredReceivers)
                         }
                     }

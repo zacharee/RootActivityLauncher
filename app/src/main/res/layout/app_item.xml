@@ -143,16 +143,28 @@
             android:clickable="true"
             />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/activities"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:visibility="gone"
-            app:layoutManager=".util.PredictiveLinearLayoutManager"
-            tools:listitem="@layout/component_item"
-            tools:visibility="visible"
-            />
+            android:layout_height="wrap_content">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/activities"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="32dp"
+                android:visibility="gone"
+                android:scrollbars="vertical"
+                android:scrollbarThumbVertical="@drawable/scroll_thumb"
+                android:requiresFadingEdge="vertical"
+                android:fadingEdgeLength="@dimen/item_recycler_fading_edge_length"
+                app:layoutManager=".util.PredictiveLinearLayoutManager"
+                app:layout_constrainedHeight="true"
+                app:layout_constraintHeight_max="@dimen/item_recycler_max_height"
+                tools:listitem="@layout/component_item"
+                tools:visibility="visible"
+                />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <TextView
             android:id="@+id/services_title"
@@ -169,16 +181,29 @@
             android:clickable="true"
             />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/services"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:visibility="gone"
-            app:layoutManager=".util.PredictiveLinearLayoutManager"
-            tools:listitem="@layout/component_item"
-            tools:visibility="visible"
-            />
+            android:layout_height="wrap_content">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/services"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="32dp"
+                android:visibility="gone"
+                android:scrollbars="vertical"
+                android:scrollbarThumbVertical="@drawable/scroll_thumb"
+                android:requiresFadingEdge="vertical"
+                android:fadingEdgeLength="@dimen/item_recycler_fading_edge_length"
+                app:layoutManager=".util.PredictiveLinearLayoutManager"
+                app:layout_constrainedHeight="true"
+                app:layout_constraintHeight_max="@dimen/item_recycler_max_height"
+                android:nestedScrollingEnabled="true"
+                tools:listitem="@layout/component_item"
+                tools:visibility="visible"
+                />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <TextView
             android:id="@+id/receivers_title"
@@ -195,16 +220,29 @@
             android:clickable="true"
             />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/receivers"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:visibility="gone"
-            app:layoutManager=".util.PredictiveLinearLayoutManager"
-            tools:listitem="@layout/component_item"
-            tools:visibility="visible"
-            />
+            android:layout_height="wrap_content">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/receivers"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="32dp"
+                android:visibility="gone"
+                android:scrollbars="vertical"
+                android:scrollbarThumbVertical="@drawable/scroll_thumb"
+                android:requiresFadingEdge="vertical"
+                android:fadingEdgeLength="@dimen/item_recycler_fading_edge_length"
+                app:layoutManager=".util.PredictiveLinearLayoutManager"
+                app:layout_constrainedHeight="true"
+                app:layout_constraintHeight_max="@dimen/item_recycler_max_height"
+                android:nestedScrollingEnabled="true"
+                tools:listitem="@layout/component_item"
+                tools:visibility="visible"
+                />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </LinearLayout>
 

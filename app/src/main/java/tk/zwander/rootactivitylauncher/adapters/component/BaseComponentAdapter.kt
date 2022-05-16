@@ -41,8 +41,7 @@ abstract class BaseComponentAdapter<
     dataClass: Class<DataClass>,
     private val isForTasker: Boolean,
     private val selectionCallback: (BaseComponentInfo) -> Unit
-) :
-    RecyclerView.Adapter<VHClass>(), CoroutineScope by MainScope() {
+) : RecyclerView.Adapter<VHClass>(), CoroutineScope by MainScope() {
     val currentList = SortedList(dataClass, object : SortedListAdapterCallback<DataClass>(this) {
         override fun areItemsTheSame(item1: DataClass, item2: DataClass): Boolean {
             return constructComponentKey(item1.info) == constructComponentKey(item2.info)
@@ -248,7 +247,7 @@ abstract class BaseComponentAdapter<
                         .fit()
                         .centerInside()
                         .into(binding.icon)
-                }
+                } ?: binding.icon.setImageDrawable(null)
 
                 binding.enabled.setOnCheckedChangeListener(null)
                 if (binding.enabled.isChecked != data.info.isActuallyEnabled(context)) binding.enabled.isChecked = data.info.isActuallyEnabled(context)
