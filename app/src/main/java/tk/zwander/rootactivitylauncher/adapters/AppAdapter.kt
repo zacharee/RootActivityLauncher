@@ -229,12 +229,12 @@ class AppAdapter(
 
         init {
             itemView.apply {
-                binding.activities.addItemDecoration(innerDividerItemDecoration)
-                binding.services.addItemDecoration(innerDividerItemDecoration)
-                binding.receivers.addItemDecoration(innerDividerItemDecoration)
+                binding.activitiesComponent.addItemDecoration(innerDividerItemDecoration)
+                binding.servicesComponent.addItemDecoration(innerDividerItemDecoration)
+                binding.receiversComponent.addItemDecoration(innerDividerItemDecoration)
 
-                binding.activitiesTitle.setOnClickListener {
-                    if (adapterPosition == -1) return@setOnClickListener
+                binding.activitiesComponent.setOnTitleClickListener {
+                    if (adapterPosition == -1) return@setOnTitleClickListener
 
                     val d = async.currentList[adapterPosition]
                     d.activitiesExpanded = !d.activitiesExpanded
@@ -242,8 +242,8 @@ class AppAdapter(
                     notifyItemChanged(adapterPosition, listOf(Unit))
                 }
 
-                binding.servicesTitle.setOnClickListener {
-                    if (adapterPosition == -1) return@setOnClickListener
+                binding.servicesComponent.setOnTitleClickListener {
+                    if (adapterPosition == -1) return@setOnTitleClickListener
 
                     val d = async.currentList[adapterPosition]
                     d.servicesExpanded = !d.servicesExpanded
@@ -251,8 +251,8 @@ class AppAdapter(
                     notifyItemChanged(adapterPosition, listOf(Unit))
                 }
 
-                binding.receiversTitle.setOnClickListener {
-                    if (adapterPosition == -1) return@setOnClickListener
+                binding.receiversComponent.setOnTitleClickListener {
+                    if (adapterPosition == -1) return@setOnTitleClickListener
 
                     val d = async.currentList[adapterPosition]
                     d.receiversExpanded = !d.receiversExpanded
@@ -312,21 +312,19 @@ class AppAdapter(
                     binding.appEnabled.setOnCheckedChangeListener(enabledListener)
                 }
 
-                binding.activities.adapter = CustomAnimationAdapter(data.activityAdapter)
-                binding.services.adapter = CustomAnimationAdapter(data.serviceAdapter)
-                binding.receivers.adapter = CustomAnimationAdapter(data.receiverAdapter)
+                binding.activitiesComponent.adapter = CustomAnimationAdapter(data.activityAdapter)
+                binding.servicesComponent.adapter = CustomAnimationAdapter(data.serviceAdapter)
+                binding.receiversComponent.adapter = CustomAnimationAdapter(data.receiverAdapter)
 
-                binding.activities.layoutManager =
+                binding.activitiesComponent.layoutManager =
                     context.getAppropriateLayoutManager(context.pxAsDp(width).toInt())
-                binding.services.layoutManager =
+                binding.servicesComponent.layoutManager =
                     context.getAppropriateLayoutManager(context.pxAsDp(width).toInt())
-                binding.receivers.layoutManager =
+                binding.receiversComponent.layoutManager =
                     context.getAppropriateLayoutManager(context.pxAsDp(width).toInt())
 
-                if (binding.activities.isVisible != data.activitiesExpanded) {
-                    binding.activities.isVisibleAnimated = data.activitiesExpanded
-
-                    if (binding.activities.isVisible) {
+                if (binding.activitiesComponent.expanded != data.activitiesExpanded) {
+                    if (data.activitiesExpanded) {
                         data.activityAdapter.setItems(listOf())
 
                         scope.launch {
@@ -334,15 +332,15 @@ class AppAdapter(
                                 data.loadActivities()
                             }
 
-                            binding.activities.setHeightParams(data.activitiesSize)
+                            binding.activitiesComponent.updateHeight(data.activitiesSize)
                             data.activityAdapter.setItems(data.filteredActivities)
                         }
                     }
-                }
-                if (binding.services.isVisible != data.servicesExpanded) {
-                    binding.services.isVisibleAnimated = data.servicesExpanded
 
-                    if (binding.services.isVisible) {
+                    binding.activitiesComponent.expanded = data.activitiesExpanded
+                }
+                if (binding.servicesComponent.expanded != data.servicesExpanded) {
+                    if (data.servicesExpanded) {
                         data.serviceAdapter.setItems(listOf())
 
                         scope.launch {
@@ -350,15 +348,15 @@ class AppAdapter(
                                 data.loadServices()
                             }
 
-                            binding.services.setHeightParams(data.servicesSize)
+                            binding.servicesComponent.updateHeight(data.servicesSize)
                             data.serviceAdapter.setItems(data.filteredServices)
                         }
                     }
-                }
-                if (binding.receivers.isVisible != data.receiversExpanded) {
-                    binding.receivers.isVisibleAnimated = data.receiversExpanded
 
-                    if (binding.receivers.isVisible) {
+                    binding.servicesComponent.expanded = data.servicesExpanded
+                }
+                if (binding.receiversComponent.expanded != data.receiversExpanded) {
+                    if (data.receiversExpanded) {
                         data.receiverAdapter.setItems(listOf())
 
                         scope.launch {
@@ -366,41 +364,24 @@ class AppAdapter(
                                 data.loadReceivers()
                             }
 
-                            binding.receivers.setHeightParams(data.receiversSize)
+                            binding.receiversComponent.updateHeight(data.receiversSize)
                             data.receiverAdapter.setItems(data.filteredReceivers)
                         }
                     }
+
+                    binding.receiversComponent.expanded = data.receiversExpanded
                 }
 
-                binding.activitiesTitle.text =
+                binding.activitiesComponent.title =
                     resources.getString(R.string.activities, data.activitiesSize)
-                binding.servicesTitle.text =
+                binding.servicesComponent.title =
                     resources.getString(R.string.services, data.servicesSize)
-                binding.receiversTitle.text =
+                binding.receiversComponent.title =
                     resources.getString(R.string.receivers, data.receiversSize)
 
-                binding.activitiesTitle.setCompoundDrawablesRelative(
-                    null,
-                    null,
-                    if (data.activitiesExpanded) arrowUp else arrowDown,
-                    null
-                )
-                binding.servicesTitle.setCompoundDrawablesRelative(
-                    null,
-                    null,
-                    if (data.servicesExpanded) arrowUp else arrowDown,
-                    null
-                )
-                binding.receiversTitle.setCompoundDrawablesRelative(
-                    null,
-                    null,
-                    if (data.receiversExpanded) arrowUp else arrowDown,
-                    null
-                )
-
-                binding.activitiesTitle.isVisible = data.activitiesSize > 0
-                binding.servicesTitle.isVisible = data.servicesSize > 0
-                binding.receiversTitle.isVisible = data.receiversSize > 0
+                binding.activitiesComponent.isVisible = data.activitiesSize > 0
+                binding.servicesComponent.isVisible = data.servicesSize > 0
+                binding.receiversComponent.isVisible = data.receiversSize > 0
             }
         }
     }

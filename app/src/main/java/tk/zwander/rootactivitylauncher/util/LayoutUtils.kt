@@ -3,7 +3,6 @@ package tk.zwander.rootactivitylauncher.util
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -48,9 +47,8 @@ fun RecyclerView.LayoutManager.findLastVisibleItemPosition(): Int {
 }
 
 fun RecyclerView.setHeightParams(size: Int) {
-    updateLayoutParams<ConstraintLayout.LayoutParams> {
-        constrainedHeight = size <= 10
-        height = if (size <= 10) ViewGroup.LayoutParams.MATCH_PARENT else
+    updateLayoutParams<ViewGroup.LayoutParams> {
+        height = if (size <= 4) ViewGroup.LayoutParams.WRAP_CONTENT else
             context.resources.getDimensionPixelSize(R.dimen.item_recycler_max_height)
     }
 }
@@ -64,12 +62,12 @@ var View.isVisibleAnimated: Boolean
             alpha = 0f
             scaleY = 0f
             isVisible = value
-            animate().alpha(1f).scaleY(1f)
+            animate().alpha(1f).scaleY(1f).start()
         } else {
             alpha = 1f
             scaleY = 1f
             animate().alpha(0f).scaleY(0f).withEndAction {
                 isVisible = value
-            }
+            }.start()
         }
     }
