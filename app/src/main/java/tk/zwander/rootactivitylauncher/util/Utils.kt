@@ -130,17 +130,19 @@ fun Context.launchUrl(url: String) {
         val browserIntent =
             Intent(Intent.ACTION_VIEW, Uri.parse(url))
         startActivity(browserIntent)
-    } catch (e: Exception) {}
+    } catch (_: Exception) {}
 }
 
 fun Context.launchEmail(to: String, subject: String) {
     try {
         val intent = Intent(Intent.ACTION_SENDTO)
-        intent.type = "text/plain"
-        intent.data = Uri.parse("mailto:${Uri.encode(to)}?subject=${Uri.encode(subject)}")
+        intent.setDataAndType(
+            Uri.parse("mailto:${Uri.encode(to)}?subject=${Uri.encode(subject)}"),
+            "text/plain"
+        )
 
         startActivity(intent)
-    } catch (e: Exception) {}
+    } catch (_: Exception) {}
 }
 
 fun constructComponentKey(component: PackageItemInfo): String {
@@ -250,7 +252,7 @@ fun Context.pxAsDp(pxVal: Number) =
 fun Context.showRootToast() {
     try {
         Toast.makeText(this, R.string.requires_root, Toast.LENGTH_SHORT).show()
-    } catch (e: Exception) {}
+    } catch (_: Exception) {}
 }
 
 fun ActivityInfo.persistableModeToString(): String {

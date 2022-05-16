@@ -87,6 +87,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:background="?selectableItemBackgroundBorderless"
+                android:contentDescription="@string/search_options"
                 app:srcCompat="@drawable/ic_baseline_keyboard_arrow_left_24"
                 />
 

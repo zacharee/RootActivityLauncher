@@ -1,5 +1,6 @@
 package tk.zwander.rootactivitylauncher.data
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.ApplicationInfo
@@ -14,6 +15,7 @@ import tk.zwander.rootactivitylauncher.util.constructComponentKey
 
 class PrefManager private constructor(context: Context) : ContextWrapper(context) {
     companion object {
+        @SuppressLint("StaticFieldLeak")
         private var instance: PrefManager? = null
 
         fun getInstance(context: Context): PrefManager {

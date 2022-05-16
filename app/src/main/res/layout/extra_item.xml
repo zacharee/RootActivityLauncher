@@ -57,6 +57,7 @@
         android:focusable="true"
         android:background="?android:selectableItemBackgroundBorderless"
         android:src="@drawable/ic_baseline_close_24"
+        android:contentDescription="@string/delete"
         />
 
 </LinearLayout>

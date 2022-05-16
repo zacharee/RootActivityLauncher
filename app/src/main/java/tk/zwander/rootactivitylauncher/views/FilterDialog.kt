@@ -1,5 +1,6 @@
 package tk.zwander.rootactivitylauncher.views
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -14,6 +15,7 @@ class FilterDialog(
     private var exportedMode: ExportedFilterMode,
     onConfirmListener: (enabledMode: EnabledFilterMode, exportedMode: ExportedFilterMode) -> Unit
 ) : MaterialAlertDialogBuilder(context) {
+    @SuppressLint("InflateParams")
     private val view = LayoutInflater.from(context).inflate(R.layout.filter_dialog, null)
     private val binding = FilterDialogBinding.bind(view)
 

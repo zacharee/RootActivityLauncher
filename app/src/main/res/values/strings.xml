@@ -55,6 +55,8 @@
     
     <string name="usage_advanced_search">Advanced Search</string>
     <string name="search">Search</string>
+    <string name="search_options">Search Options</string>
+    <string name="delete">Delete</string>
 
     <string name="extraction_failed">Extraction failed: %s</string>
 

@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.widget.doOnTextChanged
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.SortedList
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.databinding.ExtraItemBinding
@@ -16,10 +17,41 @@ class ExtrasDialogAdapter : RecyclerView.Adapter<ExtrasDialogAdapter.BaseVH<out 
         const val VIEWTYPE_EXTRA = 1
     }
 
-    private val items = ArrayList<ExtraInfo>()
+    private val items = SortedList(
+        ExtraInfo::class.java,
+        object : SortedList.Callback<ExtraInfo>() {
+            override fun compare(o1: ExtraInfo, o2: ExtraInfo): Int {
+                return 0
+            }
+
+            override fun onInserted(position: Int, count: Int) {
+                notifyItemRangeInserted(position + 1, count)
+            }
+
+            override fun onRemoved(position: Int, count: Int) {
+                notifyItemRangeRemoved(position + 1, count)
+            }
+
+            override fun onMoved(fromPosition: Int, toPosition: Int) {
+                notifyItemMoved(fromPosition + 1, toPosition + 1)
+            }
+
+            override fun onChanged(position: Int, count: Int) {
+                notifyItemRangeChanged(position + 1, count)
+            }
+
+            override fun areContentsTheSame(oldItem: ExtraInfo, newItem: ExtraInfo): Boolean {
+                return oldItem == newItem
+            }
+
+            override fun areItemsTheSame(item1: ExtraInfo, item2: ExtraInfo): Boolean {
+                return item1 == item2
+            }
+        }
+    )
 
     override fun getItemCount(): Int {
-        return items.size + 1
+        return items.size() + 1
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -50,12 +82,14 @@ class ExtrasDialogAdapter : RecyclerView.Adapter<ExtrasDialogAdapter.BaseVH<out 
     fun setItems(items: List<ExtraInfo>) {
         this.items.clear()
         this.items.addAll(items)
-
-        notifyDataSetChanged()
     }
 
     fun currentData(): List<ExtraInfo> {
-        return ArrayList(items)
+        return ArrayList<ExtraInfo>().apply {
+            for (i in 0 until items.size()) {
+                add(items.get(i))
+            }
+        }
     }
 
     abstract inner class BaseVH<T: Any>(view: View) : RecyclerView.ViewHolder(view) {
@@ -86,9 +120,8 @@ class ExtrasDialogAdapter : RecyclerView.Adapter<ExtrasDialogAdapter.BaseVH<out 
                 }
                 remove.setOnClickListener {
                     try {
-                        items.removeAt(adapterPosition - 1)
-                        notifyItemRemoved(adapterPosition)
-                    } catch (e: ArrayIndexOutOfBoundsException) {}
+                        items.removeItemAt(adapterPosition - 1)
+                    } catch (_: ArrayIndexOutOfBoundsException) {}
                 }
             }
         }
