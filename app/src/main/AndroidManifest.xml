@@ -29,7 +29,6 @@
     <uses-permission android:name="com.samsung.android.knox.permission.KNOX_INVENTORY"/>
     <uses-permission android:name="android.permission.sec.MDM_MULTI_USER_MGMT"/>
     <uses-permission android:name="com.samsung.android.knox.permission.KNOX_MULTI_USER_MGMT"/>
-    <uses-permission android:name="com.samsung.server.telecom.permission.WPS_CAL"/>
 
     <uses-sdk tools:overrideLibrary="rikka.shizuku.provider,rikka.shizuku.api,rikka.shizuku.shared,rikka.shizuku.aidl" />
 
