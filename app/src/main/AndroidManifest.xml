@@ -9,26 +9,24 @@
     <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
 
-    <uses-permission android:name="android.permission.sec.MDM_APP_MGMT"/>
-    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_PHONE_RESTRICTION"/>
-    <uses-permission android:name="com.android.samsung.knox.permission.KNOX_RESTRICTION_MGMT"/>
-    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_RESTRICTION_MGMT"/>
-    <uses-permission android:name="com.android.samsung.knox.permission.KNOX_APP_MGMT"/>
-    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_APP_MGMT"/>
-    <uses-permission android:name="android.permission.sec.MDM_RESTRICTION"/>
-    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_FIREWALL"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="com.example.supportlibclient.SUPPORT_PERMISSION"/>
-    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES"/>
-    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_BLUETOOTH"/>
-    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_HW_CONTROL"/>
-    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_WIFI"/>
-    <uses-permission android:name="com.samsung.android.knox.permission.MDM_SECURITY"/>
-    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_VPN_GENERIC"/>
-    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_VPN"/>
-    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_INVENTORY"/>
-    <uses-permission android:name="android.permission.sec.MDM_MULTI_USER_MGMT"/>
-    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_MULTI_USER_MGMT"/>
+<!--    <uses-permission android:name="android.permission.sec.MDM_APP_MGMT"/>-->
+<!--    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_PHONE_RESTRICTION"/>-->
+<!--    <uses-permission android:name="com.android.samsung.knox.permission.KNOX_RESTRICTION_MGMT"/>-->
+<!--    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_RESTRICTION_MGMT"/>-->
+<!--    <uses-permission android:name="com.android.samsung.knox.permission.KNOX_APP_MGMT"/>-->
+<!--    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_APP_MGMT"/>-->
+<!--    <uses-permission android:name="android.permission.sec.MDM_RESTRICTION"/>-->
+<!--    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_FIREWALL"/>-->
+<!--    <uses-permission android:name="com.example.supportlibclient.SUPPORT_PERMISSION"/>-->
+<!--    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_BLUETOOTH"/>-->
+<!--    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_HW_CONTROL"/>-->
+<!--    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_WIFI"/>-->
+<!--    <uses-permission android:name="com.samsung.android.knox.permission.MDM_SECURITY"/>-->
+<!--    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_VPN_GENERIC"/>-->
+<!--    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_VPN"/>-->
+<!--    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_INVENTORY"/>-->
+<!--    <uses-permission android:name="android.permission.sec.MDM_MULTI_USER_MGMT"/>-->
+<!--    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_MULTI_USER_MGMT"/>-->
 
     <uses-sdk tools:overrideLibrary="rikka.shizuku.provider,rikka.shizuku.api,rikka.shizuku.shared,rikka.shizuku.aidl" />
 
