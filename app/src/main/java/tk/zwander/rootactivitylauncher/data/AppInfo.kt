@@ -3,6 +3,7 @@ package tk.zwander.rootactivitylauncher.data
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
+import com.google.android.gms.common.internal.Objects
 import tk.zwander.rootactivitylauncher.adapters.component.ActivityAdapter
 import tk.zwander.rootactivitylauncher.adapters.component.ReceiverAdapter
 import tk.zwander.rootactivitylauncher.adapters.component.ServiceAdapter
@@ -64,10 +65,26 @@ data class AppInfo(
     override fun equals(other: Any?): Boolean {
         return other is AppInfo
                 && info.packageName == other.info.packageName
+                && super.equals(other)
+                && activitiesSize == other.activitiesSize
+                && servicesSize == other.servicesSize
+                && receiversSize == other._receiversSize
+                && filteredActivities == other.filteredActivities
+                && filteredServices == other.filteredServices
+                && filteredReceivers == other.filteredReceivers
     }
 
     override fun hashCode(): Int {
-        return info.packageName.hashCode()
+        return info.packageName.hashCode() +
+                31 * super.hashCode() +
+                Objects.hashCode(
+                    activitiesSize,
+                    servicesSize,
+                    receiversSize,
+                    filteredActivities,
+                    filteredServices,
+                    filteredReceivers
+                )
     }
 
     suspend fun onFilterChange(
