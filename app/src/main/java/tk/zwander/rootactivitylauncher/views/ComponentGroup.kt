@@ -7,7 +7,6 @@ import android.widget.LinearLayout
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import androidx.recyclerview.widget.RecyclerView.LayoutManager
-import jp.wasabeef.recyclerview.animators.FadeInAnimator
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.databinding.ComponentGroupBinding
 import tk.zwander.rootactivitylauncher.util.*
