@@ -14,7 +14,7 @@ import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.util.AdvancedSearcher
 import tk.zwander.rootactivitylauncher.util.isActuallyEnabled
 import tk.zwander.rootactivitylauncher.util.isValidRegex
-import kotlin.collections.ArrayList
+import java.util.concurrent.ConcurrentLinkedDeque
 
 data class AppInfo(
     val pInfo: PackageInfo,
@@ -33,9 +33,9 @@ data class AppInfo(
     val serviceAdapter = ServiceAdapter(isForTasker, selectionCallback)
     val receiverAdapter = ReceiverAdapter(isForTasker, selectionCallback)
 
-    val filteredActivities = ArrayList<ActivityInfo>(_activitiesSize)
-    val filteredServices = ArrayList<ServiceInfo>(_servicesSize)
-    val filteredReceivers = ArrayList<ReceiverInfo>(_receiversSize)
+    val filteredActivities = ConcurrentLinkedDeque<ActivityInfo>()
+    val filteredServices = ConcurrentLinkedDeque<ServiceInfo>()
+    val filteredReceivers = ConcurrentLinkedDeque<ReceiverInfo>()
 
     val activitiesSize: Int
         get() = if (!hasLoadedActivities) _activitiesSize else filteredActivities.size
@@ -44,9 +44,9 @@ data class AppInfo(
     val receiversSize: Int
         get() = if (!hasLoadedReceivers) _receiversSize else filteredReceivers.size
 
-    private val _loadedActivities = arrayListOf<ActivityInfo>()
-    private val _loadedServices = arrayListOf<ServiceInfo>()
-    private val _loadedReceivers = arrayListOf<ReceiverInfo>()
+    private val _loadedActivities = ConcurrentLinkedDeque<ActivityInfo>()
+    private val _loadedServices = ConcurrentLinkedDeque<ServiceInfo>()
+    private val _loadedReceivers = ConcurrentLinkedDeque<ReceiverInfo>()
 
     var activitiesExpanded: Boolean = false
     var servicesExpanded: Boolean = false

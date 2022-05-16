@@ -1,9 +1,7 @@
 package tk.zwander.rootactivitylauncher.views
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
-import android.view.View
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.adapters.ExtrasDialogAdapter
@@ -13,15 +11,12 @@ import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
 import tk.zwander.rootactivitylauncher.util.updateActionForComponent
 import tk.zwander.rootactivitylauncher.util.updateExtrasForComponent
 
-
 class ExtrasDialog(context: Context, componentKey: String) : MaterialAlertDialogBuilder(context) {
-    @SuppressLint("InflateParams")
-    private val view: View = LayoutInflater.from(context).inflate(R.layout.extras_dialog, null)
     private val adapter = ExtrasDialogAdapter()
-    private val binding = ExtrasDialogBinding.bind(view)
+    private val binding = ExtrasDialogBinding.inflate(LayoutInflater.from(context))
 
     init {
-        setView(view)
+        setView(binding.root)
 
         adapter.setItems(context.findExtrasForComponent(componentKey))
         binding.action.setText(context.findActionForComponent(componentKey))

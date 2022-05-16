@@ -329,10 +329,12 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 onFilterChangeWithLoader(override = !appAdapter.state.hasLoadedItems)
             }
             binding.searchOptionsWrapper.isVisible = true
+            hideActionsForSearch(true)
         }
         searchView?.setOnCloseListener {
             setSearchWrapperState(false)
             binding.searchOptionsWrapper.isVisible = false
+            hideActionsForSearch(false)
             false
         }
 
@@ -590,6 +592,12 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         progress.isVisible = false
         progressView?.indeterminate = false
         binding.scrimProgress.indeterminate = false
+
+        searchView?.let {
+            if (!it.isIconified) {
+                it.requestFocus()
+            }
+        }
     }
 
     private suspend fun loadApp(app: PackageInfo): AppInfo? = coroutineScope {
@@ -666,5 +674,18 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         }
 
         return@coroutineScope null
+    }
+
+    private fun hideActionsForSearch(hide: Boolean) {
+        arrayOf(
+            R.id.action_filter,
+            R.id.scroll_top,
+            R.id.scroll_bottom
+        ).forEach {
+            menu.findItem(it).setShowAsAction(
+                if (hide) MenuItem.SHOW_AS_ACTION_IF_ROOM else
+                    MenuItem.SHOW_AS_ACTION_ALWAYS
+            )
+        }
     }
 }
