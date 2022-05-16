@@ -32,8 +32,6 @@ import rikka.shizuku.Shizuku
 import tk.zwander.patreonsupportersretrieval.view.SupporterView
 import tk.zwander.rootactivitylauncher.adapters.AppAdapter
 import tk.zwander.rootactivitylauncher.data.AppInfo
-import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
-import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.data.component.*
 import tk.zwander.rootactivitylauncher.databinding.ActivityMainBinding
 import tk.zwander.rootactivitylauncher.util.*
@@ -216,13 +214,13 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         }
         binding.useRegex.setOnCheckedChangeListener { _, isChecked ->
             launch {
-                onFilterChangeWithLoader(useRegex = isChecked)
+                onFilterChangeWithLoader({ it.copy(useRegex = isChecked) })
             }
             binding.appList.scrollToPosition(0)
         }
         binding.includeComponents.setOnCheckedChangeListener { _, isChecked ->
             launch {
-                onFilterChangeWithLoader(includeComponents = isChecked)
+                onFilterChangeWithLoader({ it.copy(includeComponents = isChecked) })
             }
             binding.appList.scrollToPosition(0)
         }
@@ -240,14 +238,16 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                     R.id.action_filter -> {
                         FilterDialog(
                             this@MainActivity,
-                            appAdapter.enabledFilterMode,
-                            appAdapter.exportedFilterMode
+                            appAdapter.state.enabledFilterMode,
+                            appAdapter.state.exportedFilterMode
                         ) { enabledMode, exportedMode ->
                             launch {
-                                onFilterChangeWithLoader(
-                                    enabledMode = enabledMode,
-                                    exportedMode = exportedMode
-                                )
+                                onFilterChangeWithLoader({
+                                    it.copy(
+                                        enabledFilterMode = enabledMode,
+                                        exportedFilterMode = exportedMode
+                                    )
+                                })
                             }
                         }.show()
                         true
@@ -325,7 +325,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         searchView?.setOnQueryTextListener(this)
         searchView?.setOnSearchClickListener {
             launch {
-                onFilterChangeWithLoader(override = !appAdapter.hasLoadedItems)
+                onFilterChangeWithLoader(override = !appAdapter.state.hasLoadedItems)
             }
             binding.searchOptionsWrapper.isVisible = true
         }
@@ -355,7 +355,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
     override fun onQueryTextChange(newText: String?): Boolean {
         launch {
-            onFilterChangeWithLoader(query = newText ?: "")
+            onFilterChangeWithLoader({ it.copy(currentQuery = newText ?: "") })
         }
         binding.appList.scrollToPosition(0)
         return true
@@ -547,7 +547,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 }, 10)
             }
 
-            if (appAdapter.hasFilters) {
+            if (appAdapter.state.hasFilters) {
                 launch(Dispatchers.Main) {
                     onFilterChangeWithLoader(override = true)
                 }
@@ -570,14 +570,10 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     }
 
     private suspend fun onFilterChangeWithLoader(
-        query: String = appAdapter.currentQuery,
-        useRegex: Boolean = appAdapter.useRegex,
-        includeComponents: Boolean = appAdapter.includeComponents,
-        enabledMode: EnabledFilterMode = appAdapter.enabledFilterMode,
-        exportedMode: ExportedFilterMode = appAdapter.exportedFilterMode,
+        newState: (AppAdapter.State) -> AppAdapter.State = { it },
         override: Boolean = false
     ) {
-        if (!appAdapter.hasLoadedItems) {
+        if (!appAdapter.state.hasLoadedItems) {
             binding.scrim.isVisible = true
             progress.isVisible = true
             progressView?.indeterminate = true
@@ -585,11 +581,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         }
 
         appAdapter.onFilterChange(
-            query,
-            useRegex,
-            includeComponents,
-            enabledMode,
-            exportedMode,
+            newState(appAdapter.state),
             override
         )
 

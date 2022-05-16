@@ -129,19 +129,19 @@
             android:layout_height="8dp"
             />
 
-        <tk.zwander.rootactivitylauncher.views.ComponentGroup
+        <tk.zwander.rootactivitylauncher.views.ActivityGroup
             android:id="@+id/activities_component"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             />
 
-        <tk.zwander.rootactivitylauncher.views.ComponentGroup
+        <tk.zwander.rootactivitylauncher.views.ServicesGroup
             android:id="@+id/services_component"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             />
 
-        <tk.zwander.rootactivitylauncher.views.ComponentGroup
+        <tk.zwander.rootactivitylauncher.views.ReceiversGroup
             android:id="@+id/receivers_component"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
