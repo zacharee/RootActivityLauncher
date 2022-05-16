@@ -6,8 +6,11 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="4dp"
-    app:contentPadding="8dp">
+    android:layout_marginStart="8dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
+    app:cardCornerRadius="@dimen/corner_radius">
 
     <LinearLayout
         android:orientation="vertical"
@@ -21,7 +24,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center_vertical"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:padding="8dp">
 
             <tk.zwander.rootactivitylauncher.views.RecycledImageView
                 android:id="@+id/app_icon"
@@ -96,7 +100,7 @@
                 android:contentDescription="@string/set_global_extras"
                 android:scaleType="center"
                 android:background="?selectableItemBackground"
-                app:srcCompat="@drawable/ic_baseline_more_horiz_24"
+                app:srcCompat="@drawable/tune"
                 />
 
             <tk.zwander.rootactivitylauncher.views.TooltippedClickableImageView
@@ -119,7 +123,7 @@
                 android:contentDescription="@string/extract_apk"
                 android:scaleType="center"
                 android:background="?selectableItemBackground"
-                app:srcCompat="@drawable/ic_baseline_open_in_new_24"
+                app:srcCompat="@drawable/save"
                 />
 
         </LinearLayout>

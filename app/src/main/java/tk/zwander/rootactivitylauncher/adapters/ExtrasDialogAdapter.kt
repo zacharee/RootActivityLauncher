@@ -21,7 +21,11 @@ class ExtrasDialogAdapter : RecyclerView.Adapter<ExtrasDialogAdapter.BaseVH<out 
         ExtraInfo::class.java,
         object : SortedList.Callback<ExtraInfo>() {
             override fun compare(o1: ExtraInfo, o2: ExtraInfo): Int {
-                return 0
+                return when {
+                    o1.key.isBlank() && o1.value.isBlank() -> 1
+                    o2.key.isBlank() && o2.value.isBlank() -> -1
+                    else -> 0
+                }
             }
 
             override fun onInserted(position: Int, count: Int) {

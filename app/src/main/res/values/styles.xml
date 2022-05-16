@@ -4,6 +4,10 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:navigationBarColor">?colorSurface</item>
+        <item name="alertDialogStyle">@style/DialogTheme</item>
+        <item name="materialAlertDialogTheme">@style/MaterialAlertDialogTheme</item>
+        <item name="actionOverflowMenuStyle">@style/PopupMenuTheme</item>
+        <item name="popupMenuBackground">@drawable/popup_menu_background</item>
     </style>
     <style name="AppTheme.Transparent" parent="AppTheme">
         <item name="android:windowIsTranslucent">true</item>
@@ -15,5 +19,23 @@
         <item name="android:windowEnterAnimation">@null</item>
         <item name="android:windowExitAnimation">@null</item>
         <item name="android:windowNoDisplay">true</item>
+    </style>
+
+    <style name="MaterialAlertDialogTheme" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="alertDialogStyle">@style/DialogTheme</item>
+    </style>
+
+    <style name="DialogTheme" parent="MaterialAlertDialog.MaterialComponents">
+        <item name="dialogCornerRadius">@dimen/corner_radius</item>
+        <item name="shapeAppearance">@style/DialogCorners</item>
+    </style>
+
+    <style name="DialogCorners" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/corner_radius</item>
+    </style>
+
+    <style name="PopupMenuTheme" parent="Widget.MaterialComponents.PopupMenu.Overflow">
+        <item name="popupMenuBackground">@drawable/popup_menu_background</item>
     </style>
 </resources>

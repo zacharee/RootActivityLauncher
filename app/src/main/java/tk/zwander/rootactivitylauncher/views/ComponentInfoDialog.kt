@@ -3,30 +3,22 @@ package tk.zwander.rootactivitylauncher.views
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.*
-import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Build
 import android.text.*
-import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
-import android.util.Log
 import android.util.PrintWriterPrinter
 import android.util.Printer
 import android.view.LayoutInflater
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
-import androidx.core.text.toSpannable
-import androidx.core.text.toSpanned
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.internal.TextWatcherAdapter
-import com.google.android.material.textview.MaterialTextView
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.databinding.ComponentInfoDialogBinding
 import tk.zwander.rootactivitylauncher.util.*
 import java.io.PrintWriter
 import java.io.StringWriter
-import kotlin.math.sign
 
 class ComponentInfoDialog(context: Context, private val info: Any) : MaterialAlertDialogBuilder(context), TextWatcher {
     private val view = ComponentInfoDialogBinding.inflate(LayoutInflater.from(context))

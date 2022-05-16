@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -21,10 +21,13 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <ScrollView
+    <tk.zwander.rootactivitylauncher.views.ShadowFadingEdgeScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:requiresFadingEdge="vertical"
+        android:fadingEdgeLength="@dimen/item_recycler_fading_edge_length"
+        app:fadingEdgeColor="@color/colorFadingEdgeLight">
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@android:id/message"
@@ -33,6 +36,6 @@
             android:textIsSelectable="true"
             />
 
-    </ScrollView>
+    </tk.zwander.rootactivitylauncher.views.ShadowFadingEdgeScrollView>
 
 </LinearLayout>

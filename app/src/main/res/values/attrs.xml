@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="fadingEdgeColor" format="reference|color" />
+
+    <declare-styleable name="ShadowFadingEdgeRecyclerView">
+        <attr name="fadingEdgeColor" />
+    </declare-styleable>
+
+    <declare-styleable name="ShadowFadingEdgeScrollView">
+        <attr name="fadingEdgeColor" />
+    </declare-styleable>
+</resources>

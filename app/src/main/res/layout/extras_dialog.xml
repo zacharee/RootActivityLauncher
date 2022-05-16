@@ -33,6 +33,9 @@
         android:id="@+id/list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:requiresFadingEdge="vertical"
+        android:fadingEdgeLength="@dimen/item_recycler_fading_edge_length"
+        app:fadingEdgeColor="@color/colorFadingEdgeLight"
         app:layoutManager=".util.PredictiveLinearLayoutManager"
         tools:listitem="@layout/extra_item"
         />

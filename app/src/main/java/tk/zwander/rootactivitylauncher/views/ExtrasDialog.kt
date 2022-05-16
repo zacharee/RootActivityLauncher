@@ -30,7 +30,7 @@ class ExtrasDialog(context: Context, componentKey: String) : MaterialAlertDialog
         setTitle(R.string.extras)
         setNegativeButton(android.R.string.cancel, null)
         setPositiveButton(android.R.string.ok) { _, _ ->
-            val newData = adapter.currentData()
+            val newData = adapter.currentData().filterNot { it.key.isBlank() }
 
             context.updateExtrasForComponent(componentKey, newData)
             context.updateActionForComponent(componentKey, binding.action.text?.toString())

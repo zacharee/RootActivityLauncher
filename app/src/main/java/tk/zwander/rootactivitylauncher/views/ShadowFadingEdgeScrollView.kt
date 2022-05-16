@@ -2,17 +2,17 @@ package tk.zwander.rootactivitylauncher.views
 
 import android.content.Context
 import android.util.AttributeSet
+import android.widget.ScrollView
 import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.RecyclerView
 import tk.zwander.rootactivitylauncher.R
 
-open class ShadowFadingEdgeRecyclerView(context: Context, attrs: AttributeSet) : RecyclerView(context, attrs) {
+class ShadowFadingEdgeScrollView(context: Context, attrs: AttributeSet) : ScrollView(context, attrs) {
     private var color: Int = ContextCompat.getColor(context, R.color.colorFadingEdge)
 
     init {
-        val a = context.obtainStyledAttributes(attrs, R.styleable.ShadowFadingEdgeRecyclerView)
+        val a = context.obtainStyledAttributes(attrs, R.styleable.ShadowFadingEdgeScrollView)
 
-        color = a.getColor(R.styleable.ShadowFadingEdgeRecyclerView_fadingEdgeColor, color)
+        color = a.getColor(R.styleable.ShadowFadingEdgeScrollView_fadingEdgeColor, color)
 
         a.recycle()
     }

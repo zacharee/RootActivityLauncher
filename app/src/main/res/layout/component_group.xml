@@ -14,6 +14,8 @@
         android:orientation="horizontal"
         android:gravity="center"
         android:padding="8dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
         android:focusable="true"
         android:clickable="true"
         android:background="?selectableItemBackground">

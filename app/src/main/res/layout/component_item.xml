@@ -101,7 +101,7 @@
             android:layout_height="48dp"
             android:layout_weight="1"
             android:scaleType="center"
-            android:src="@drawable/ic_baseline_more_horiz_24"
+            android:src="@drawable/tune"
             android:background="?android:selectableItemBackground"
             android:contentDescription="@string/set_extras"
             />
