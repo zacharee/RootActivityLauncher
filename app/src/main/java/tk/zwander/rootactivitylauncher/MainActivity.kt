@@ -41,6 +41,7 @@ import tk.zwander.rootactivitylauncher.views.FilterDialog
 import java.io.File
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicLong
 
 @SuppressLint("RestrictedApi")
 open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
@@ -58,7 +59,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             extractLauncher.launch(null)
         }
 
-        AppAdapter(this, this, isForTasker, ::onExtract)
+        AppAdapter(this, this, isForTasker, ::updateProgress, ::onExtract)
     }
     private val appListLayoutManager: RecyclerView.LayoutManager
         get() = binding.appList.layoutManager as RecyclerView.LayoutManager
@@ -100,12 +101,12 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                         if (host != null) {
                             val loaded = loadApp(getPackageInfo(host))
 
-                            appAdapter.addItem(loaded ?: return@launch)
+                            appAdapter.addItem(loaded ?: return@launch, ::updateProgress)
                         }
                     }
                     Intent.ACTION_PACKAGE_REMOVED -> {
                         if (host != null) {
-                            appAdapter.removeItem(host)
+                            appAdapter.removeItem(host, ::updateProgress)
                         }
                     }
                     Intent.ACTION_PACKAGE_REPLACED -> {
@@ -214,15 +215,11 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             setSearchWrapperState(binding.searchOptionsWrapper.translationX != 0f)
         }
         binding.useRegex.setOnCheckedChangeListener { _, isChecked ->
-            launch {
-                onFilterChangeWithLoader({ it.copy(useRegex = isChecked) })
-            }
+            onFilterChangeWithLoader({ it.copy(useRegex = isChecked) })
             binding.appList.scrollToPosition(0)
         }
         binding.includeComponents.setOnCheckedChangeListener { _, isChecked ->
-            launch {
-                onFilterChangeWithLoader({ it.copy(includeComponents = isChecked) })
-            }
+            onFilterChangeWithLoader({ it.copy(includeComponents = isChecked) })
             binding.appList.scrollToPosition(0)
         }
 
@@ -242,14 +239,12 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                             appAdapter.state.enabledFilterMode,
                             appAdapter.state.exportedFilterMode
                         ) { enabledMode, exportedMode ->
-                            launch {
-                                onFilterChangeWithLoader({
-                                    it.copy(
-                                        enabledFilterMode = enabledMode,
-                                        exportedFilterMode = exportedMode
-                                    )
-                                })
-                            }
+                            onFilterChangeWithLoader({
+                                it.copy(
+                                    enabledFilterMode = enabledMode,
+                                    exportedFilterMode = exportedMode
+                                )
+                            })
                         }.show()
                         true
                     }
@@ -325,9 +320,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
         searchView?.setOnQueryTextListener(this)
         searchView?.setOnSearchClickListener {
-            launch {
-                onFilterChangeWithLoader(override = !appAdapter.state.hasLoadedItems)
-            }
+            onFilterChangeWithLoader(override = !appAdapter.state.hasLoadedItems)
             binding.searchOptionsWrapper.isVisible = true
             hideActionsForSearch(true)
         }
@@ -357,9 +350,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     }
 
     override fun onQueryTextChange(newText: String?): Boolean {
-        launch {
-            onFilterChangeWithLoader({ it.copy(currentQuery = newText ?: "") })
-        }
+        onFilterChangeWithLoader({ it.copy(currentQuery = newText ?: "") })
         binding.appList.scrollToPosition(0)
         return true
     }
@@ -551,9 +542,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             }
 
             if (appAdapter.state.hasFilters) {
-                launch(Dispatchers.Main) {
-                    onFilterChangeWithLoader(override = true)
-                }
+                onFilterChangeWithLoader(override = true)
             }
         }
     }
@@ -572,30 +561,47 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         )
     }
 
-    private suspend fun onFilterChangeWithLoader(
+    private fun onFilterChangeWithLoader(
         newState: (AppAdapter.State) -> AppAdapter.State = { it },
         override: Boolean = false
     ) {
-        if (!appAdapter.state.hasLoadedItems) {
-            binding.scrim.isVisible = true
-            progress.isVisible = true
-            progressView?.indeterminate = true
-            binding.scrimProgress.indeterminate = true
-        }
+        if (currentDataJob?.isActive == true) currentDataJob?.cancel()
+        currentDataJob = async(Dispatchers.Main) {
+            if (!appAdapter.state.hasLoadedItems) {
+                binding.scrim.isVisible = true
+                progress.isVisible = true
+                progressView?.indeterminate = true
+            }
 
-        appAdapter.onFilterChange(
-            newState(appAdapter.state),
-            override
-        )
+            withContext(Dispatchers.IO) {
+                val previousUpdateTime = AtomicLong(0)
 
-        binding.scrim.isVisible = false
-        progress.isVisible = false
-        progressView?.indeterminate = false
-        binding.scrimProgress.indeterminate = false
+                appAdapter.onFilterChange(
+                    newState(appAdapter.state),
+                    override
+                ) { current, total ->
+                    val currentTime = System.currentTimeMillis()
 
-        searchView?.let {
-            if (!it.isIconified) {
-                it.requestFocus()
+                    // It's possible for updates to come through too quickly for the UI thread to handle.
+                    // This makes sure we don't overload it by only allowing updates every 10ms.
+                    if (currentTime - previousUpdateTime.get() > 10) {
+                        previousUpdateTime.set(currentTime)
+
+                        launch(Dispatchers.Main) {
+                            updateProgress((current / total.toFloat() * 100f).toInt())
+                        }
+                    }
+                }
+            }
+
+            binding.scrim.isVisible = false
+            progress.isVisible = false
+            progressView?.indeterminate = false
+
+            searchView?.let {
+                if (!it.isIconified) {
+                    it.requestFocus()
+                }
             }
         }
     }
@@ -611,10 +617,10 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         ) {
             val appLabel = app.applicationInfo.loadLabel(packageManager)
 
-            val activitiesLoader = {
+            val activitiesLoader: suspend (suspend (Int, Int) -> Unit) -> Collection<ActivityInfo> = {
                 val activityInfos = LinkedList<ActivityInfo>()
 
-                activities?.forEach { act ->
+                activities?.forEachIndexed { index, act ->
                     val label = act.loadLabel(packageManager).ifBlank { appLabel }
                     activityInfos.add(
                         ActivityInfo(
@@ -622,14 +628,15 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                             label
                         )
                     )
+                    it(index, activities.size)
                 }
 
                 activityInfos
             }
-            val servicesLoader = {
+            val servicesLoader: suspend (suspend (Int, Int) -> Unit) -> Collection<ServiceInfo> = {
                 val serviceInfos = LinkedList<ServiceInfo>()
 
-                services?.forEach { srv ->
+                services?.forEachIndexed { index, srv ->
                     val label = srv.loadLabel(packageManager).ifBlank { appLabel }
                     serviceInfos.add(
                         ServiceInfo(
@@ -637,14 +644,15 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                             label
                         )
                     )
+                    it(index, services.size)
                 }
 
                 serviceInfos
             }
-            val receiversLoader = {
+            val receiversLoader: suspend (suspend (Int, Int) -> Unit) -> Collection<ReceiverInfo> = {
                 val receiverInfos = LinkedList<ReceiverInfo>()
 
-                receivers?.forEach { rec ->
+                receivers?.forEachIndexed { index, rec ->
                     val label = rec.loadLabel(packageManager).ifBlank { appLabel }
                     receiverInfos.add(
                         ReceiverInfo(
@@ -652,6 +660,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                             label
                         )
                     )
+                    it(index, receivers.size)
                 }
 
                 receiverInfos

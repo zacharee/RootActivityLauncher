@@ -20,14 +20,14 @@ data class AppInfo(
     val pInfo: PackageInfo,
     val info: ApplicationInfo = pInfo.applicationInfo,
     val label: CharSequence,
-    private val activitiesLoader: () -> Collection<ActivityInfo>,
-    private val servicesLoader: () -> Collection<ServiceInfo>,
-    private val receiversLoader: () -> Collection<ReceiverInfo>,
+    private val activitiesLoader: suspend (suspend (Int, Int) -> Unit) -> Collection<ActivityInfo>,
+    private val servicesLoader: suspend (suspend (Int, Int) -> Unit) -> Collection<ServiceInfo>,
+    private val receiversLoader: suspend (suspend (Int, Int) -> Unit) -> Collection<ReceiverInfo>,
     private val _activitiesSize: Int,
     private val _servicesSize: Int,
     private val _receiversSize: Int,
-    val isForTasker: Boolean,
-    val selectionCallback: (BaseComponentInfo) -> Unit
+    private val isForTasker: Boolean,
+    private val selectionCallback: (BaseComponentInfo) -> Unit
 ) {
     val activityAdapter = ActivityAdapter(isForTasker, selectionCallback)
     val serviceAdapter = ServiceAdapter(isForTasker, selectionCallback)
@@ -44,6 +44,9 @@ data class AppInfo(
     val receiversSize: Int
         get() = if (!hasLoadedReceivers) _receiversSize else filteredReceivers.size
 
+    val totalUnfilteredSize: Int
+        get() = _activitiesSize + _servicesSize + _receiversSize
+
     private val _loadedActivities = ConcurrentLinkedDeque<ActivityInfo>()
     private val _loadedServices = ConcurrentLinkedDeque<ServiceInfo>()
     private val _loadedReceivers = ConcurrentLinkedDeque<ReceiverInfo>()
@@ -52,11 +55,11 @@ data class AppInfo(
     var servicesExpanded: Boolean = false
     var receiversExpanded: Boolean = false
 
-    internal var currentQuery: String = ""
-    internal var enabledFilterMode = EnabledFilterMode.SHOW_ALL
-    internal var exportedFilterMode = ExportedFilterMode.SHOW_ALL
-    internal var useRegex: Boolean = false
-    internal var includeComponents: Boolean = true
+    private var currentQuery: String = ""
+    private var enabledFilterMode = EnabledFilterMode.SHOW_ALL
+    private var exportedFilterMode = ExportedFilterMode.SHOW_ALL
+    private var useRegex: Boolean = false
+    private var includeComponents: Boolean = true
 
     private var hasLoadedActivities = false
     private var hasLoadedServices = false
@@ -95,6 +98,7 @@ data class AppInfo(
         enabledMode: EnabledFilterMode = enabledFilterMode,
         exportedMode: ExportedFilterMode = exportedFilterMode,
         override: Boolean = false,
+        progress: (Int, Int) -> Unit,
     ) {
         if (override
             || currentQuery != query
@@ -109,15 +113,24 @@ data class AppInfo(
             this.useRegex = useRegex
             this.includeComponents = includeComponents
 
-            getLoadedActivities().apply {
+            val total = _activitiesSize + _servicesSize + _receiversSize
+            var current = 0
+
+            getLoadedActivities { _, _ ->
+                progress(current++, total)
+            }.apply {
                 filteredActivities.clear()
                 filterTo(filteredActivities) { matches(it, context) }
             }
-            getLoadedServices().apply {
+            getLoadedServices { _, _ ->
+                progress(current++, total)
+            }.apply {
                 filteredServices.clear()
                 filterTo(filteredServices) { matches(it, context) }
             }
-            getLoadedReceivers().apply {
+            getLoadedReceivers { _, _ ->
+                progress(current++, total)
+            }.apply {
                 filteredReceivers.clear()
                 filterTo(filteredReceivers) { matches(it, context) }
             }
@@ -125,44 +138,44 @@ data class AppInfo(
     }
 
     // Keep these as suspend functions
-    suspend fun loadActivities() {
+    suspend fun loadActivities(progress: suspend (Int, Int) -> Unit) {
         if (activitiesSize > 0 && _loadedActivities.isEmpty()) {
-            _loadedActivities.addAll(activitiesLoader())
+            _loadedActivities.addAll(activitiesLoader(progress))
             filteredActivities.addAll(_loadedActivities)
             hasLoadedActivities = true
         }
     }
 
-    suspend fun loadServices() {
+    suspend fun loadServices(progress: suspend (Int, Int) -> Unit) {
         if (servicesSize > 0 && _loadedServices.isEmpty()) {
-            _loadedServices.addAll(servicesLoader())
+            _loadedServices.addAll(servicesLoader(progress))
             filteredServices.addAll(_loadedServices)
             hasLoadedServices = true
         }
     }
 
-    suspend fun loadReceivers() {
+    suspend fun loadReceivers(progress: suspend (Int, Int) -> Unit) {
         if (receiversSize > 0 && _loadedReceivers.isEmpty()) {
-            _loadedReceivers.addAll(receiversLoader())
+            _loadedReceivers.addAll(receiversLoader(progress))
             filteredReceivers.addAll(_loadedReceivers)
             hasLoadedReceivers = true
         }
     }
 
-    private suspend fun getLoadedActivities(): Collection<ActivityInfo> {
-        loadActivities()
+    private suspend fun getLoadedActivities(progress: (Int, Int) -> Unit): Collection<ActivityInfo> {
+        loadActivities(progress)
 
         return _loadedActivities
     }
 
-    private suspend fun getLoadedServices(): Collection<ServiceInfo> {
-        loadServices()
+    private suspend fun getLoadedServices(progress: (Int, Int) -> Unit): Collection<ServiceInfo> {
+        loadServices(progress)
 
         return _loadedServices
     }
 
-    private suspend fun getLoadedReceivers(): Collection<ReceiverInfo> {
-        loadReceivers()
+    private suspend fun getLoadedReceivers(progress: (Int, Int) -> Unit): Collection<ReceiverInfo> {
+        loadReceivers(progress)
 
         return _loadedReceivers
     }

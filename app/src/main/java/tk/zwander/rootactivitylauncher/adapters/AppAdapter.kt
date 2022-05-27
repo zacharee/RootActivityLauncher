@@ -26,6 +26,7 @@ class AppAdapter(
     private val context: Context,
     private val scope: CoroutineScope,
     private val isForTasker: Boolean,
+    private val progressCallback: (Int) -> Unit,
     private val extractCallback: (AppInfo) -> Unit
 ) : RecyclerView.Adapter<AppAdapter.AppVH>(), FastScrollRecyclerView.SectionedAdapter {
     init {
@@ -69,16 +70,16 @@ class AppAdapter(
         return async.currentList.getOrNull(position)?.label?.substring(0, 1) ?: ""
     }
 
-    suspend fun addItem(item: AppInfo) {
+    suspend fun addItem(item: AppInfo, progress: (Int) -> Unit) {
         orig[item.info.packageName] = item
 
-        onFilterChange(override = true)
+        onFilterChange(override = true, progress = { current, total -> progress((current / total.toFloat() * 100f).toInt())})
     }
 
-    suspend fun removeItem(packageName: String) {
+    suspend fun removeItem(packageName: String, progress: (Int) -> Unit) {
         orig.remove(packageName)
 
-        onFilterChange(override = true)
+        onFilterChange(override = true, progress = { current, total -> progress((current / total.toFloat() * 100f).toInt())})
     }
 
     fun updateItem(item: AppInfo) {
@@ -113,10 +114,14 @@ class AppAdapter(
 
     suspend fun onFilterChange(
         newState: State = state,
-        override: Boolean = false
+        override: Boolean = false,
+        progress: (Int, Int) -> Unit
     ) {
         if (override || newState != state) {
             updateState { newState }
+
+            val total = orig.values.sumOf { it.totalUnfilteredSize }
+            var current = 0
 
             orig.values.forEachParallel {
                 it.onFilterChange(
@@ -127,7 +132,9 @@ class AppAdapter(
                     newState.enabledFilterMode,
                     newState.exportedFilterMode,
                     override
-                )
+                ) { _, _ ->
+                    progress(current++, total)
+                }
             }
             sortAndSubmitList(filter(newState))
             updateState { newState.copy(hasLoadedItems = true) }
@@ -288,9 +295,9 @@ class AppAdapter(
             binding.receiversComponent.isVisible = data.receiversSize > 0
 
             if (data.activitiesExpanded) {
-                scope.launch {
-                    withContext(Dispatchers.IO) {
-                        data.loadActivities()
+                scope.async(Dispatchers.Main) {
+                    data.loadActivities { current, total ->
+                        progressCallback((current / total.toFloat() * 100f).toInt())
                     }
 
                     binding.activitiesComponent.updateHeight(data.activitiesSize)
@@ -300,9 +307,9 @@ class AppAdapter(
             binding.activitiesComponent.expanded = data.activitiesExpanded
 
             if (data.servicesExpanded) {
-                scope.launch {
-                    withContext(Dispatchers.IO) {
-                        data.loadServices()
+                scope.async(Dispatchers.Main) {
+                    data.loadServices { current, total ->
+                        progressCallback((current / total.toFloat() * 100f).toInt())
                     }
 
                     binding.servicesComponent.updateHeight(data.servicesSize)
@@ -312,9 +319,9 @@ class AppAdapter(
             binding.servicesComponent.expanded = data.servicesExpanded
 
             if (data.receiversExpanded) {
-                scope.launch {
-                    withContext(Dispatchers.IO) {
-                        data.loadReceivers()
+                scope.async(Dispatchers.Main) {
+                    data.loadReceivers { current, total ->
+                        progressCallback((current / total.toFloat() * 100f).toInt())
                     }
 
                     binding.receiversComponent.updateHeight(data.receiversSize)
