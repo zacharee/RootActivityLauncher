@@ -442,7 +442,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
             //This mess is because of a bug in Marshmallow and possibly earlier that
             //causes getInstalledPackages() to fail because one of the PackageInfo objects
-            //is to large. It'll throw a DeadObjectException internally and then just return
+            //is too large. It'll throw a DeadObjectException internally and then just return
             //as much as it already transferred before the error. The bug seems to be fixed in
             //Nougat and later.
             //If the device is on Marshmallow, retrieve a list of packages without any components
