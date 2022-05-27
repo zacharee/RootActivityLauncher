@@ -3,6 +3,7 @@ package tk.zwander.rootactivitylauncher.util
 import android.content.pm.ActivityInfo
 import android.content.pm.ComponentInfo
 import android.content.pm.ServiceInfo
+import com.android.internal.R.attr.mode
 import tk.zwander.rootactivitylauncher.data.AppInfo
 
 object AdvancedSearcher {
@@ -12,37 +13,65 @@ object AdvancedSearcher {
 
         companion object {
             fun fromString(source: String, def: LogicMode): LogicMode {
-                return when (source.lowercase()) {
-                    "or" -> OR
-                    "and" -> AND
-                    else -> def
-                }
+                return values().find {
+                    it.name.lowercase() == source.lowercase()
+                } ?: def
             }
         }
     }
 
-    fun matchesHasPermission(query: String, data: AppInfo): Boolean {
-        if (!query.contains("has-permission:")) return false
+    private const val MODE_DELIMITER = ";"
+    private const val ITEM_DELIMITER = ","
+    private const val EXP_DELIMITER = " "
+    private const val TYPE_DELIMITER = ":"
 
-        val permission = query.substringAfter("has-permission:").substringBefore(" ")
-        val (mode, permissions) = try {
-            if (permission.contains(";")) {
-                permission.split(";").run {
+    private const val HAS_PERMISSION = "has-permission"
+    private const val REQUIRES_PERMISSION = "requires-permission"
+    private const val DECLARES_PERMISSION = "declares-permission"
+
+    /**
+     * Expects a [query] string in a format like:
+     * `<possible earlier text> [type]:[AND;|OR;]item1,item2,item3,... <possible later text>`.
+     *
+     * If neither AND; nor OR; are found, the default mode is [LogicMode.AND].
+     */
+    private fun itemMatch(
+        query: String,
+        type: String,
+        checker: (LogicMode, List<String>) -> Boolean
+    ): Boolean {
+        if (!query.contains("$type$TYPE_DELIMITER")) return false
+
+        val i = query.substringAfter("$type$TYPE_DELIMITER").substringBefore(EXP_DELIMITER)
+        val (mode, items) = try {
+            if (i.contains(MODE_DELIMITER)) {
+                i.split(MODE_DELIMITER).run {
                     LogicMode.fromString(this[0], LogicMode.AND) to
-                            this[1].split(",") }
+                            this[1].split(ITEM_DELIMITER)
+                }
             } else {
-                LogicMode.AND to permission.split(",")
+                LogicMode.AND to i.split(ITEM_DELIMITER)
             }
         } catch (e: Exception) {
             return false
         }
 
-        val requestedPermissions = data.pInfo.requestedPermissions ?: return false
+        return checker(mode, items)
+    }
 
+    private fun logicMatch(mode: LogicMode, items: List<String>, availableItems: List<String>): Boolean {
         return if (mode == LogicMode.OR) {
-            permissions.any { requestedPermissions.contains(it) }
+            items.any { availableItems.contains(it) }
         } else {
-            permissions.all { requestedPermissions.contains(it) }
+            items.all { availableItems.contains(it) }
+        }
+    }
+
+    fun matchesHasPermission(query: String, data: AppInfo): Boolean {
+        return itemMatch(query, HAS_PERMISSION) { mode, items ->
+            val p = data.pInfo.requestedPermissions ?: return@itemMatch false
+
+            logicMatch(mode, items, p.toList())
         }
     }
 
@@ -61,48 +90,17 @@ object AdvancedSearcher {
     }
 
     private fun matchesRequiresPermission(query: String, requiredPermission: String?): Boolean {
-        if (!query.contains("requires-permission:")) return false
-        if (requiredPermission == null) return false
-
-        val permission = query.substringAfter("requires-permission:").substringBefore(" ")
-        val (mode, permissions) = try {
-            if (permission.contains(";")) {
-                permission.split(";").run {
-                    LogicMode.fromString(this[0], LogicMode.AND) to
-                            this[1].split(",") }
-            } else {
-                LogicMode.AND to permission.split(",")
-            }
-        } catch (e: Exception) {
-            return false
+        return itemMatch(query, REQUIRES_PERMISSION) { _, items ->
+            // Always an OR check, so we don't care about any mode given.
+            items.contains(requiredPermission)
         }
-
-        //Always OR mode here
-        return permissions.contains(requiredPermission)
     }
 
     fun matchesDeclaresPermission(query: String, data: AppInfo): Boolean {
-        if (!query.contains("declares-permission:")) return false
+        return itemMatch(query, DECLARES_PERMISSION) { mode, items ->
+            val declaredPermissions = data.pInfo.permissions?.map { it.name } ?: return@itemMatch false
 
-        val permission = query.substringAfter("declares-permission:").substringBefore(" ")
-        val (mode, permissions) = try {
-            if (permission.contains(";")) {
-                permission.split(";").run {
-                    LogicMode.fromString(this[0], LogicMode.AND) to
-                            this[1].split(",") }
-            } else {
-                LogicMode.AND to permission.split(",")
-            }
-        } catch (e: Exception) {
-            return false
-        }
-
-        val declaredPermissions = data.pInfo.permissions?.map { it.name } ?: return false
-
-        return if (mode == LogicMode.AND) {
-            permissions.any { declaredPermissions.contains(it) }
-        } else {
-            permissions.all { declaredPermissions.contains(it) }
+            logicMatch(mode, items, declaredPermissions)
         }
     }
 }
