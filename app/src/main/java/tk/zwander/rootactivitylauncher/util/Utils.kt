@@ -30,9 +30,7 @@ import tk.zwander.rootactivitylauncher.data.PrefManager
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import java.util.regex.PatternSyntaxException
 import kotlin.coroutines.CoroutineContext
-import kotlin.math.roundToInt
 import kotlin.random.Random
-
 
 inline fun <T, R> SparseArray<out T>.map(transform: (T) -> R): List<R> {
     return mapTo(ArrayList(), transform)
@@ -122,7 +120,11 @@ fun Context.openAppInfo(packageName: String) {
     val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
     intent.data = Uri.parse("package:$packageName")
 
-    startActivity(intent)
+    try {
+        startActivity(intent)
+    } catch (e: Exception) {
+        Toast.makeText(this, resources.getString(R.string.unable_to_launch, e.localizedMessage), Toast.LENGTH_SHORT).show()
+    }
 }
 
 fun Context.launchUrl(url: String) {
@@ -130,7 +132,9 @@ fun Context.launchUrl(url: String) {
         val browserIntent =
             Intent(Intent.ACTION_VIEW, Uri.parse(url))
         startActivity(browserIntent)
-    } catch (_: Exception) {}
+    } catch (e: Exception) {
+        Toast.makeText(this, resources.getString(R.string.unable_to_launch, e.localizedMessage), Toast.LENGTH_SHORT).show()
+    }
 }
 
 fun Context.launchEmail(to: String, subject: String) {
@@ -142,7 +146,9 @@ fun Context.launchEmail(to: String, subject: String) {
         )
 
         startActivity(intent)
-    } catch (_: Exception) {}
+    } catch (e: Exception) {
+        Toast.makeText(this, resources.getString(R.string.unable_to_launch, e.localizedMessage), Toast.LENGTH_SHORT).show()
+    }
 }
 
 fun constructComponentKey(component: PackageItemInfo): String {
@@ -153,37 +159,11 @@ fun constructComponentKey(packageName: String, componentName: String): String {
     return "$packageName/$componentName"
 }
 
-fun <T> CoroutineScope.lazyDeferred(
-    context: CoroutineContext = Dispatchers.IO,
-    block: suspend CoroutineScope.() -> T
-): Lazy<Deferred<T>> {
-    return lazy {
-        async(context = context, start = CoroutineStart.LAZY) {
-            block(this)
-        }
-    }
-}
-
-@ExperimentalCoroutinesApi
-suspend fun <T> Deferred<T>.getOrAwaitResult() = if (isCompleted) getCompleted() else await()
-
 fun <T> Collection<T>.forEachParallelBlocking(context: CoroutineContext = Dispatchers.IO, block: suspend CoroutineScope.(T) -> Unit) = runBlocking {
     forEachParallel(context, block)
 }
 
 suspend fun <T> Collection<T>.forEachParallel(context: CoroutineContext = Dispatchers.IO, block: suspend CoroutineScope.(T) -> Unit) = coroutineScope {
-    val jobs = ArrayList<Deferred<*>>(size)
-    forEach {
-        jobs.add(
-            async(context) {
-                block(it)
-            }
-        )
-    }
-    jobs.awaitAll()
-}
-
-suspend fun <T> Array<T>.forEachParallel(context: CoroutineContext = Dispatchers.IO, block: suspend CoroutineScope.(T) -> Unit) = coroutineScope {
     val jobs = ArrayList<Deferred<*>>(size)
     forEach {
         jobs.add(
@@ -236,14 +216,6 @@ fun requestShizukuPermission(resultListener: (Boolean) -> Unit, permissionLaunch
         Shizuku.requestPermission(code)
     }
 }
-
-//Take a DP value and return its representation in pixels.
-fun Context.dpAsPx(dpVal: Number) =
-    TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_DIP,
-        dpVal.toFloat(),
-        resources.displayMetrics
-    ).roundToInt()
 
 //Take a pixel value and return its representation in DP.
 fun Context.pxAsDp(pxVal: Number) =

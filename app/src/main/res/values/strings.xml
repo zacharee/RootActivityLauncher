@@ -59,6 +59,7 @@
     <string name="delete">Delete</string>
 
     <string name="extraction_failed">Extraction failed: %s</string>
+    <string name="unable_to_launch">Unable to launch: %s</string>
 
     <string name="usage_advanced_search_has_permission">Has Permission</string>
     <string name="usage_advanced_search_has_permission_desc">You can use Root Activity Launcher to search for apps that request different permissions. The basic format is: \"has-permission:[AND/OR;]list,of,permissions\". If you use \"AND\" apps must request all permissions in the list to be shown in the results. If you use \"OR\" apps must request at least one permission in the list. The default mode is \"AND\".</string>
