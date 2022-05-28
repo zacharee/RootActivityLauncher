@@ -42,23 +42,26 @@ abstract class BaseComponentAdapter<
     private val selectionCallback: (BaseComponentInfo) -> Unit
 ) : RecyclerView.Adapter<VHClass>(), CoroutineScope by MainScope() {
     init {
+        @Suppress("LeakingThis")
         setHasStableIds(true)
     }
 
-    val currentList = SortedList(dataClass, object : SortedListAdapterCallback<DataClass>(this) {
-        override fun areItemsTheSame(item1: DataClass, item2: DataClass): Boolean {
-            return constructComponentKey(item1.info) == constructComponentKey(item2.info)
-        }
+    val currentList by lazy {
+        SortedList(dataClass, object : SortedListAdapterCallback<DataClass>(this) {
+            override fun areItemsTheSame(item1: DataClass, item2: DataClass): Boolean {
+                return constructComponentKey(item1.info) == constructComponentKey(item2.info)
+            }
 
-        override fun compare(o1: DataClass, o2: DataClass): Int {
-            return o1.compareTo(o2)
-        }
+            override fun compare(o1: DataClass, o2: DataClass): Int {
+                return o1.compareTo(o2)
+            }
 
-        override fun areContentsTheSame(oldItem: DataClass, newItem: DataClass): Boolean {
-            return true
-        }
+            override fun areContentsTheSame(oldItem: DataClass, newItem: DataClass): Boolean {
+                return true
+            }
 
-    })
+        })
+    }
 
     override fun getItemCount(): Int {
         return currentList.size()
@@ -86,15 +89,15 @@ abstract class BaseComponentAdapter<
     }
 
     abstract inner class BaseComponentVH(view: View) : RecyclerView.ViewHolder(view) {
-        protected val binding = ComponentItemBinding.bind(itemView)
+        private val binding = ComponentItemBinding.bind(itemView)
 
         internal abstract val componentType: ComponentType
 
-        internal val currentExtras: List<ExtraInfo>
+        private val currentExtras: List<ExtraInfo>
             get() = itemView.context.findExtrasForComponent(currentComponentKey)
-        internal val currentGlobalExtras: List<ExtraInfo>
+        private val currentGlobalExtras: List<ExtraInfo>
             get() = itemView.context.findExtrasForComponent(currentPackageName)
-        internal val currentPackageName: String
+        private val currentPackageName: String
             get() = currentList[adapterPosition].info.packageName
         internal val currentComponentKey: String
             get() = currentList[adapterPosition].run {
@@ -104,7 +107,7 @@ abstract class BaseComponentAdapter<
                 )
             }
 
-        internal val componentEnabledListener = object : CompoundButton.OnCheckedChangeListener {
+        private val componentEnabledListener = object : CompoundButton.OnCheckedChangeListener {
             override fun onCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
                 val d = currentList[adapterPosition]
                 val l = this

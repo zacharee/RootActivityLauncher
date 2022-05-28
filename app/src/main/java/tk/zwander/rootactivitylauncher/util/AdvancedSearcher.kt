@@ -3,7 +3,6 @@ package tk.zwander.rootactivitylauncher.util
 import android.content.pm.ActivityInfo
 import android.content.pm.ComponentInfo
 import android.content.pm.ServiceInfo
-import com.android.internal.R.attr.mode
 import tk.zwander.rootactivitylauncher.data.AppInfo
 
 object AdvancedSearcher {

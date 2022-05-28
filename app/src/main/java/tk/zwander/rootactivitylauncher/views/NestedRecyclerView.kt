@@ -66,11 +66,7 @@ open class NestedRecyclerView @JvmOverloads constructor(
     }
 
     override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            dispatchNestedPreScroll(dx, dy, consumed, null)
-        } else {
-            super.onNestedPreScroll(target, dx, dy, consumed)
-        }
+        super.onNestedPreScroll(target, dx, dy, consumed)
     }
 
     /*  Introduced with NestedScrollingParent2. */
@@ -135,11 +131,7 @@ open class NestedRecyclerView @JvmOverloads constructor(
 
     /*  Introduced with NestedScrollingParent2. */
     override fun onNestedPreFling(target: View, velocityX: Float, velocityY: Float): Boolean {
-        return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            false
-        } else {
-            super.onNestedPreFling(target, velocityX, velocityY)
-        }
+        return super.onNestedPreFling(target, velocityX, velocityY)
     }
 
     /* In ViewGroup for API 21+. */
@@ -148,12 +140,7 @@ open class NestedRecyclerView @JvmOverloads constructor(
         velocityX: Float,
         velocityY: Float,
         consumed: Boolean
-    ) =
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            false
-        } else {
-            super.onNestedFling(target, velocityX, velocityY, consumed)
-        }
+    ) = super.onNestedFling(target, velocityX, velocityY, consumed)
 
     private fun setTarget(target: View?) {
         nestedScrollTarget = target

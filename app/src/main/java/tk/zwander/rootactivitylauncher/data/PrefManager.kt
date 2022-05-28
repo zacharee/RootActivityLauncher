@@ -3,15 +3,10 @@ package tk.zwander.rootactivitylauncher.data
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.ContextWrapper
-import android.content.pm.ApplicationInfo
-import android.content.pm.PackageInfo
-import android.content.pm.PackageItemInfo
 import androidx.core.content.edit
-import androidx.core.content.pm.PackageInfoCompat
 import androidx.preference.PreferenceManager
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
-import tk.zwander.rootactivitylauncher.util.constructComponentKey
 
 class PrefManager private constructor(context: Context) : ContextWrapper(context) {
     companion object {

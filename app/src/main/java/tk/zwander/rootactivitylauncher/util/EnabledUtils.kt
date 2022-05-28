@@ -3,7 +3,6 @@ package tk.zwander.rootactivitylauncher.util
 import android.content.Context
 import android.content.pm.IPackageManager
 import android.content.pm.PackageManager
-import android.util.Log
 import eu.chainfire.libsuperuser.Shell
 import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuBinderWrapper
@@ -31,7 +30,7 @@ private fun Context.tryShizukuEnable(pkg: String, enabled: Boolean): Boolean {
     }
 }
 
-private fun Context.tryRootEnable(pkg: String, enabled: Boolean): Boolean {
+private fun tryRootEnable(pkg: String, enabled: Boolean): Boolean {
     if (!Shell.SU.available()) return false
 
     return Shell.Pool.SU.run("pm ${if (enabled) "enable" else "disable"} $pkg") == 0

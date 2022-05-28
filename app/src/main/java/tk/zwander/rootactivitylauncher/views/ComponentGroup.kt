@@ -12,7 +12,7 @@ import tk.zwander.rootactivitylauncher.databinding.ComponentGroupBinding
 import tk.zwander.rootactivitylauncher.util.*
 
 sealed class ComponentGroup(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs) {
-    private val binding = ComponentGroupBinding.inflate(LayoutInflater.from(context), this)
+    private val binding by lazy { ComponentGroupBinding.inflate(LayoutInflater.from(context), this) }
 
     protected abstract val formatRes: Int
 
