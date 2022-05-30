@@ -561,11 +561,16 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         )
     }
 
+    private var latestFilterState: ((AppAdapter.State) -> AppAdapter.State)? = null
+
     private fun onFilterChangeWithLoader(
         newState: (AppAdapter.State) -> AppAdapter.State = { it },
         override: Boolean = false
     ) {
-        if (currentDataJob?.isActive == true) currentDataJob?.cancel()
+        if (currentDataJob?.isActive == true) {
+            latestFilterState = newState
+            return
+        }
         currentDataJob = async(Dispatchers.Main) {
             if (!appAdapter.state.hasLoadedItems) {
                 binding.scrim.isVisible = true
@@ -597,6 +602,11 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             binding.scrim.isVisible = false
             progress.isVisible = false
             progressView?.indeterminate = false
+
+            latestFilterState?.let {
+                appAdapter.onFilterChange(newState = it(appAdapter.state), override = true)
+            }
+            latestFilterState = null
 
             searchView?.let {
                 if (!it.isIconified) {

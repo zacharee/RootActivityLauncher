@@ -108,14 +108,14 @@ class AppAdapter(
         })
     }
 
-    private fun updateState(block: (State) -> State) {
+    fun updateState(block: (State) -> State) {
         state = block(state)
     }
 
     suspend fun onFilterChange(
         newState: State = state,
         override: Boolean = false,
-        progress: (Int, Int) -> Unit
+        progress: ((Int, Int) -> Unit)? = null
     ) {
         if (override || newState != state) {
             updateState { newState }
@@ -133,7 +133,7 @@ class AppAdapter(
                     newState.exportedFilterMode,
                     override
                 ) { _, _ ->
-                    progress(current++, total)
+                    progress?.invoke(current++, total)
                 }
             }
             sortAndSubmitList(filter(newState))
