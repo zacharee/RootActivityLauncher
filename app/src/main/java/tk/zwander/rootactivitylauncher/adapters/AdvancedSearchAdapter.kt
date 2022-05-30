@@ -11,7 +11,8 @@ class AdvancedSearchAdapter : RecyclerView.Adapter<AdvancedSearchAdapter.Advance
     private val items = arrayListOf(
         R.string.usage_advanced_search_has_permission to R.string.usage_advanced_search_has_permission_desc,
         R.string.usage_advanced_search_declares_permission to R.string.usage_advanced_search_declares_permission_desc,
-        R.string.usage_advanced_search_requires_permission to R.string.usage_advanced_search_requires_permission_desc
+        R.string.usage_advanced_search_requires_permission to R.string.usage_advanced_search_requires_permission_desc,
+        R.string.usage_advanced_search_requires_feature to R.string.usage_advanced_search_requires_feature_desc
     )
 
     override fun getItemCount(): Int {

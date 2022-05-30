@@ -27,6 +27,7 @@ object AdvancedSearcher {
     private const val HAS_PERMISSION = "has-permission"
     private const val REQUIRES_PERMISSION = "requires-permission"
     private const val DECLARES_PERMISSION = "declares-permission"
+    private const val REQUIRES_FEATURE = "requires-feature"
 
     /**
      * Expects a [query] string in a format like:
@@ -100,6 +101,14 @@ object AdvancedSearcher {
             val declaredPermissions = data.pInfo.permissions?.map { it.name } ?: return@itemMatch false
 
             logicMatch(mode, items, declaredPermissions)
+        }
+    }
+
+    fun matchesRequiresFeature(query: String, data: AppInfo): Boolean {
+        return itemMatch(query, REQUIRES_FEATURE) { mode, items ->
+            val requiredFeatures = data.pInfo.reqFeatures?.map { it.name } ?: return@itemMatch false
+
+            logicMatch(mode, items, requiredFeatures)
         }
     }
 }

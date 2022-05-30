@@ -153,6 +153,7 @@ class AppAdapter(
         val advancedMatch = AdvancedSearcher.matchesHasPermission(state.currentQuery, data)
                 || AdvancedSearcher.matchesRequiresPermission(state.currentQuery, data)
                 || AdvancedSearcher.matchesDeclaresPermission(state.currentQuery, data)
+                || AdvancedSearcher.matchesRequiresFeature(state.currentQuery, data)
 
         if (!advancedMatch && activityFilterEmpty && serviceFilterEmpty && receiverFilterEmpty) return false
 

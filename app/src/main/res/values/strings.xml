@@ -62,11 +62,14 @@
     <string name="unable_to_launch">Unable to launch: %s</string>
 
     <string name="usage_advanced_search_has_permission">Has Permission</string>
-    <string name="usage_advanced_search_has_permission_desc">You can use Root Activity Launcher to search for apps that request different permissions. The basic format is: \"has-permission:[AND/OR;]list,of,permissions\". If you use \"AND\" apps must request all permissions in the list to be shown in the results. If you use \"OR\" apps must request at least one permission in the list. The default mode is \"AND\".</string>
+    <string name="usage_advanced_search_has_permission_desc">You can use Root Activity Launcher to search for apps that request different permissions. The basic format is: \"has-permission:[AND/OR;]list,of,permissions\". If you use \"AND\", apps must request all permissions in the list to be shown in the results. If you use \"OR\" apps must request at least one permission in the list. The default mode is \"AND\".</string>
 
     <string name="usage_advanced_search_declares_permission">Declares Permission</string>
-    <string name="usage_advanced_search_declares_permission_desc">You can use Root Activity Launcher to search for apps that declare different permissions. The basic format is: \"declares-permission:[AND/OR;]list,of,permissions\". If you use \"AND\" apps must declare all permissions in the list to be shown in the results. If you use \"OR\" apps must declare at least one permission in the list. The default mode is \"AND\".</string>
+    <string name="usage_advanced_search_declares_permission_desc">You can use Root Activity Launcher to search for apps that declare different permissions. The basic format is: \"declares-permission:[AND/OR;]list,of,permissions\". If you use \"AND\", apps must declare all permissions in the list to be shown in the results. If you use \"OR\" apps must declare at least one permission in the list. The default mode is \"AND\".</string>
 
     <string name="usage_advanced_search_requires_permission">Requires Permission</string>
     <string name="usage_advanced_search_requires_permission_desc">You can use Root Activity Launcher to search for apps and components that require different permissions. The basic format is: \"requires-permission:list,of,permissions\". The only supported mode for this is \"OR\".</string>
+
+    <string name="usage_advanced_search_requires_feature">Requires Feature</string>
+    <string name="usage_advanced_search_requires_feature_desc">You can use Root Activity Launcher to search for apps that require different features. The basic format is: \"requires-feature:[AND/OR;]list,of,features\". If you use \"AND\", apps must require all features in the list to be shown in the results. If you use \"OR\" apps must require at least one feature in the list. The default mode is \"AND\".</string>
 </resources>
