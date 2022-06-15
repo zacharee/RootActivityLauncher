@@ -28,6 +28,7 @@ class ServiceIconHandler(private val context: Context) : RequestHandler() {
 
         return Result(
             try {
+                @Suppress("DEPRECATION")
                 context.packageManager.getServiceInfo(
                     component,
                     if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS else PackageManager.GET_DISABLED_COMPONENTS

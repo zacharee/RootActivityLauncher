@@ -46,6 +46,7 @@ class ShortcutLaunchActivity : AppCompatActivity() {
             ComponentType.RECEIVER -> {
                 launchReceiver(globalExtras + extras, componentKey!!)
             }
+            else -> {}
         }
 
         finish()

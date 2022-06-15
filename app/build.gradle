@@ -40,15 +40,15 @@ dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
-    implementation 'androidx.core:core-ktx:1.7.0'
-    implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'androidx.core:core-ktx:1.8.0'
+    implementation 'androidx.appcompat:appcompat:1.4.2'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation "androidx.core:core-ktx:1.7.0"
+    implementation "androidx.core:core-ktx:1.8.0"
     implementation 'androidx.preference:preference-ktx:1.2.0'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-alpha01'
 
-    implementation 'com.google.android.material:material:1.6.0'
-    implementation 'com.google.code.gson:gson:2.8.9'
+    implementation 'com.google.android.material:material:1.6.1'
+    implementation 'com.google.code.gson:gson:2.9.0'
     implementation 'com.google.firebase:firebase-crashlytics:18.2.11'
     //Crashlytics doesn't seem to work without this added (wtf)
     implementation 'com.google.firebase:firebase-analytics:21.0.0'
@@ -59,8 +59,8 @@ dependencies {
     implementation 'com.github.zacharee:RecyclerView-FastScroll:224bd6f8e8'
     implementation 'com.joaomgcd:taskerpluginlibrary:0.4.2'
 
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.2'
     implementation 'com.github.Chainfire:libsuperuser:1.1.0.201907261845'
     implementation 'com.github.2hamed:ProgressCircula:0.2.1'
     implementation 'com.squareup.picasso:picasso:2.71828'
