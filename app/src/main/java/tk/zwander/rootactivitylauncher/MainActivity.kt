@@ -41,6 +41,7 @@ import tk.zwander.rootactivitylauncher.views.FilterDialog
 import java.io.File
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 @SuppressLint("RestrictedApi")
@@ -513,7 +514,9 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             val max = apps.size - 1
             val loaded = ConcurrentLinkedQueue<AppInfo>()
 
-            var progressIndex = 0
+            val progressIndex = AtomicInteger(0)
+            val lastUpdate = AtomicLong(0L)
+            val previousProgress = AtomicInteger(0)
 
             apps.forEachParallel { app ->
                 loadApp(app)?.let {
@@ -521,8 +524,19 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 }
 
                 if (!silent) {
-                    val p = (progressIndex++.toFloat() / max.toFloat() * 100f).toInt()
-                    updateProgress(p)
+                    val p = (progressIndex.incrementAndGet().toFloat() / max.toFloat() * 100f).toInt()
+                    val time = System.currentTimeMillis()
+
+                    if (time - lastUpdate.get() >= 10) {
+                        lastUpdate.set(time)
+                        if (previousProgress.get() < p) {
+                            previousProgress.set(p)
+
+                            launch(Dispatchers.Main) {
+                                updateProgress(p)
+                            }
+                        }
+                    }
                 }
             }
 
