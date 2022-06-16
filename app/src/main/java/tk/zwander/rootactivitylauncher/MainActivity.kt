@@ -182,6 +182,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission(), ::onPermissionResult)
 
     private var currentDataJob: Deferred<*>? = null
+    private var currentFilterJob: Deferred<*>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -374,6 +375,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         super.onDestroy()
 
         currentDataJob?.cancel()
+        currentFilterJob?.cancel()
         packageUpdateReceiver.unregister()
         cancel()
     }
@@ -542,7 +544,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             }
 
             if (appAdapter.state.hasFilters) {
-                onFilterChangeWithLoader(override = true)
+                onFilterChangeWithLoader(override = true, fromLoadData = true)
             }
         }
     }
@@ -565,13 +567,14 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
     private fun onFilterChangeWithLoader(
         newState: (AppAdapter.State) -> AppAdapter.State = { it },
-        override: Boolean = false
+        override: Boolean = false,
+        fromLoadData: Boolean = false
     ) {
-        if (currentDataJob?.isActive == true) {
+        if ((currentDataJob?.isActive == true && !fromLoadData) || currentFilterJob?.isActive == true) {
             latestFilterState = newState
             return
         }
-        currentDataJob = async(Dispatchers.Main) {
+        currentFilterJob = async(Dispatchers.Main) {
             if (!appAdapter.state.hasLoadedItems) {
                 binding.scrim.isVisible = true
                 progress.isVisible = true
