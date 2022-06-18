@@ -638,76 +638,71 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         val services = app.services
         val receivers = app.receivers
 
-        if ((activities != null && activities.isNotEmpty())
-                || (services != null && services.isNotEmpty())
-                || (receivers != null && receivers.isNotEmpty())
-        ) {
-            val appLabel = app.applicationInfo.loadLabel(packageManager)
+        val appLabel = app.applicationInfo.loadLabel(packageManager)
 
-            val activitiesLoader: suspend (suspend (Int, Int) -> Unit) -> Collection<ActivityInfo> = {
-                val activityInfos = LinkedList<ActivityInfo>()
+        val activitiesLoader: suspend (suspend (Int, Int) -> Unit) -> Collection<ActivityInfo> = {
+            val activityInfos = LinkedList<ActivityInfo>()
 
-                activities?.forEachIndexed { index, act ->
-                    val label = act.loadLabel(packageManager).ifBlank { appLabel }
-                    activityInfos.add(
-                        ActivityInfo(
-                            act,
-                            label
-                        )
+            activities?.forEachIndexed { index, act ->
+                val label = act.loadLabel(packageManager).ifBlank { appLabel }
+                activityInfos.add(
+                    ActivityInfo(
+                        act,
+                        label
                     )
-                    it(index, activities.size)
-                }
-
-                activityInfos
-            }
-            val servicesLoader: suspend (suspend (Int, Int) -> Unit) -> Collection<ServiceInfo> = {
-                val serviceInfos = LinkedList<ServiceInfo>()
-
-                services?.forEachIndexed { index, srv ->
-                    val label = srv.loadLabel(packageManager).ifBlank { appLabel }
-                    serviceInfos.add(
-                        ServiceInfo(
-                            srv,
-                            label
-                        )
-                    )
-                    it(index, services.size)
-                }
-
-                serviceInfos
-            }
-            val receiversLoader: suspend (suspend (Int, Int) -> Unit) -> Collection<ReceiverInfo> = {
-                val receiverInfos = LinkedList<ReceiverInfo>()
-
-                receivers?.forEachIndexed { index, rec ->
-                    val label = rec.loadLabel(packageManager).ifBlank { appLabel }
-                    receiverInfos.add(
-                        ReceiverInfo(
-                            rec,
-                            label
-                        )
-                    )
-                    it(index, receivers.size)
-                }
-
-                receiverInfos
+                )
+                it(index, activities.size)
             }
 
-            return@coroutineScope AppInfo(
-                pInfo = app,
-                label = appLabel,
-                activitiesLoader = activitiesLoader,
-                servicesLoader = servicesLoader,
-                receiversLoader = receiversLoader,
-                _activitiesSize = activities?.size ?: 0,
-                _servicesSize = services?.size ?: 0,
-                _receiversSize = receivers?.size ?: 0,
-                isForTasker = isForTasker,
-                selectionCallback = { info ->
-                    selectedItem = info.type() to info.component
-                }
-            )
+            activityInfos
         }
+        val servicesLoader: suspend (suspend (Int, Int) -> Unit) -> Collection<ServiceInfo> = {
+            val serviceInfos = LinkedList<ServiceInfo>()
+
+            services?.forEachIndexed { index, srv ->
+                val label = srv.loadLabel(packageManager).ifBlank { appLabel }
+                serviceInfos.add(
+                    ServiceInfo(
+                        srv,
+                        label
+                    )
+                )
+                it(index, services.size)
+            }
+
+            serviceInfos
+        }
+        val receiversLoader: suspend (suspend (Int, Int) -> Unit) -> Collection<ReceiverInfo> = {
+            val receiverInfos = LinkedList<ReceiverInfo>()
+
+            receivers?.forEachIndexed { index, rec ->
+                val label = rec.loadLabel(packageManager).ifBlank { appLabel }
+                receiverInfos.add(
+                    ReceiverInfo(
+                        rec,
+                        label
+                    )
+                )
+                it(index, receivers.size)
+            }
+
+            receiverInfos
+        }
+
+        return@coroutineScope AppInfo(
+            pInfo = app,
+            label = appLabel,
+            activitiesLoader = activitiesLoader,
+            servicesLoader = servicesLoader,
+            receiversLoader = receiversLoader,
+            _activitiesSize = activities?.size ?: 0,
+            _servicesSize = services?.size ?: 0,
+            _receiversSize = receivers?.size ?: 0,
+            isForTasker = isForTasker,
+            selectionCallback = { info ->
+                selectedItem = info.type() to info.component
+            }
+        )
 
         return@coroutineScope null
     }
