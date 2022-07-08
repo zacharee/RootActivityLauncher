@@ -99,9 +99,9 @@ abstract class BaseComponentAdapter<
         private val currentGlobalExtras: List<ExtraInfo>
             get() = itemView.context.findExtrasForComponent(currentPackageName)
         private val currentPackageName: String
-            get() = currentList[adapterPosition].info.packageName
+            get() = currentList[bindingAdapterPosition].info.packageName
         internal val currentComponentKey: String
-            get() = currentList[adapterPosition].run {
+            get() = currentList[bindingAdapterPosition].run {
                 constructComponentKey(
                     info.packageName,
                     info.name
@@ -110,7 +110,7 @@ abstract class BaseComponentAdapter<
 
         private val componentEnabledListener = object : CompoundButton.OnCheckedChangeListener {
             override fun onCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
-                val d = currentList[adapterPosition]
+                val d = currentList[bindingAdapterPosition]
                 val l = this
 
                 launch(Dispatchers.Main) {
@@ -193,7 +193,7 @@ abstract class BaseComponentAdapter<
                     )
                     binding.root.setBackgroundResource(outValue.resourceId)
                     binding.root.setOnClickListener {
-                        selectionCallback(currentList[adapterPosition])
+                        selectionCallback(currentList[bindingAdapterPosition])
                     }
                 }
 
@@ -203,13 +203,13 @@ abstract class BaseComponentAdapter<
                 }
                 binding.launch.setOnClickListener {
                     onLaunch(
-                        currentList[adapterPosition],
+                        currentList[bindingAdapterPosition],
                         context,
                         currentGlobalExtras + currentExtras
                     )
                 }
                 binding.shortcut.setOnClickListener {
-                    val d = currentList[adapterPosition]
+                    val d = currentList[bindingAdapterPosition]
                     context.createShortcut(
                         d.label.run { if (!isNullOrBlank()) this else d.info.applicationInfo.loadLabel(context.packageManager) },
                         IconCompat.createWithBitmap(
@@ -223,7 +223,7 @@ abstract class BaseComponentAdapter<
                     )
                 }
                 binding.info.setOnClickListener {
-                    val d = currentList[adapterPosition]
+                    val d = currentList[bindingAdapterPosition]
                     ComponentInfoDialog(context, d.info)
                         .show()
                 }

@@ -633,7 +633,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         }
     }
 
-    private suspend fun loadApp(app: PackageInfo): AppInfo? = coroutineScope {
+    private suspend fun loadApp(app: PackageInfo): AppInfo = coroutineScope {
         val activities = app.activities
         val services = app.services
         val receivers = app.receivers
@@ -703,8 +703,6 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 selectedItem = info.type() to info.component
             }
         )
-
-        return@coroutineScope null
     }
 
     private fun hideActionsForSearch(hide: Boolean) {

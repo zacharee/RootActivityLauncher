@@ -236,12 +236,16 @@ fun ActivityInfo.persistableModeToString(): String {
     }
 }
 
-val ActivityInfo.manifestMinAspectRatio: Float
+val ActivityInfo.manifestMinAspectRatioCompat: Float
     @SuppressLint("PrivateApi")
-    get() = ActivityInfo::class.java
-        .getDeclaredField("mMinAspectRatio")
-        .apply { isAccessible = true }
-        .getFloat(this)
+    get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        manifestMinAspectRatio
+    } else {
+        ActivityInfo::class.java
+            .getDeclaredField("mMinAspectRatio")
+            .apply { isAccessible = true }
+            .getFloat(this)
+    }
 
 val ActivityInfo.rMaxAspectRatio: Float
     @SuppressLint("PrivateApi")

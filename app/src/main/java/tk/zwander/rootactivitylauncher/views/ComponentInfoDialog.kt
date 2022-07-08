@@ -128,7 +128,7 @@ class ComponentInfoDialog(context: Context, private val info: Any) : MaterialAle
             }
 
             if (info.manifestMinAspectRatio != 0f) {
-                printer.println("manifestMinAspectRatio=${info.manifestMinAspectRatio}")
+                printer.println("manifestMinAspectRatio=${info.manifestMinAspectRatioCompat}")
             }
 
             if (info.supportsSizeChanges) {
