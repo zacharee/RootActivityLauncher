@@ -117,14 +117,14 @@ class ExtrasDialogAdapter : RecyclerView.Adapter<ExtrasDialogAdapter.BaseVH<out 
                 keyField.setText(data.key, TextView.BufferType.EDITABLE)
                 valueField.setText(data.value, TextView.BufferType.EDITABLE)
                 keyField.doOnTextChanged { text, _, _, _ ->
-                    items[adapterPosition - 1].key = text.toString()
+                    items[bindingAdapterPosition - 1].key = text.toString()
                 }
                 valueField.doOnTextChanged { text, _, _, _ ->
-                    items[adapterPosition - 1].value = text.toString()
+                    items[bindingAdapterPosition - 1].value = text.toString()
                 }
                 remove.setOnClickListener {
                     try {
-                        items.removeItemAt(adapterPosition - 1)
+                        items.removeItemAt(bindingAdapterPosition - 1)
                     } catch (_: ArrayIndexOutOfBoundsException) {}
                 }
             }

@@ -102,7 +102,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                         if (host != null) {
                             val loaded = loadApp(getPackageInfo(host))
 
-                            appAdapter.addItem(loaded ?: return@launch, ::updateProgress)
+                            appAdapter.addItem(loaded, ::updateProgress)
                         }
                     }
                     Intent.ACTION_PACKAGE_REMOVED -> {
@@ -112,7 +112,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                     }
                     Intent.ACTION_PACKAGE_REPLACED -> {
                         if (host != null) {
-                            appAdapter.updateItem(loadApp(getPackageInfo(host)) ?: return@launch)
+                            appAdapter.updateItem(loadApp(getPackageInfo(host)))
                         }
                     }
                 }
@@ -519,7 +519,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             val previousProgress = AtomicInteger(0)
 
             apps.forEachParallel { app ->
-                loadApp(app)?.let {
+                loadApp(app).let {
                     loaded.add(it)
                 }
 

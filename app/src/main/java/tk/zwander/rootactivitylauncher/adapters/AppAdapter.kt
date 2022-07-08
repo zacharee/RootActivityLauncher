@@ -186,7 +186,7 @@ class AppAdapter(
 
         private val enabledListener = object : CompoundButton.OnCheckedChangeListener {
             override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
-                val d = async.currentList[adapterPosition]
+                val d = async.currentList[bindingAdapterPosition]
 
                 if (!itemView.context.setPackageEnabled(d.info.packageName, isChecked)) {
                     binding.appEnabled.setOnCheckedChangeListener(null)
@@ -202,62 +202,62 @@ class AppAdapter(
             binding.receiversComponent.addItemDecoration(innerDividerItemDecoration)
 
             binding.activitiesComponent.setOnTitleClickListener {
-                if (adapterPosition == -1) return@setOnTitleClickListener
+                if (bindingAdapterPosition == -1) return@setOnTitleClickListener
 
-                val d = async.currentList[adapterPosition]
+                val d = async.currentList[bindingAdapterPosition]
                 d.activitiesExpanded = !d.activitiesExpanded
 
-                notifyItemChanged(adapterPosition, listOf(Unit))
+                notifyItemChanged(bindingAdapterPosition, listOf(Unit))
             }
 
             binding.servicesComponent.setOnTitleClickListener {
-                if (adapterPosition == -1) return@setOnTitleClickListener
+                if (bindingAdapterPosition == -1) return@setOnTitleClickListener
 
-                val d = async.currentList[adapterPosition]
+                val d = async.currentList[bindingAdapterPosition]
                 d.servicesExpanded = !d.servicesExpanded
 
-                notifyItemChanged(adapterPosition, listOf(Unit))
+                notifyItemChanged(bindingAdapterPosition, listOf(Unit))
             }
 
             binding.receiversComponent.setOnTitleClickListener {
-                if (adapterPosition == -1) return@setOnTitleClickListener
+                if (bindingAdapterPosition == -1) return@setOnTitleClickListener
 
-                val d = async.currentList[adapterPosition]
+                val d = async.currentList[bindingAdapterPosition]
                 d.receiversExpanded = !d.receiversExpanded
 
-                notifyItemChanged(adapterPosition, listOf(Unit))
+                notifyItemChanged(bindingAdapterPosition, listOf(Unit))
             }
 
             binding.appInfo.setOnClickListener {
-                if (adapterPosition == -1) return@setOnClickListener
+                if (bindingAdapterPosition == -1) return@setOnClickListener
 
-                val d = async.currentList[adapterPosition]
+                val d = async.currentList[bindingAdapterPosition]
 
                 context.openAppInfo(d.info.packageName)
             }
 
             binding.globalExtras.setOnClickListener {
-                if (adapterPosition == -1) return@setOnClickListener
+                if (bindingAdapterPosition == -1) return@setOnClickListener
 
-                val d = async.currentList[adapterPosition]
+                val d = async.currentList[bindingAdapterPosition]
 
                 ExtrasDialog(context, d.info.packageName)
                     .show()
             }
 
             binding.appComponentInfo.setOnClickListener {
-                if (adapterPosition == -1) return@setOnClickListener
+                if (bindingAdapterPosition == -1) return@setOnClickListener
 
-                val d = async.currentList[adapterPosition]
+                val d = async.currentList[bindingAdapterPosition]
 
                 ComponentInfoDialog(context, d.pInfo)
                     .show()
             }
 
             binding.appExtract.setOnClickListener {
-                if (adapterPosition == -1) return@setOnClickListener
+                if (bindingAdapterPosition == -1) return@setOnClickListener
 
-                val d = async.currentList[adapterPosition]
+                val d = async.currentList[bindingAdapterPosition]
                 extractCallback(d)
             }
 
