@@ -74,7 +74,7 @@ sealed class ComponentGroup(context: Context, attrs: AttributeSet) : LinearLayou
     }
 
     fun updateLayoutManager(width: Int) {
-        layoutManager = context.getAppropriateLayoutManager(context.pxAsDp(width).toInt())
+        layoutManager = context.getAppropriateLayoutManager(context.pxAsDp(width).toInt(), layoutManager)
     }
 }
 

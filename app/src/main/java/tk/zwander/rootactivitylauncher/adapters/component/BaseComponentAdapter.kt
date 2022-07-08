@@ -44,6 +44,7 @@ abstract class BaseComponentAdapter<
     init {
         @Suppress("LeakingThis")
         setHasStableIds(true)
+        stateRestorationPolicy = StateRestorationPolicy.PREVENT_WHEN_EMPTY
     }
 
     val currentList by lazy {

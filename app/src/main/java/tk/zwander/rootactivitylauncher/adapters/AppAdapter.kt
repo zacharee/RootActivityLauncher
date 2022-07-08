@@ -279,9 +279,17 @@ class AppAdapter(
                 binding.appEnabled.setOnCheckedChangeListener(enabledListener)
             }
 
-            binding.activitiesComponent.adapter = data.activityAdapter
-            binding.servicesComponent.adapter = data.serviceAdapter
-            binding.receiversComponent.adapter = data.receiverAdapter
+            if (binding.activitiesComponent.adapter !== data.activityAdapter) {
+                binding.activitiesComponent.adapter = data.activityAdapter
+            }
+
+            if (binding.servicesComponent.adapter !== data.serviceAdapter) {
+                binding.servicesComponent.adapter = data.serviceAdapter
+            }
+
+            if (binding.receiversComponent.adapter !== data.receiverAdapter) {
+                binding.receiversComponent.adapter = data.receiverAdapter
+            }
 
             binding.activitiesComponent.updateLayoutManager(itemView.width)
             binding.servicesComponent.updateLayoutManager(itemView.width)

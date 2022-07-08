@@ -7,6 +7,7 @@ import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.LayoutManager
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import tk.zwander.rootactivitylauncher.R
 import kotlin.math.floor
@@ -19,14 +20,34 @@ private fun gridLayoutManager(spans: Int): StaggeredGridLayoutManager {
     return StaggeredGridLayoutManager(spans, StaggeredGridLayoutManager.VERTICAL)
 }
 
-fun Context.getAppropriateLayoutManager(widthDp: Int): RecyclerView.LayoutManager {
-    return when {
-        widthDp >= 800 -> gridLayoutManager(floor(widthDp / 400f).toInt())
-        else -> linearLayoutManager()
+fun Context.getAppropriateLayoutManager(widthDp: Int, currentLayoutManager: LayoutManager? = null): LayoutManager {
+    val spans = floor(widthDp / 400f).toInt()
+
+    fun createLayoutManager(): LayoutManager {
+        return when {
+            widthDp >= 800 -> gridLayoutManager(spans)
+            else -> linearLayoutManager()
+        }
+    }
+
+    return when (currentLayoutManager) {
+        is StaggeredGridLayoutManager -> {
+            if (currentLayoutManager.spanCount == spans) {
+                return currentLayoutManager
+            } else {
+                createLayoutManager()
+            }
+        }
+        is LinearLayoutManager -> {
+            return currentLayoutManager
+        }
+        else -> {
+            createLayoutManager()
+        }
     }
 }
 
-fun RecyclerView.LayoutManager.findFirstVisibleItemPosition(): Int {
+fun LayoutManager.findFirstVisibleItemPosition(): Int {
     if (this is LinearLayoutManager) {
         return findFirstVisibleItemPosition()
     } else if (this is StaggeredGridLayoutManager) {
@@ -36,7 +57,7 @@ fun RecyclerView.LayoutManager.findFirstVisibleItemPosition(): Int {
     return -1
 }
 
-fun RecyclerView.LayoutManager.findLastVisibleItemPosition(): Int {
+fun LayoutManager.findLastVisibleItemPosition(): Int {
     if (this is LinearLayoutManager) {
         return findLastVisibleItemPosition()
     } else if (this is StaggeredGridLayoutManager) {
