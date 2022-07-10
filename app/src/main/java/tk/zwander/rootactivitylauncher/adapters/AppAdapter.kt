@@ -146,37 +146,34 @@ class AppAdapter(
     }
 
     private fun matches(data: AppInfo, state: State): Boolean {
+        if (state.currentQuery.isBlank()) return true
+
         val activityFilterEmpty = data.filteredActivities.isEmpty()
         val serviceFilterEmpty = data.filteredServices.isEmpty()
         val receiverFilterEmpty = data.filteredReceivers.isEmpty()
+
+        if (state.includeComponents && (!activityFilterEmpty || !serviceFilterEmpty || !receiverFilterEmpty)) return true
 
         val advancedMatch = AdvancedSearcher.matchesHasPermission(state.currentQuery, data)
                 || AdvancedSearcher.matchesRequiresPermission(state.currentQuery, data)
                 || AdvancedSearcher.matchesDeclaresPermission(state.currentQuery, data)
                 || AdvancedSearcher.matchesRequiresFeature(state.currentQuery, data)
 
-        if (!advancedMatch && activityFilterEmpty && serviceFilterEmpty && receiverFilterEmpty) return false
-
-        if (state.currentQuery.isBlank()) return true
+        if (advancedMatch) return true
 
         if (state.useRegex && state.currentQuery.isValidRegex()) {
             if (Regex(state.currentQuery).run {
                     containsMatchIn(data.info.packageName)
                             || containsMatchIn(data.label)
-                } || advancedMatch) {
+                }) {
                 return true
             }
         } else {
             if (data.label.contains(state.currentQuery, true)
-                || data.info.packageName.contains(state.currentQuery, true)
-                || advancedMatch
-            ) {
+                || data.info.packageName.contains(state.currentQuery, true)) {
                 return true
             }
         }
-
-        if (state.includeComponents /* filters won't be empty by this point (if changing code, make sure they still won't be) */)
-            return true
 
         return false
     }
