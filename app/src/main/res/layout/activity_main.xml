@@ -62,73 +62,64 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <FrameLayout
-        android:id="@+id/search_options_wrapper"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:layout_marginBottom="?actionBarSize">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:orientation="horizontal"
-            android:background="@drawable/popup_menu_background"
-            android:layout_gravity="top"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
-
-            <ImageView
-                android:id="@+id/open_close"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="2dp"
-                android:layout_marginEnd="16dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?selectableItemBackgroundBorderless"
-                android:contentDescription="@string/search_options"
-                app:srcCompat="@drawable/ic_baseline_keyboard_arrow_left_24"
-                />
-
-            <CheckBox
-                android:id="@+id/use_regex"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/regex"
-                android:foregroundGravity="center_horizontal"
-                />
-
-            <CheckBox
-                android:id="@+id/include_components"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/include_components"
-                android:checked="true"
-                android:foregroundGravity="center_horizontal"
-                />
-
-        </LinearLayout>
-
-    </FrameLayout>
-
     <com.google.android.material.bottomappbar.BottomAppBar
         android:id="@+id/bottom_bar"
         android:layout_width="match_parent"
-        android:layout_height="?actionBarSize"
-        android:layout_gravity="bottom"
-        android:gravity="center_vertical|end">
+        android:layout_height="wrap_content"
+        android:minHeight="?actionBarSize"
+        app:paddingBottomSystemWindowInsets="false"
+        app:contentInsetLeft="0dp"
+        app:contentInsetStart="0dp"
+        app:contentInsetRight="0dp"
+        app:contentInsetEnd="0dp"
+        android:layout_gravity="bottom">
 
-        <androidx.appcompat.widget.ActionMenuView
-            android:id="@+id/action_menu_view"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:animateLayoutChanges="true"
-            android:layout_gravity="end"
-            android:gravity="center_vertical|end"
-            />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_vertical|end">
+
+            <LinearLayout
+                android:id="@+id/search_options_wrapper"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:visibility="gone"
+                tools:visibility="visible"
+                android:gravity="center">
+
+                <CheckBox
+                    android:id="@+id/use_regex"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="@string/regex"
+                    android:gravity="center"
+                    />
+
+                <CheckBox
+                    android:id="@+id/include_components"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="@string/include_components"
+                    android:checked="true"
+                    android:gravity="center"
+                    />
+
+            </LinearLayout>
+
+            <androidx.appcompat.widget.ActionMenuView
+                android:id="@+id/action_menu_view"
+                android:layout_width="wrap_content"
+                android:layout_height="?actionBarSize"
+                android:animateLayoutChanges="true"
+                />
+
+        </LinearLayout>
 
     </com.google.android.material.bottomappbar.BottomAppBar>
 

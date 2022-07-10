@@ -10,6 +10,8 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
@@ -18,12 +20,20 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.SearchView
+import androidx.core.view.OnApplyWindowInsetsListener
+import androidx.core.view.ViewCompat
+import androidx.core.view.ViewCompat.animate
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsAnimationCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import androidx.documentfile.provider.DocumentFile
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.android.internal.R.attr.height
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.hmomeni.progresscircula.ProgressCircula
 import jp.wasabeef.recyclerview.animators.FadeInAnimator
@@ -189,6 +199,41 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val i = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                leftMargin = i.left
+                rightMargin = i.right
+                topMargin = i.top
+                bottomMargin = i.bottom
+            }
+            insets
+        }
+
+        ViewCompat.setWindowInsetsAnimationCallback(
+            binding.root,
+            object : WindowInsetsAnimationCompat.Callback(DISPATCH_MODE_STOP) {
+                override fun onProgress(
+                    insets: WindowInsetsCompat,
+                    runningAnimations: MutableList<WindowInsetsAnimationCompat>
+                ): WindowInsetsCompat {
+                    val i = insets.getInsets(WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.systemBars())
+
+                    binding.root.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                        leftMargin = i.left
+                        rightMargin = i.right
+                        topMargin = i.top
+                        bottomMargin = i.bottom
+                    }
+
+                    return insets
+                }
+            }
+        )
+
         //Maybe if we ever get a KNOX license key...
 //        val cInfoClass = Class.forName("com.samsung.android.knox.ContextInfo")
 //        val cInfo = cInfoClass.getDeclaredConstructor(Int::class.java)
@@ -203,19 +248,8 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
         packageUpdateReceiver.register()
 
-        setSupportActionBar(binding.bottomBar)
+        supportActionBar?.setDisplayShowHomeEnabled(false)
 
-        binding.searchOptionsWrapper.viewTreeObserver.addOnGlobalLayoutListener(object :
-            ViewTreeObserver.OnGlobalLayoutListener {
-            override fun onGlobalLayout() {
-                setSearchWrapperState(false)
-                binding.searchOptionsWrapper.isVisible = false
-                binding.searchOptionsWrapper.viewTreeObserver.removeOnGlobalLayoutListener(this)
-            }
-        })
-        binding.openClose.setOnClickListener {
-            setSearchWrapperState(binding.searchOptionsWrapper.translationX != 0f)
-        }
         binding.useRegex.setOnCheckedChangeListener { _, isChecked ->
             onFilterChangeWithLoader({ it.copy(useRegex = isChecked) })
             binding.appList.scrollToPosition(0)
@@ -322,13 +356,14 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
         searchView?.setOnQueryTextListener(this)
         searchView?.setOnSearchClickListener {
+            it.postDelayed({
+                setSearchWrapperState(true)
+            }, 100)
             onFilterChangeWithLoader(override = !appAdapter.state.hasLoadedItems)
-            binding.searchOptionsWrapper.isVisible = true
             hideActionsForSearch(true)
         }
         searchView?.setOnCloseListener {
             setSearchWrapperState(false)
-            binding.searchOptionsWrapper.isVisible = false
             hideActionsForSearch(false)
             false
         }
@@ -414,20 +449,16 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     }
 
     private fun setSearchWrapperState(open: Boolean) {
-        binding.searchOptionsWrapper.apply {
-            animate()
-                .translationX(if (open) 0f else run {
-                    width - dpToPx(28).toFloat()
-                })
-                .apply {
-                    duration = resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
-                    interpolator = if (open) DecelerateInterpolator() else AccelerateInterpolator()
-                }
-                .start()
-        }
-        binding.openClose.animate()
-            .scaleX(if (open) -1f else 1f)
-            .start()
+        binding.searchOptionsWrapper.isVisible = open
+//        binding.searchOptionsWrapper.apply {
+//            animate()
+//                .translationY(if (open) 0f else height.toFloat())
+//                .apply {
+//                    duration = resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
+//                    interpolator = if (open) DecelerateInterpolator() else AccelerateInterpolator()
+//                }
+//                .start()
+//        }
     }
 
     private fun loadDataAsync(silent: Boolean = false): Deferred<*> {
