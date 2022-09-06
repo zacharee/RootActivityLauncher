@@ -261,12 +261,16 @@ val ComponentInfo.safeComponentName: ComponentName
     get() = ComponentName(packageName, name)
 
 fun ComponentInfo.isActuallyEnabled(context: Context): Boolean {
-    return when (context.packageManager.getComponentEnabledSetting(safeComponentName)) {
-        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-        PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED -> true
-        PackageManager.COMPONENT_ENABLED_STATE_DEFAULT -> enabled
-        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-        PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER -> false
-        else -> false
+    return try {
+        when (context.packageManager.getComponentEnabledSetting(safeComponentName)) {
+            PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+            PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED -> true
+            PackageManager.COMPONENT_ENABLED_STATE_DEFAULT -> enabled
+            PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+            PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER -> false
+            else -> false
+        }
+    } catch (e: Exception) {
+        false
     }
 }
