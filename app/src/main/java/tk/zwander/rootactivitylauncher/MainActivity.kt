@@ -1,5 +1,6 @@
 package tk.zwander.rootactivitylauncher
 
+import android.animation.LayoutTransition
 import android.annotation.SuppressLint
 import android.content.*
 import android.content.pm.PackageInfo
@@ -73,9 +74,8 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     private val progressView: ProgressCircula?
         get() = (progress?.actionView as ProgressCircula?)
 
-    private val search by lazy { menu.findItem(R.id.action_search) }
-    private val searchView: SearchView?
-        get() = (search?.actionView as SearchView?)
+//    private val search by lazy { menu.findItem(R.id.action_search) }
+    private val searchView: SearchView by lazy { binding.searchView }
 
     private val filter by lazy { menu.findItem(R.id.action_filter) }
     private val scrollToTop by lazy { menu.findItem(R.id.scroll_top) }
@@ -251,6 +251,13 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             onFilterChangeWithLoader({ it.copy(includeComponents = isChecked) })
             binding.appList.scrollToPosition(0)
         }
+        binding.root.apply {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+            } else {
+                layoutTransition = null
+            }
+        }
 
         if (Shizuku.pingBinder()) {
             if (!hasShizukuPermission) {
@@ -347,15 +354,15 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
         updateScrollButtonState()
 
-        searchView?.setOnQueryTextListener(this)
-        searchView?.setOnSearchClickListener {
+        searchView.setOnQueryTextListener(this)
+        searchView.setOnSearchClickListener {
             it.postDelayed({
                 setSearchWrapperState(true)
             }, 100)
             onFilterChangeWithLoader(override = !appAdapter.state.hasLoadedItems)
             hideActionsForSearch(true)
         }
-        searchView?.setOnCloseListener {
+        searchView.setOnCloseListener {
             setSearchWrapperState(false)
             hideActionsForSearch(false)
             false
@@ -460,7 +467,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 updateProgress(0)
                 binding.scrim.isVisible = true
                 progress.isVisible = true
-                search.isVisible = false
+                searchView.isVisible = false
                 filter.isVisible = false
                 scrollToTop.isVisible = false
                 scrollToBottom.isVisible = false
@@ -572,7 +579,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
                 binding.refresh.postDelayed({
                     updateScrollButtonState()
-                    search.isVisible = true
+                    searchView.isVisible = true
                     filter.isVisible = true
                 }, 10)
             } else {

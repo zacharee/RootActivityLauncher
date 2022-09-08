@@ -1,116 +1,130 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:animateLayoutChanges="true"
     tools:context=".MainActivity">
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/refresh"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginBottom="?actionBarSize">
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
-        <tk.zwander.rootactivitylauncher.views.NestedRecyclerView
-            android:id="@+id/app_list"
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/refresh"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <tk.zwander.rootactivitylauncher.views.NestedRecyclerView
+                android:id="@+id/app_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:fastScrollAutoHide="true"
+                app:fastScrollPopupBgColor="?colorAccent"
+                app:fastScrollPopupTextColor="?android:textColorPrimary"
+                app:fastScrollThumbColor="?colorAccent"
+                app:fastScrollThumbInactiveColor="?android:textColorSecondary"
+                app:layoutManager=".util.PredictiveLinearLayoutManager"
+                tools:listitem="@layout/app_item"
+                />
+
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/scrim"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:fastScrollAutoHide="true"
-            app:fastScrollPopupBgColor="?colorAccent"
-            app:fastScrollPopupTextColor="?android:textColorPrimary"
-            app:fastScrollThumbColor="?colorAccent"
-            app:fastScrollThumbInactiveColor="?android:textColorSecondary"
-            app:layoutManager=".util.PredictiveLinearLayoutManager"
-            tools:listitem="@layout/app_item"
-            />
+            android:orientation="horizontal"
+            android:background="#88000000"
+            android:gravity="center"
+            android:focusable="true"
+            android:clickable="true">
 
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+            <com.hmomeni.progresscircula.ProgressCircula
+                android:id="@+id/scrim_progress"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:padding="16dp"
+                app:pgc_showProgress="true"
+                app:pgc_textColor="@android:color/white"
+                app:pgc_indeterminate="false"
+                app:pgc_rimColor="?android:colorAccent"
+                app:pgc_rimWidth="8dp"
+                app:pgc_speed="0.5"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHeight_max="200dp"
+                app:layout_constraintWidth_max="200dp"
+                tools:pgc_progress="10"
+                />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/scrim"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal"
-        android:background="#88000000"
-        android:gravity="center"
-        android:focusable="true"
-        android:clickable="true"
-        android:layout_marginBottom="?actionBarSize">
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <com.hmomeni.progresscircula.ProgressCircula
-            android:id="@+id/scrim_progress"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:padding="16dp"
-            app:pgc_showProgress="true"
-            app:pgc_textColor="@android:color/white"
-            app:pgc_indeterminate="false"
-            app:pgc_rimColor="?android:colorAccent"
-            app:pgc_rimWidth="8dp"
-            app:pgc_speed="0.5"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHeight_max="200dp"
-            app:layout_constraintWidth_max="200dp"
-            tools:pgc_progress="10"
-            />
+    </FrameLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <com.google.android.material.bottomappbar.BottomAppBar
+    <LinearLayout
         android:id="@+id/bottom_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="?actionBarSize"
+        android:orientation="vertical"
+        android:background="@color/cardview_dark_background"
         app:paddingBottomSystemWindowInsets="false"
         app:contentInsetLeft="0dp"
         app:contentInsetStart="0dp"
         app:contentInsetRight="0dp"
         app:contentInsetEnd="0dp"
-        android:layout_gravity="bottom">
+        android:layout_gravity="bottom"
+        android:gravity="bottom|end">
+
+        <LinearLayout
+            android:id="@+id/search_options_wrapper"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:visibility="gone"
+            tools:visibility="visible"
+            android:gravity="center">
+
+            <CheckBox
+                android:id="@+id/use_regex"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="@string/regex"
+                android:gravity="center"
+                />
+
+            <CheckBox
+                android:id="@+id/include_components"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="@string/include_components"
+                android:checked="true"
+                android:gravity="center"
+                />
+
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center_vertical|end">
+            android:gravity="bottom|end">
 
-            <LinearLayout
-                android:id="@+id/search_options_wrapper"
-                android:layout_width="match_parent"
+            <androidx.appcompat.widget.SearchView
+                android:id="@+id/search_view"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:visibility="gone"
-                tools:visibility="visible"
-                android:gravity="center">
-
-                <CheckBox
-                    android:id="@+id/use_regex"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="@string/regex"
-                    android:gravity="center"
-                    />
-
-                <CheckBox
-                    android:id="@+id/include_components"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="@string/include_components"
-                    android:checked="true"
-                    android:gravity="center"
-                    />
-
-            </LinearLayout>
+                />
 
             <androidx.appcompat.widget.ActionMenuView
                 android:id="@+id/action_menu_view"
@@ -121,6 +135,6 @@
 
         </LinearLayout>
 
-    </com.google.android.material.bottomappbar.BottomAppBar>
+    </LinearLayout>
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</LinearLayout>
