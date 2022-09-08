@@ -477,7 +477,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             //each set of components individually and combine them.
             //https://twitter.com/Wander1236/status/1412928863798190083?s=20
             val apps = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
-                packageManager.getInstalledPackages(
+                packageManager.getInstalledPackagesCompat(
                     PackageManager.GET_ACTIVITIES or
                             PackageManager.GET_SERVICES or
                             PackageManager.GET_RECEIVERS or
@@ -487,11 +487,11 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 )
             } else {
                 @Suppress("DEPRECATION")
-                val packages = packageManager.getInstalledPackages(PackageManager.GET_DISABLED_COMPONENTS)
-                packages.mapNotNull { info ->
+                val packages = packageManager.getInstalledPackagesCompat(PackageManager.GET_DISABLED_COMPONENTS)
+                packages.map { info ->
                     try {
                         //Try to get all the components for this package at once.
-                        packageManager.getPackageInfo(
+                        packageManager.getPackageInfoCompat(
                             info.packageName,
                             PackageManager.GET_ACTIVITIES or
                                     PackageManager.GET_SERVICES or
@@ -512,7 +512,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                         ).map { flag ->
                             async {
                                 try {
-                                    packageManager.getPackageInfo(info.packageName, flag)
+                                    packageManager.getPackageInfoCompat(info.packageName, flag)
                                 } catch (e: Exception) {
                                     Log.e("RootActivityLauncher", "Unable to get split info for ${info.packageName} for flag $flag", e)
                                     null

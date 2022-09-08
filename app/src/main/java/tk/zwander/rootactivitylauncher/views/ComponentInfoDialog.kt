@@ -210,7 +210,7 @@ class ComponentInfoDialog(context: Context, private val info: Any) : MaterialAle
 
         info.instrumentation?.let {
             printer.println("instrumentation:")
-            it.forEachIndexed { index, item ->
+            it.forEachIndexed { _, item ->
                 printer.println("  instrumentation_info:")
                 printer.println("    targetPackage=${item.targetPackage}")
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -290,6 +290,7 @@ class ComponentInfoDialog(context: Context, private val info: Any) : MaterialAle
                         printer.println("    banner=${banner.hexString}")
                     }
                 }
+                @Suppress("DEPRECATION")
                 perm.protectionLevel.let { level ->
                     printer.println("    protectionLevel=${PermissionInfo.protectionToString(level)}")
                 }
@@ -353,6 +354,7 @@ class ComponentInfoDialog(context: Context, private val info: Any) : MaterialAle
             }
         }
 
+        @Suppress("DEPRECATION")
         info.signatures?.let { sigs ->
             printer.println("signatures:")
             sigs.forEach { sig ->
