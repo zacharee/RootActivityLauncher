@@ -40,7 +40,7 @@
         android:name=".App">
         <activity android:name=".MainActivity"
             android:exported="true"
-            android:windowSoftInputMode="adjustNothing"
+            android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
