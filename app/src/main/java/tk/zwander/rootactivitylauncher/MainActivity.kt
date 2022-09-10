@@ -192,41 +192,6 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
-            val i = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-
-            v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                leftMargin = i.left
-                rightMargin = i.right
-                topMargin = i.top
-                bottomMargin = i.bottom
-            }
-            insets
-        }
-
-        ViewCompat.setWindowInsetsAnimationCallback(
-            binding.root,
-            object : WindowInsetsAnimationCompat.Callback(DISPATCH_MODE_STOP) {
-                override fun onProgress(
-                    insets: WindowInsetsCompat,
-                    runningAnimations: MutableList<WindowInsetsAnimationCompat>
-                ): WindowInsetsCompat {
-                    val i = insets.getInsets(WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.systemBars())
-
-                    binding.root.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                        leftMargin = i.left
-                        rightMargin = i.right
-                        topMargin = i.top
-                        bottomMargin = i.bottom
-                    }
-
-                    return insets
-                }
-            }
-        )
-
         //Maybe if we ever get a KNOX license key...
 //        val cInfoClass = Class.forName("com.samsung.android.knox.ContextInfo")
 //        val cInfo = cInfoClass.getDeclaredConstructor(Int::class.java)
@@ -256,6 +221,41 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
             } else {
                 layoutTransition = null
+
+                WindowCompat.setDecorFitsSystemWindows(window, false)
+
+                ViewCompat.setOnApplyWindowInsetsListener(this) { v, insets ->
+                    val i = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+                    v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                        leftMargin = i.left
+                        rightMargin = i.right
+                        topMargin = i.top
+                        bottomMargin = i.bottom
+                    }
+                    insets
+                }
+
+                ViewCompat.setWindowInsetsAnimationCallback(
+                    this,
+                    object : WindowInsetsAnimationCompat.Callback(DISPATCH_MODE_STOP) {
+                        override fun onProgress(
+                            insets: WindowInsetsCompat,
+                            runningAnimations: MutableList<WindowInsetsAnimationCompat>
+                        ): WindowInsetsCompat {
+                            val i = insets.getInsets(WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.systemBars())
+
+                            updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                                leftMargin = i.left
+                                rightMargin = i.right
+                                topMargin = i.top
+                                bottomMargin = i.bottom
+                            }
+
+                            return insets
+                        }
+                    }
+                )
             }
         }
 
@@ -656,7 +656,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             }
             latestFilterState = null
 
-            searchView?.let {
+            searchView.let {
                 if (!it.isIconified) {
                     it.requestFocus()
                 }
