@@ -452,9 +452,13 @@ class ComponentInfoDialog(context: Context, private val info: Any) : MaterialAle
                 }
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    info.mOverlayIsStatic.let {
-                        printer.println("mOverlayIsStatic=$it")
-                    }
+                    // mOverlayIsStatic is package-protected on Android 10.
+                    PackageInfo::class.java
+                        .getDeclaredField("mOverlayIsStatic")
+                        .apply { isAccessible = true }
+                        .get(info).let {
+                            printer.println("mOverlayIsStatic=$it")
+                        }
                 } else {
                     PackageInfo::class.java
                         .getDeclaredField("isStaticOverlay")
