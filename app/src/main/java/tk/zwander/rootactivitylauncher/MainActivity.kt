@@ -186,7 +186,6 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission(), ::onPermissionResult)
 
     private var currentDataJob: Deferred<*>? = null
-    private var currentFilterJob: Deferred<*>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -209,6 +208,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         supportActionBar?.setDisplayShowHomeEnabled(false)
 
         binding.useRegex.setOnCheckedChangeListener { _, isChecked ->
+
             onFilterChangeWithLoader({ it.copy(useRegex = isChecked) })
             binding.appList.scrollToPosition(0)
         }
@@ -410,8 +410,8 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
     override fun onDestroy() {
         super.onDestroy()
 
-        currentDataJob?.cancel()
-        currentFilterJob?.cancel()
+//        currentDataJob?.cancel()
+//        currentFilterJob?.cancel()
         packageUpdateReceiver.unregister()
         cancel()
     }
@@ -471,7 +471,6 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                 filter.isVisible = false
                 scrollToTop.isVisible = false
                 scrollToBottom.isVisible = false
-                setSearchWrapperState(false)
             }
 
             //This mess is because of a bug in Marshmallow and possibly earlier that
@@ -589,7 +588,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             }
 
             if (appAdapter.state.hasFilters) {
-                onFilterChangeWithLoader(override = true, fromLoadData = true)
+                onFilterChangeWithLoader(override = true)
             }
         }
     }
@@ -608,22 +607,19 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
         )
     }
 
-    private var latestFilterState: ((AppAdapter.State) -> AppAdapter.State)? = null
-
     private fun onFilterChangeWithLoader(
         newState: (AppAdapter.State) -> AppAdapter.State = { it },
-        override: Boolean = false,
-        fromLoadData: Boolean = false
+        override: Boolean = false
     ) {
-        if ((currentDataJob?.isActive == true && !fromLoadData) || currentFilterJob?.isActive == true) {
-            latestFilterState = newState
-            return
-        }
-        currentFilterJob = async(Dispatchers.Main) {
-            if (!appAdapter.state.hasLoadedItems) {
+        async(Dispatchers.Main) {
+            val initialLoad = !appAdapter.state.hasLoadedItems
+
+            if (initialLoad) {
                 binding.scrim.isVisible = true
                 progress.isVisible = true
                 progressView?.indeterminate = true
+
+                searchView.clearFocus()
             }
 
             withContext(Dispatchers.IO) {
@@ -650,11 +646,6 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
             binding.scrim.isVisible = false
             progress.isVisible = false
             progressView?.indeterminate = false
-
-            latestFilterState?.let {
-                appAdapter.onFilterChange(newState = it(appAdapter.state), override = true)
-            }
-            latestFilterState = null
 
             searchView.let {
                 if (!it.isIconified) {

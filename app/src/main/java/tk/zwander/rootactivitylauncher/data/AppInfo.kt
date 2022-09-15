@@ -61,9 +61,12 @@ data class AppInfo(
     private var useRegex: Boolean = false
     private var includeComponents: Boolean = true
 
-    private var hasLoadedActivities = false
-    private var hasLoadedServices = false
-    private var hasLoadedReceivers = false
+    var hasLoadedActivities = false
+        private set
+    var hasLoadedServices = false
+        private set
+    var hasLoadedReceivers = false
+        private set
 
     override fun equals(other: Any?): Boolean {
         return other is AppInfo
