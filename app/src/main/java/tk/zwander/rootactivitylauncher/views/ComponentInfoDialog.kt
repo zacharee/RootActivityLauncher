@@ -11,18 +11,44 @@ import android.text.style.StyleSpan
 import android.util.PrintWriterPrinter
 import android.util.Printer
 import android.view.LayoutInflater
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.databinding.ComponentInfoDialogBinding
 import tk.zwander.rootactivitylauncher.util.*
 import java.io.PrintWriter
 import java.io.StringWriter
 
-class ComponentInfoDialog(context: Context, private val info: Any) : MaterialAlertDialogBuilder(context), TextWatcher {
+class ComponentInfoDialog(context: Context, private val info: Any) : MaterialAlertDialogBuilder(context), TextWatcher, CoroutineScope by MainScope() {
     private val view = ComponentInfoDialogBinding.inflate(LayoutInflater.from(context))
     private val highlightColor = ContextCompat.getColor(context, R.color.colorPrimaryDark)
+
+    private var queryJob: Job? = null
+
+    private val dump: SpannableStringBuilder = SpannableStringBuilder()
+        get() {
+            if (field.isBlank()) {
+                field.append(
+                    when (info) {
+                        is ActivityInfo -> processActivityInfo(info)
+                        is ServiceInfo -> processServiceInfo(info)
+                        is PackageInfo -> processPackageInfo(info)
+                        else -> ""
+                    }
+                )
+                formatDump(field)
+            }
+
+            return field
+        }
 
     init {
         setTitle(R.string.component_info)
@@ -30,7 +56,21 @@ class ComponentInfoDialog(context: Context, private val info: Any) : MaterialAle
 
         setView(view.root)
 
-        handleQuery("")
+        (context as LifecycleOwner).lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                cancel()
+            }
+        })
+
+        launch(Dispatchers.IO) {
+            val dump = this@ComponentInfoDialog.dump
+
+            withContext(Dispatchers.Main) {
+                view.loader.isVisible = false
+                view.bodyWrapper.isVisible = true
+                view.message.setText(dump, TextView.BufferType.SPANNABLE)
+            }
+        }
     }
 
     override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
@@ -41,14 +81,14 @@ class ComponentInfoDialog(context: Context, private val info: Any) : MaterialAle
     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
     private fun handleQuery(query: CharSequence) {
-        val message = when (info) {
-            is ActivityInfo -> processActivityInfo(info, query)
-            is ServiceInfo -> processServiceInfo(info, query)
-            is PackageInfo -> processPackageInfo(info, query)
-            else -> null
-        }
+        queryJob?.cancel()
+        queryJob = launch(Dispatchers.IO) {
+            val applied = applyQuery(dump, query)
 
-        view.message.text = message
+            withContext(Dispatchers.Main) {
+                view.message.text = SpannableStringBuilder(applied)
+            }
+        }
     }
 
     override fun create(): AlertDialog {
@@ -63,22 +103,20 @@ class ComponentInfoDialog(context: Context, private val info: Any) : MaterialAle
         }
     }
 
-    private fun processServiceInfo(info: ServiceInfo, query: CharSequence): CharSequence {
+    private fun processServiceInfo(info: ServiceInfo): CharSequence {
         val sWriter = StringWriter()
         val pWriter = PrintWriter(sWriter)
         val printer = PrintWriterPrinter(pWriter)
 
         info.dump(printer, "")
 
-        val string = formatDump(sWriter.toString(), query)
-
         sWriter.close()
         pWriter.close()
 
-        return string
+        return sWriter.toString()
     }
 
-    private fun processActivityInfo(info: ActivityInfo, query: CharSequence): CharSequence {
+    private fun processActivityInfo(info: ActivityInfo): CharSequence {
         val sWriter = StringWriter()
         val pWriter = PrintWriter(sWriter)
         val printer = PrintWriterPrinter(pWriter)
@@ -140,16 +178,14 @@ class ComponentInfoDialog(context: Context, private val info: Any) : MaterialAle
                 .invoke(info, printer, "")
         }
 
-        val string = formatDump(sWriter.toString(), query)
-
         sWriter.close()
         pWriter.close()
 
-        return string
+        return sWriter.toString()
     }
 
     @SuppressLint("PrivateApi")
-    private fun processPackageInfo(info: PackageInfo, query: CharSequence): CharSequence {
+    private fun processPackageInfo(info: PackageInfo): CharSequence {
         val sWriter = StringWriter()
         val pWriter = PrintWriter(sWriter)
         val printer = PrintWriterPrinter(pWriter)
@@ -162,6 +198,7 @@ class ComponentInfoDialog(context: Context, private val info: Any) : MaterialAle
             printer.println("splitNames=${it.contentToString()}")
         }
 
+        @Suppress("DEPRECATION")
         info.versionCode.let {
             printer.println("versionCode=$it")
         }
@@ -490,47 +527,72 @@ class ComponentInfoDialog(context: Context, private val info: Any) : MaterialAle
             it.dump(printer, "  ")
         }
 
-        val string = formatDump(sWriter.toString(), query)
-
         sWriter.close()
         pWriter.close()
 
-        return string
+        return sWriter.toString()
     }
 
-    private fun formatDump(dump: String, query: CharSequence): CharSequence {
-        val string = SpannableStringBuilder(dump)
-
-        Regex("[a-zA-Z0-9]+(=|: |:\n)")
-            .findAll(string)
+    private fun formatDump(dump: SpannableStringBuilder, firstPass: Boolean = true) {
+        Regex("[a-zA-Z\\d]+(=|: |:\n)")
+            .findAll(dump)
             .forEach { result ->
-                string.setSpan(StyleSpan(Typeface.BOLD),
+                dump.setSpan(StyleSpan(Typeface.BOLD),
                     result.range.first, result.range.last,
                     Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
             }
 
-        val regex = Regex("[^:]\n")
-        var lastIndex = 0
+        if (firstPass) {
+            val regex = Regex("[^:]\n")
+            var lastIndex = 0
 
-        while (lastIndex < string.length) {
-            val result = regex.find(string, lastIndex) ?: break
-            val range = result.range
+            while (lastIndex < dump.length) {
+                val result = regex.find(dump, lastIndex) ?: break
+                val range = result.range
 
-            string.replace(range.first + 1, range.last + 1, "\n\n")
+                dump.replace(range.first + 1, range.last + 1, "\n\n")
 
-            lastIndex = range.last + 2
+                lastIndex = range.last + 2
+            }
         }
+    }
 
-        if (query.isNotBlank()) {
-            Regex(Regex.escape(query.toString()), RegexOption.IGNORE_CASE)
-                .findAll(string)
-                .forEach { result ->
-                    string.setSpan(ForegroundColorSpan(highlightColor),
-                        result.range.first, result.range.last + 1,
-                        Spannable.SPAN_INCLUSIVE_INCLUSIVE)
-                }
+    private val applyMutex = Mutex()
+
+    private suspend fun applyQuery(dump: SpannableStringBuilder, query: CharSequence): CharSequence {
+        return applyMutex.withLock {
+            dump.clearSpans()
+            formatDump(dump, false)
+
+            if (query.isNotBlank()) {
+//                val indices = arrayListOf<Int>()
+//
+//                while (indices.isEmpty() || indices.last() < dump.length) {
+//                    val index = dump.indexOf(query.toString(), indices.lastOrNull()?.plus(query.length) ?: 0)
+//
+//                    if (index == -1) {
+//                        break
+//                    }
+//
+//                    dump.setSpan(
+//                        ForegroundColorSpan(highlightColor),
+//                        index, index + query.length,
+//                        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+//                    )
+//
+//                    indices.add(index)
+//                }
+
+                Regex(Regex.escape(query.toString()), RegexOption.IGNORE_CASE)
+                    .findAll(dump)
+                    .forEach { result ->
+                        dump.setSpan(ForegroundColorSpan(highlightColor),
+                            result.range.first, result.range.last + 1,
+                            Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                    }
+            }
+
+            dump
         }
-
-        return string
     }
 }
