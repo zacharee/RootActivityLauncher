@@ -1,6 +1,7 @@
 package tk.zwander.rootactivitylauncher.adapters
 
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -273,6 +274,8 @@ class AppAdapter(
             if (data.info.enabled != binding.appEnabled.isChecked) {
                 binding.appEnabled.setOnCheckedChangeListener(null)
                 binding.appEnabled.isChecked = data.info.enabled
+                binding.appEnabled.setOnCheckedChangeListener(enabledListener)
+            } else {
                 binding.appEnabled.setOnCheckedChangeListener(enabledListener)
             }
 
