@@ -98,6 +98,51 @@
 
         </RadioGroup>
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="16dp"
+            />
+
+        <TextView
+            android:id="@+id/permission_filters"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/permission_filter"
+            android:textSize="16sp"
+            android:layout_marginStart="8dp"
+            android:textColor="?android:textColorPrimary"
+            />
+
+        <RadioGroup
+            android:id="@+id/permission_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:checkedButton="@id/show_all_ex">
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/filter_requires_no_permission"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/filter_requires_no_permission"
+                />
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/filter_requires_permission"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/filter_requires_permission"
+                />
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/show_all_perm"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/filter_all"
+                />
+
+        </RadioGroup>
+
     </LinearLayout>
 
 </tk.zwander.rootactivitylauncher.views.ShadowFadingEdgeScrollView>

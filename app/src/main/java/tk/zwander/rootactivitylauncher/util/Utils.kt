@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.ApplicationInfo
 import android.content.pm.ComponentInfo
 import android.content.pm.PackageItemInfo
 import android.content.pm.PackageManager
@@ -262,15 +263,29 @@ val ComponentInfo.safeComponentName: ComponentName
 
 fun ComponentInfo.isActuallyEnabled(context: Context): Boolean {
     return try {
-        when (context.packageManager.getComponentEnabledSetting(safeComponentName)) {
-            PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-            PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED -> true
-            PackageManager.COMPONENT_ENABLED_STATE_DEFAULT -> enabled
-            PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-            PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER -> false
-            else -> false
-        }
+        checkEnabledSetting(
+            context.packageManager.getComponentEnabledSetting(safeComponentName),
+            enabled
+        )
     } catch (e: Exception) {
         false
+    }
+}
+
+fun ApplicationInfo.isActuallyEnabled(context: Context): Boolean {
+    return checkEnabledSetting(
+        context.packageManager.getApplicationEnabledSetting(packageName),
+        enabled
+    )
+}
+
+private fun checkEnabledSetting(setting: Int, default: Boolean): Boolean {
+    return when (setting) {
+        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+        PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED -> true
+        PackageManager.COMPONENT_ENABLED_STATE_DEFAULT -> default
+        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+        PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER -> false
+        else -> false
     }
 }

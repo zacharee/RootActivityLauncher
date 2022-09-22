@@ -1,7 +1,6 @@
 package tk.zwander.rootactivitylauncher.adapters
 
 import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +15,7 @@ import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
+import tk.zwander.rootactivitylauncher.data.PermissionFilterMode
 import tk.zwander.rootactivitylauncher.databinding.AppItemBinding
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.util.*
@@ -132,6 +132,7 @@ class AppAdapter(
                     newState.includeComponents,
                     newState.enabledFilterMode,
                     newState.exportedFilterMode,
+                    newState.permissionFilterMode,
                     override
                 ) { _, _ ->
                     progress?.invoke(current++, total)
@@ -271,9 +272,9 @@ class AppAdapter(
             binding.appName.text = data.label
             binding.appPkg.text = data.info.packageName
 
-            if (data.info.enabled != binding.appEnabled.isChecked) {
+            if (data.info.isActuallyEnabled(context) != binding.appEnabled.isChecked) {
                 binding.appEnabled.setOnCheckedChangeListener(null)
-                binding.appEnabled.isChecked = data.info.enabled
+                binding.appEnabled.isChecked = data.info.isActuallyEnabled(context)
                 binding.appEnabled.setOnCheckedChangeListener(enabledListener)
             } else {
                 binding.appEnabled.setOnCheckedChangeListener(enabledListener)
@@ -345,11 +346,15 @@ class AppAdapter(
         val currentQuery: String = "",
         val enabledFilterMode: EnabledFilterMode = EnabledFilterMode.SHOW_ALL,
         val exportedFilterMode: ExportedFilterMode = ExportedFilterMode.SHOW_ALL,
+        val permissionFilterMode: PermissionFilterMode = PermissionFilterMode.SHOW_ALL,
         val includeComponents: Boolean = true,
         val hasLoadedItems: Boolean = false,
         val useRegex: Boolean = false,
     ) {
         val hasFilters: Boolean
-            get() = currentQuery.isNotBlank() || enabledFilterMode != EnabledFilterMode.SHOW_ALL || exportedFilterMode != ExportedFilterMode.SHOW_ALL
+            get() = currentQuery.isNotBlank() ||
+                    enabledFilterMode != EnabledFilterMode.SHOW_ALL ||
+                    exportedFilterMode != ExportedFilterMode.SHOW_ALL ||
+                    permissionFilterMode != PermissionFilterMode.SHOW_ALL
     }
 }

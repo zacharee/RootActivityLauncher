@@ -6,13 +6,15 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
+import tk.zwander.rootactivitylauncher.data.PermissionFilterMode
 import tk.zwander.rootactivitylauncher.databinding.FilterDialogBinding
 
 class FilterDialog(
     context: Context,
     private var enabledMode: EnabledFilterMode,
     private var exportedMode: ExportedFilterMode,
-    onConfirmListener: (enabledMode: EnabledFilterMode, exportedMode: ExportedFilterMode) -> Unit
+    private var permissionMode: PermissionFilterMode,
+    onConfirmListener: (enabledMode: EnabledFilterMode, exportedMode: ExportedFilterMode, permissionMode: PermissionFilterMode) -> Unit
 ) : MaterialAlertDialogBuilder(context) {
     private val binding = FilterDialogBinding.inflate(LayoutInflater.from(context))
 
@@ -22,7 +24,7 @@ class FilterDialog(
 
         setNegativeButton(android.R.string.cancel, null)
         setPositiveButton(android.R.string.ok) { _, _ ->
-            onConfirmListener(enabledMode, exportedMode)
+            onConfirmListener(enabledMode, exportedMode, permissionMode)
         }
 
         binding.enabledGroup.check(enabledMode.id)
@@ -40,6 +42,15 @@ class FilterDialog(
                 R.id.filter_exported -> ExportedFilterMode.SHOW_EXPORTED
                 R.id.filter_unexported -> ExportedFilterMode.SHOW_UNEXPORTED
                 else -> ExportedFilterMode.SHOW_ALL
+            }
+        }
+
+        binding.permissionGroup.check(permissionMode.id)
+        binding.permissionGroup.setOnCheckedChangeListener { _, checkedId ->
+            permissionMode = when (checkedId) {
+                R.id.filter_requires_permission -> PermissionFilterMode.SHOW_REQUIRES_PERMISSION
+                R.id.filter_requires_no_permission -> PermissionFilterMode.SHOW_REQUIRES_NO_PERMISSION
+                else -> PermissionFilterMode.SHOW_ALL
             }
         }
     }

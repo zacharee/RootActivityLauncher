@@ -58,6 +58,7 @@ data class AppInfo(
     private var currentQuery: String = ""
     private var enabledFilterMode = EnabledFilterMode.SHOW_ALL
     private var exportedFilterMode = ExportedFilterMode.SHOW_ALL
+    private var permissionFilterMode = PermissionFilterMode.SHOW_ALL
     private var useRegex: Boolean = false
     private var includeComponents: Boolean = true
 
@@ -100,6 +101,7 @@ data class AppInfo(
         includeComponents: Boolean = this.includeComponents,
         enabledMode: EnabledFilterMode = enabledFilterMode,
         exportedMode: ExportedFilterMode = exportedFilterMode,
+        permissionMode: PermissionFilterMode = permissionFilterMode,
         override: Boolean = false,
         progress: (Int, Int) -> Unit,
     ) {
@@ -107,12 +109,14 @@ data class AppInfo(
             || currentQuery != query
             || enabledFilterMode != enabledMode
             || exportedFilterMode != exportedMode
+            || permissionFilterMode != permissionMode
             || this.useRegex != useRegex
             || this.includeComponents != includeComponents
         ) {
             currentQuery = query
             enabledFilterMode = enabledMode
             exportedFilterMode = exportedMode
+            permissionFilterMode = permissionMode
             this.useRegex = useRegex
             this.includeComponents = includeComponents
 
@@ -195,6 +199,20 @@ data class AppInfo(
         when (exportedFilterMode) {
             ExportedFilterMode.SHOW_EXPORTED -> if (!data.info.exported) return false
             ExportedFilterMode.SHOW_UNEXPORTED -> if (data.info.exported) return false
+            else -> {
+                //no-op
+            }
+        }
+
+        val permission = when (data) {
+            is ActivityInfo -> data.info.permission
+            is ServiceInfo -> data.info.permission
+            else -> null
+        }
+
+        when (permissionFilterMode) {
+            PermissionFilterMode.SHOW_REQUIRES_NO_PERMISSION -> if (!permission.isNullOrBlank()) return false
+            PermissionFilterMode.SHOW_REQUIRES_PERMISSION -> if (permission.isNullOrBlank()) return false
             else -> {
                 //no-op
             }

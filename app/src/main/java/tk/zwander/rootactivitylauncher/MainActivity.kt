@@ -273,12 +273,14 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
                         FilterDialog(
                             this@MainActivity,
                             appAdapter.state.enabledFilterMode,
-                            appAdapter.state.exportedFilterMode
-                        ) { enabledMode, exportedMode ->
+                            appAdapter.state.exportedFilterMode,
+                            appAdapter.state.permissionFilterMode
+                        ) { enabledMode, exportedMode, permissionMode ->
                             onFilterChangeWithLoader({
                                 it.copy(
                                     enabledFilterMode = enabledMode,
-                                    exportedFilterMode = exportedMode
+                                    exportedFilterMode = exportedMode,
+                                    permissionFilterMode = permissionMode
                                 )
                             })
                         }.show()
