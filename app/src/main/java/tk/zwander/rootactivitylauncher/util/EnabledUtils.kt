@@ -40,12 +40,16 @@ fun Context.setPackageEnabled(pkg: String, enabled: Boolean): Boolean {
     if (pkg == packageName) return false
 
     try {
+        val newState = if (enabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER
+
         packageManager.setApplicationEnabledSetting(
             pkg,
-            if (enabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-            else PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER,
+            newState,
             0
         )
+
+        assert(packageManager.getApplicationEnabledSetting(pkg) == newState)
+
         return true
     } catch (e: Exception) {
         if (tryShizukuEnable(pkg, enabled)) {

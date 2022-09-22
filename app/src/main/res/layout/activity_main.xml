@@ -44,15 +44,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:background="@color/cardview_dark_background"
+            android:background="?colorSurface"
             android:gravity="bottom|end"
             android:minHeight="?actionBarSize"
-            android:orientation="vertical"
-            app:contentInsetEnd="0dp"
-            app:contentInsetLeft="0dp"
-            app:contentInsetRight="0dp"
-            app:contentInsetStart="0dp"
-            app:paddingBottomSystemWindowInsets="false">
+            android:orientation="vertical">
 
             <LinearLayout
                 android:id="@+id/search_options_wrapper"

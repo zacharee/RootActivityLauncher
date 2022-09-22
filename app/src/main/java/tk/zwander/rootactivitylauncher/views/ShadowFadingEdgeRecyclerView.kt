@@ -17,9 +17,9 @@ open class ShadowFadingEdgeRecyclerView(context: Context, attrs: AttributeSet) :
         a.recycle()
     }
 
-    override fun getSolidColor(): Int {
-        return color
-    }
+//    override fun getSolidColor(): Int {
+//        return color
+//    }
 
     fun setSolidColor(color: Int) {
         this.color = color

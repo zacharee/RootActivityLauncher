@@ -10,7 +10,8 @@
     android:layout_marginEnd="8dp"
     android:layout_marginTop="4dp"
     android:layout_marginBottom="4dp"
-    app:cardCornerRadius="@dimen/corner_radius">
+    app:cardCornerRadius="@dimen/corner_radius"
+    style="@style/Widget.Material3.CardView.Elevated">
 
     <LinearLayout
         android:orientation="vertical"

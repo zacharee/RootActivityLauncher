@@ -17,9 +17,9 @@ class ShadowFadingEdgeScrollView(context: Context, attrs: AttributeSet) : Scroll
         a.recycle()
     }
 
-    override fun getSolidColor(): Int {
-        return color
-    }
+//    override fun getSolidColor(): Int {
+//        return color
+//    }
 
     fun setSolidColor(color: Int) {
         this.color = color
