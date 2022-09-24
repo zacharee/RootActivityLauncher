@@ -8,8 +8,10 @@
         tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID"
+        tools:node="remove" />
 
-<!--    <uses-permission android:name="android.permission.sec.MDM_APP_MGMT"/>-->
+    <!--    <uses-permission android:name="android.permission.sec.MDM_APP_MGMT"/>-->
 <!--    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_PHONE_RESTRICTION"/>-->
 <!--    <uses-permission android:name="com.android.samsung.knox.permission.KNOX_RESTRICTION_MGMT"/>-->
 <!--    <uses-permission android:name="com.samsung.android.knox.permission.KNOX_RESTRICTION_MGMT"/>-->
