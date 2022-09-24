@@ -65,7 +65,7 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
     implementation 'com.github.Chainfire:libsuperuser:1.1.0.201907261845'
     implementation 'com.github.2hamed:ProgressCircula:0.2.1'
-    implementation 'com.squareup.picasso:picasso:2.71828'
+    implementation 'com.squareup.picasso:picasso:2.8'
     implementation 'com.github.skydoves:balloon:1.4.7'
     implementation 'jp.wasabeef:recyclerview-animators:4.0.2'
 }
