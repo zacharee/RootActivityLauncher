@@ -268,15 +268,19 @@ fun ComponentInfo.isActuallyEnabled(context: Context): Boolean {
             enabled
         )
     } catch (e: Exception) {
-        false
+        enabled
     }
 }
 
 fun ApplicationInfo.isActuallyEnabled(context: Context): Boolean {
-    return checkEnabledSetting(
-        context.packageManager.getApplicationEnabledSetting(packageName),
+    return try {
+        checkEnabledSetting(
+            context.packageManager.getApplicationEnabledSetting(packageName),
+            enabled
+        )
+    } catch (e: Exception) {
         enabled
-    )
+    }
 }
 
 private fun checkEnabledSetting(setting: Int, default: Boolean): Boolean {
