@@ -9,6 +9,7 @@ android {
 
     defaultConfig {
         applicationId "tk.zwander.rootactivitylauncher"
+        namespace = "tk.zwander.rootactivitylauncher"
         minSdkVersion 21
         targetSdkVersion 33
         versionCode 20

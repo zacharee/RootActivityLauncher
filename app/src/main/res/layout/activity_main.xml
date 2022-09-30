@@ -32,7 +32,7 @@
                     app:fastScrollPopupTextColor="?android:textColorPrimary"
                     app:fastScrollThumbColor="?colorAccent"
                     app:fastScrollThumbInactiveColor="?android:textColorSecondary"
-                    app:layoutManager=".util.PredictiveLinearLayoutManager"
+                    app:layoutManager="tk.zwander.rootactivitylauncher.util.PredictiveLinearLayoutManager"
                     tools:listitem="@layout/app_item" />
 
             </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

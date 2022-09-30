@@ -50,7 +50,7 @@
         android:scrollbarThumbVertical="@drawable/scroll_thumb"
         android:requiresFadingEdge="vertical"
         android:fadingEdgeLength="@dimen/item_recycler_fading_edge_length"
-        app:layoutManager=".util.PredictiveLinearLayoutManager"
+        app:layoutManager="tk.zwander.rootactivitylauncher.util.PredictiveLinearLayoutManager"
         android:nestedScrollingEnabled="true"
         tools:listitem="@layout/component_item"
         tools:visibility="visible"
