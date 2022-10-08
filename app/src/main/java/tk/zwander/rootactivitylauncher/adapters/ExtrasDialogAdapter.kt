@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.SortedList
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
+import tk.zwander.rootactivitylauncher.data.ExtraType
 import tk.zwander.rootactivitylauncher.databinding.ExtraItemBinding
 import tk.zwander.rootactivitylauncher.databinding.ExtraTypeDialogBinding
 import tk.zwander.rootactivitylauncher.views.ExtrasTypeDialog
@@ -119,11 +120,11 @@ class ExtrasDialogAdapter : RecyclerView.Adapter<ExtrasDialogAdapter.BaseVH<out 
             binding.apply {
                 keyField.setText(data.key, TextView.BufferType.EDITABLE)
                 valueField.setText(data.value, TextView.BufferType.EDITABLE)
-                extraTypeField.setText(root.context.resources.getString(data.type.nameRes), TextView.BufferType.EDITABLE)
+                extraTypeField.setText(root.context.resources.getString(data.safeType.nameRes), TextView.BufferType.EDITABLE)
                 extraTypeField.setOnClickListener {
                     ExtrasTypeDialog(
                         context = it.context,
-                        initial = data.type,
+                        initial = data.safeType,
                         selectionListener = { type ->
                             data.type = type
                             extraTypeField.setText(root.context.resources.getString(type.nameRes), TextView.BufferType.EDITABLE)

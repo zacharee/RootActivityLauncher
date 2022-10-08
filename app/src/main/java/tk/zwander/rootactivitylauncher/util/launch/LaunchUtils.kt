@@ -13,7 +13,7 @@ fun Context.launchService(extras: List<ExtraInfo>, componentKey: String): Boolea
     intent.data = prefs.findDataForComponent(componentKey)?.let { Uri.parse(it) }
 
     if (extras.isNotEmpty()) extras.forEach {
-        it.type.putExtra(intent, it.key, it.value)
+        it.safeType.putExtra(intent, it.key, it.value)
     }
 
     val args = LaunchArgs(
@@ -40,7 +40,7 @@ fun Context.launchActivity(extras: List<ExtraInfo>, componentKey: String): Boole
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
     if (extras.isNotEmpty()) extras.forEach {
-        it.type.putExtra(intent, it.key, it.value)
+        it.safeType.putExtra(intent, it.key, it.value)
     }
 
     val args = LaunchArgs(
@@ -66,7 +66,7 @@ fun Context.launchReceiver(extras: List<ExtraInfo>, componentKey: String): Boole
     intent.data = prefs.findDataForComponent(componentKey)?.let { Uri.parse(it) }
 
     if (extras.isNotEmpty()) extras.forEach {
-        it.type.putExtra(intent, it.key, it.value)
+        it.safeType.putExtra(intent, it.key, it.value)
     }
 
     val args = LaunchArgs(

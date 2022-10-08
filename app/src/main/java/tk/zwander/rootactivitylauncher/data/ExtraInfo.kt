@@ -10,8 +10,11 @@ import tk.zwander.rootactivitylauncher.R
 data class ExtraInfo(
     var key: String,
     var value: String,
-    var type: ExtraType = ExtraType.STRING
-) : Parcelable
+    var type: ExtraType? = ExtraType.STRING
+) : Parcelable {
+    val safeType: ExtraType
+        get() = type ?: ExtraType.STRING
+}
 
 enum class ExtraType(val value: String, val nameRes: Int) {
     INTEGER("integer", R.string.integer) {
