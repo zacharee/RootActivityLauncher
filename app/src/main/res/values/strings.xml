@@ -14,6 +14,7 @@
     <string name="regex">Regex</string>
     <string name="app_info">App Info</string>
     <string name="include_components">Search Components</string>
+    <string name="data">Data</string>
 
     <string name="set_extras">Set Extras</string>
     <string name="set_global_extras">Set Global Extras</string>
@@ -22,6 +23,30 @@
     <string name="launch_status">Launch Status</string>
     <string name="component_info">Component Info</string>
     <string name="extract_apk">Extract APK(s)</string>
+    <string name="type">Type</string>
+
+    <string name="integer">Int</string>
+    <string name="bool">Bool</string>
+    <string name="str">String</string>
+    <string name="byte_name">Byte</string>
+    <string name="char_name">Char</string>
+    <string name="long_name">Long</string>
+    <string name="float_name">Float</string>
+    <string name="double_name">Double</string>
+    <string name="short_name">Short</string>
+    <string name="int_al">Int List</string>
+    <string name="string_al">String List</string>
+    <string name="float_al">Float List</string>
+    <string name="double_al">Double List</string>
+    <string name="byte_a">Byte Array</string>
+    <string name="short_a">Short Array</string>
+    <string name="char_a">Char Array</string>
+    <string name="int_a">Int Array</string>
+    <string name="long_a">Long Array</string>
+    <string name="float_a">Float Array</string>
+    <string name="double_a">Double Array</string>
+    <string name="string_a">String Array</string>
+    <string name="component">Component</string>
 
     <string name="activities">Activities (%d)</string>
     <string name="services">Services (%d)</string>

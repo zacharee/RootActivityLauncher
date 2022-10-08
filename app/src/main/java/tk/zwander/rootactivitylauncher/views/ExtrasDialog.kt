@@ -6,10 +6,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.adapters.ExtrasDialogAdapter
 import tk.zwander.rootactivitylauncher.databinding.ExtrasDialogBinding
-import tk.zwander.rootactivitylauncher.util.findActionForComponent
-import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
-import tk.zwander.rootactivitylauncher.util.updateActionForComponent
-import tk.zwander.rootactivitylauncher.util.updateExtrasForComponent
+import tk.zwander.rootactivitylauncher.util.*
 
 class ExtrasDialog(context: Context, componentKey: String) : MaterialAlertDialogBuilder(context) {
     private val adapter = ExtrasDialogAdapter()
@@ -20,6 +17,7 @@ class ExtrasDialog(context: Context, componentKey: String) : MaterialAlertDialog
 
         adapter.setItems(context.findExtrasForComponent(componentKey))
         binding.action.setText(context.findActionForComponent(componentKey))
+        binding.data.setText(context.findDataForComponent(componentKey))
         binding.list.adapter = adapter
 
         setTitle(R.string.extras)
@@ -29,6 +27,7 @@ class ExtrasDialog(context: Context, componentKey: String) : MaterialAlertDialog
 
             context.updateExtrasForComponent(componentKey, newData)
             context.updateActionForComponent(componentKey, binding.action.text?.toString())
+            context.updateDataForComponent(componentKey, binding.data.text?.toString())
         }
     }
 }

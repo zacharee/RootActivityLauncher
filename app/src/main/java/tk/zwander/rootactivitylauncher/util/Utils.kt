@@ -88,6 +88,19 @@ fun Context.updateActionForComponent(componentName: String, action: String?) {
     prefs.actions = map
 }
 
+fun Context.findDataForComponent(componentName: String): String? {
+    val pkg = determineComponentNamePackage(componentName)
+
+    return prefs.datas[componentName] ?: prefs.datas[pkg]
+}
+
+fun Context.updateDataForComponent(componentName: String, data: String?) {
+    val map = prefs.datas
+
+    map[componentName] = if (data.isNullOrBlank()) null else data
+    prefs.datas = map
+}
+
 fun Context.dpToPx(dp: Number): Int {
     return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), resources.displayMetrics).toInt()
 }
