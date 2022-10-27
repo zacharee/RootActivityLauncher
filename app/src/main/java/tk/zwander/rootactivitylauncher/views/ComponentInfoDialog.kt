@@ -497,11 +497,13 @@ class ComponentInfoDialog(context: Context, private val info: Any) : MaterialAle
                             printer.println("mOverlayIsStatic=$it")
                         }
                 } else {
-                    PackageInfo::class.java
-                        .getDeclaredField("isStaticOverlay")
-                        .get(info).let {
-                            printer.println("isStaticOverlay=$it")
-                        }
+                    try {
+                        PackageInfo::class.java
+                            .getDeclaredField("isStaticOverlay")
+                            .get(info).let {
+                                printer.println("isStaticOverlay=$it")
+                            }
+                    } catch (ignored: NoSuchFieldException) {}
                 }
             }
         }
