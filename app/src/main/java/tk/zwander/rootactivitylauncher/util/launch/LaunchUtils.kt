@@ -3,15 +3,17 @@ package tk.zwander.rootactivitylauncher.util.launch
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.util.*
 
 fun Context.launchService(extras: List<ExtraInfo>, componentKey: String): Boolean {
     val intent = Intent(prefs.findActionForComponent(componentKey))
     intent.component = ComponentName.unflattenFromString(componentKey)
+    intent.data = prefs.findDataForComponent(componentKey)?.let { Uri.parse(it) }
 
     if (extras.isNotEmpty()) extras.forEach {
-        intent.putExtra(it.key, it.value)
+        it.safeType.putExtra(intent, it.key, it.value)
     }
 
     val args = LaunchArgs(
@@ -34,10 +36,11 @@ fun Context.launchService(extras: List<ExtraInfo>, componentKey: String): Boolea
 fun Context.launchActivity(extras: List<ExtraInfo>, componentKey: String): Boolean {
     val intent = Intent(prefs.findActionForComponent(componentKey))
     intent.component = ComponentName.unflattenFromString(componentKey)
+    intent.data = prefs.findDataForComponent(componentKey)?.let { Uri.parse(it) }
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
     if (extras.isNotEmpty()) extras.forEach {
-        intent.putExtra(it.key, it.value)
+        it.safeType.putExtra(intent, it.key, it.value)
     }
 
     val args = LaunchArgs(
@@ -60,9 +63,10 @@ fun Context.launchActivity(extras: List<ExtraInfo>, componentKey: String): Boole
 fun Context.launchReceiver(extras: List<ExtraInfo>, componentKey: String): Boolean {
     val intent = Intent(prefs.findActionForComponent(componentKey))
     intent.component = ComponentName.unflattenFromString(componentKey)
+    intent.data = prefs.findDataForComponent(componentKey)?.let { Uri.parse(it) }
 
     if (extras.isNotEmpty()) extras.forEach {
-        intent.putExtra(it.key, it.value)
+        it.safeType.putExtra(intent, it.key, it.value)
     }
 
     val args = LaunchArgs(

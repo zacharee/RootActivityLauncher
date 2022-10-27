@@ -118,7 +118,7 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
             command.append(" -a ${args.intent.action}")
 
             if (args.extras.isNotEmpty()) args.extras.forEach {
-                command.append(" -e \"${it.key}\" \"${it.value}\"")
+                command.append(" --${it.safeType.shellArgName} \"${it.key}\" \"${it.value}\"")
             }
 
             return command.toString()
@@ -171,7 +171,7 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
             command.append(" -a ${args.intent.action}")
 
             if (args.extras.isNotEmpty()) args.extras.forEach {
-                command.append(" -e \"${it.key}\" \"${it.value}\"")
+                command.append(" --${it.safeType.shellArgName} \"${it.key}\" \"${it.value}\"")
             }
 
             return command.toString()
@@ -216,7 +216,7 @@ sealed interface ReceiverLaunchStrategy : LaunchStrategy {
             command.append(" -a ${args.intent.action}")
 
             if (args.extras.isNotEmpty()) args.extras.forEach {
-                command.append(" -e \"${it.key}\" \"${it.value}\"")
+                command.append(" --${it.safeType.shellArgName} \"${it.key}\" \"${it.value}\"")
             }
 
             return command.toString()
@@ -230,7 +230,7 @@ sealed interface ReceiverLaunchStrategy : LaunchStrategy {
 
             if (args.extras.isNotEmpty()) {
                 args.extras.forEach {
-                    command.append(" -e \"${it.key}\" \"${it.value}\"")
+                    command.append(" --${it.safeType.shellArgName} \"${it.key}\" \"${it.value}\"")
                 }
             }
 
