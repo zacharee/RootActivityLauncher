@@ -49,17 +49,17 @@ dependencies {
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-alpha01'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1'
 
-    implementation 'com.google.android.material:material:1.6.1'
+    implementation 'com.google.android.material:material:1.7.0'
     implementation 'com.google.code.gson:gson:2.9.1'
-    implementation 'com.google.firebase:firebase-crashlytics:18.2.13'
+    implementation 'com.google.firebase:firebase-crashlytics:18.3.1'
     //Crashlytics doesn't seem to work without this added (wtf)
-    implementation 'com.google.firebase:firebase-analytics:21.1.1'
+    implementation 'com.google.firebase:firebase-analytics:21.2.0'
     implementation "dev.rikka.shizuku:api:12.1.0"
     implementation "dev.rikka.shizuku:provider:12.1.0"
     implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:4.3'
     implementation 'com.github.zacharee:PatreonSupportersRetrieval:4ce71eb5bf'
     implementation 'com.github.zacharee:RecyclerView-FastScroll:224bd6f8e8'
-    implementation 'com.joaomgcd:taskerpluginlibrary:0.4.2'
+    implementation 'com.joaomgcd:taskerpluginlibrary:0.4.3'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
 
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
