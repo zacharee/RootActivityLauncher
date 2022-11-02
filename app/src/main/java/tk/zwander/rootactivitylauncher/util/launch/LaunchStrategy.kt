@@ -25,9 +25,11 @@ interface ShizukuLaunchStrategy : LaunchStrategy {
 interface ShizukuShellLaunchStrategy : ShizukuLaunchStrategy, CommandLaunchStrategy {
     override fun Context.tryLaunch(args: LaunchArgs): Boolean {
         return try {
-            val command = makeCommand(args)
+            val command = StringBuilder(makeCommand(args))
 
-            Shizuku.newProcess(arrayOf("sh", "-c", command), null, null).run {
+            args.addToCommand(command)
+
+            Shizuku.newProcess(arrayOf("sh", "-c", command.toString()), null, null).run {
                 waitForTimeout(1000, TimeUnit.MILLISECONDS)
 
                 Log.e("RootActivityLauncher", "Shizuku Command Output\n${inputStream.bufferedReader().use { it.readLines().joinToString("\n") }}")
@@ -48,6 +50,26 @@ interface RootLaunchStrategy : CommandLaunchStrategy {
     }
 
     override fun Context.tryLaunch(args: LaunchArgs): Boolean {
-        return Shell.Pool.SU.run(makeCommand(args)) == 0
+        val command = StringBuilder(makeCommand(args))
+
+        args.addToCommand(command)
+
+        return Shell.Pool.SU.run(command.toString()) == 0
+    }
+}
+
+private fun LaunchArgs.addToCommand(command: StringBuilder) {
+    command.append(" -a ${intent.action}")
+
+    if (extras.isNotEmpty()) {
+        extras.forEach {
+            command.append(" --${it.safeType.shellArgName} \"${it.key}\" \"${it.value}\"")
+        }
+    }
+
+    if (intent.categories.isNotEmpty()) {
+        intent.categories.forEach {
+            command.append(" -c \"${it}\"")
+        }
     }
 }

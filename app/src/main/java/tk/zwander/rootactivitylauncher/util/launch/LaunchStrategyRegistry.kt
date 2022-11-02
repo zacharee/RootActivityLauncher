@@ -75,11 +75,7 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
     }
     object ShizukuShell : ActivityLaunchStrategy, ShizukuShellLaunchStrategy {
         override fun makeCommand(args: LaunchArgs): String {
-            val command = StringBuilder("am start -n ${args.intent.component.flattenToString()}")
-
-            command.append(" -a ${args.intent.action}")
-
-            return command.toString()
+            return "am start -n ${args.intent.component.flattenToString()}"
         }
     }
     object KNOX : ActivityLaunchStrategy {
@@ -113,15 +109,7 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
     }
     object Root : ActivityLaunchStrategy, RootLaunchStrategy {
         override fun makeCommand(args: LaunchArgs): String {
-            val command = StringBuilder("am start -n ${args.intent.component.flattenToString()}")
-
-            command.append(" -a ${args.intent.action}")
-
-            if (args.extras.isNotEmpty()) args.extras.forEach {
-                command.append(" --${it.safeType.shellArgName} \"${it.key}\" \"${it.value}\"")
-            }
-
-            return command.toString()
+            return "am start -n ${args.intent.component.flattenToString()}"
         }
     }
 }
@@ -157,24 +145,12 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
     }
     object ShizukuShell : ServiceLaunchStrategy, ShizukuShellLaunchStrategy {
         override fun makeCommand(args: LaunchArgs): String {
-            val command = StringBuilder("am startservice ${args.intent.component.flattenToString()}")
-
-            command.append(" -a ${args.intent.action}")
-
-            return command.toString()
+            return "am startservice ${args.intent.component.flattenToString()}"
         }
     }
     object Root : ServiceLaunchStrategy, RootLaunchStrategy {
         override fun makeCommand(args: LaunchArgs): String {
-            val command = StringBuilder("am startservice ${args.intent.component.flattenToString()}")
-
-            command.append(" -a ${args.intent.action}")
-
-            if (args.extras.isNotEmpty()) args.extras.forEach {
-                command.append(" --${it.safeType.shellArgName} \"${it.key}\" \"${it.value}\"")
-            }
-
-            return command.toString()
+            return "am startservice ${args.intent.component.flattenToString()}"
         }
     }
 }
@@ -211,30 +187,12 @@ sealed interface ReceiverLaunchStrategy : LaunchStrategy {
     }
     object ShizukuShell : ReceiverLaunchStrategy, ShizukuShellLaunchStrategy {
         override fun makeCommand(args: LaunchArgs): String {
-            val command = StringBuilder("am broadcast -n ${args.intent.component.flattenToString()}")
-
-            command.append(" -a ${args.intent.action}")
-
-            if (args.extras.isNotEmpty()) args.extras.forEach {
-                command.append(" --${it.safeType.shellArgName} \"${it.key}\" \"${it.value}\"")
-            }
-
-            return command.toString()
+            return "am broadcast -n ${args.intent.component.flattenToString()}"
         }
     }
     object Root : ReceiverLaunchStrategy, RootLaunchStrategy {
         override fun makeCommand(args: LaunchArgs): String {
-            val command = StringBuilder("am broadcast -n ${args.intent.component.flattenToString()}")
-
-            command.append(" -a ${args.intent.action}")
-
-            if (args.extras.isNotEmpty()) {
-                args.extras.forEach {
-                    command.append(" --${it.safeType.shellArgName} \"${it.key}\" \"${it.value}\"")
-                }
-            }
-
-            return command.toString()
+            return "am broadcast -n ${args.intent.component.flattenToString()}"
         }
     }
 }

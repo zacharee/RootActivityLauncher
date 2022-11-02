@@ -7,21 +7,26 @@ import android.net.Uri
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.util.*
 
-fun Context.launchService(extras: List<ExtraInfo>, componentKey: String): Boolean {
+private fun Context.createLaunchArgs(extras: List<ExtraInfo>, componentKey: String): LaunchArgs {
     val intent = Intent(prefs.findActionForComponent(componentKey))
     intent.component = ComponentName.unflattenFromString(componentKey)
     intent.data = prefs.findDataForComponent(componentKey)?.let { Uri.parse(it) }
 
-    if (extras.isNotEmpty()) extras.forEach {
-        it.safeType.putExtra(intent, it.key, it.value)
+    prefs.findCategoriesForComponent(componentKey).forEach { category ->
+        intent.addCategory(category)
     }
 
-    val args = LaunchArgs(
-        intent = intent,
-        extras = extras
-    )
+    if (extras.isNotEmpty()) {
+        extras.forEach { extra ->
+            extra.safeType.putExtra(intent, extra.key, extra.value)
+        }
+    }
 
-    ServiceLaunchStrategy::class.sealedSubclasses.forEach {
+    return LaunchArgs(intent, extras)
+}
+
+private inline fun <reified T : LaunchStrategy> Context.performLaunch(args: LaunchArgs): Boolean {
+    T::class.sealedSubclasses.forEach {
         with (it.objectInstance!!) {
             if (canRun() && tryLaunch(args)) {
                 return true
@@ -31,57 +36,22 @@ fun Context.launchService(extras: List<ExtraInfo>, componentKey: String): Boolea
 
     showRootToast()
     return false
+}
+
+private inline fun <reified T : LaunchStrategy> Context.launch(extras: List<ExtraInfo>, componentKey: String): Boolean {
+    val args = createLaunchArgs(extras, componentKey)
+
+    return performLaunch<T>(args)
+}
+
+fun Context.launchService(extras: List<ExtraInfo>, componentKey: String): Boolean {
+    return launch<ServiceLaunchStrategy>(extras, componentKey)
 }
 
 fun Context.launchActivity(extras: List<ExtraInfo>, componentKey: String): Boolean {
-    val intent = Intent(prefs.findActionForComponent(componentKey))
-    intent.component = ComponentName.unflattenFromString(componentKey)
-    intent.data = prefs.findDataForComponent(componentKey)?.let { Uri.parse(it) }
-    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-
-    if (extras.isNotEmpty()) extras.forEach {
-        it.safeType.putExtra(intent, it.key, it.value)
-    }
-
-    val args = LaunchArgs(
-        intent = intent,
-        extras = extras
-    )
-
-    ActivityLaunchStrategy::class.sealedSubclasses.forEach {
-        with (it.objectInstance!!) {
-            if (canRun() && tryLaunch(args)) {
-                return true
-            }
-        }
-    }
-
-    showRootToast()
-    return false
+    return launch<ActivityLaunchStrategy>(extras, componentKey)
 }
 
 fun Context.launchReceiver(extras: List<ExtraInfo>, componentKey: String): Boolean {
-    val intent = Intent(prefs.findActionForComponent(componentKey))
-    intent.component = ComponentName.unflattenFromString(componentKey)
-    intent.data = prefs.findDataForComponent(componentKey)?.let { Uri.parse(it) }
-
-    if (extras.isNotEmpty()) extras.forEach {
-        it.safeType.putExtra(intent, it.key, it.value)
-    }
-
-    val args = LaunchArgs(
-        intent = intent,
-        extras = extras
-    )
-
-    ReceiverLaunchStrategy::class.sealedSubclasses.forEach {
-        with (it.objectInstance!!) {
-            if (canRun() && tryLaunch(args)) {
-                return true
-            }
-        }
-    }
-
-    showRootToast()
-    return false
+    return launch<ReceiverLaunchStrategy>(extras, componentKey)
 }

@@ -18,6 +18,7 @@ class ExtrasDialog(context: Context, componentKey: String) : MaterialAlertDialog
         adapter.setItems(context.findExtrasForComponent(componentKey))
         binding.action.setText(context.findActionForComponent(componentKey))
         binding.data.setText(context.findDataForComponent(componentKey))
+        binding.categories.setText(context.findCategoriesForComponent(componentKey).joinToString("\n"))
         binding.list.adapter = adapter
 
         setTitle(R.string.extras)
@@ -28,6 +29,7 @@ class ExtrasDialog(context: Context, componentKey: String) : MaterialAlertDialog
             context.updateExtrasForComponent(componentKey, newData)
             context.updateActionForComponent(componentKey, binding.action.text?.toString())
             context.updateDataForComponent(componentKey, binding.data.text?.toString())
+            context.updateCategoriesForComponent(componentKey, binding.categories.text?.toString()?.split("\n") ?: listOf())
         }
     }
 }

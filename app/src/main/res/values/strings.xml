@@ -15,6 +15,7 @@
     <string name="app_info">App Info</string>
     <string name="include_components">Search Components</string>
     <string name="data">Data</string>
+    <string name="categories">Categories (newline-separated)</string>
 
     <string name="set_extras">Set Extras</string>
     <string name="set_global_extras">Set Global Extras</string>

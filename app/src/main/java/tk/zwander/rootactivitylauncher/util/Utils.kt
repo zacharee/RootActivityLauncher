@@ -101,6 +101,20 @@ fun Context.updateDataForComponent(componentName: String, data: String?) {
     prefs.datas = map
 }
 
+fun Context.findCategoriesForComponent(componentName: String): MutableList<String?> {
+    val pkg = determineComponentNamePackage(componentName)
+
+    return prefs.categories[componentName] ?: prefs.categories[pkg] ?: mutableListOf()
+}
+
+fun Context.updateCategoriesForComponent(componentName: String, categories: List<String?>) {
+    val filtered = categories.filterNot { it.isNullOrBlank() }
+    val map = prefs.categories
+
+    map[componentName] = ArrayList(filtered)
+    prefs.categories = map
+}
+
 fun Context.dpToPx(dp: Number): Int {
     return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), resources.displayMetrics).toInt()
 }
