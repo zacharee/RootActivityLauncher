@@ -21,7 +21,7 @@ class ExtrasDialog(context: Context, componentKey: String) : MaterialAlertDialog
         binding.categories.setText(context.findCategoriesForComponent(componentKey).joinToString("\n"))
         binding.list.adapter = adapter
 
-        setTitle(R.string.extras)
+        setTitle(R.string.intent)
         setNegativeButton(android.R.string.cancel, null)
         setPositiveButton(android.R.string.ok) { _, _ ->
             val newData = adapter.currentData().filterNot { it.key.isBlank() }
