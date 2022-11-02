@@ -10,6 +10,8 @@ import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraType
 import tk.zwander.rootactivitylauncher.databinding.ExtraTypeDialogBinding
 import tk.zwander.rootactivitylauncher.databinding.ExtraTypeItemBinding
+import tk.zwander.rootactivitylauncher.util.MarginItemDecoration
+import tk.zwander.rootactivitylauncher.util.dpToPx
 
 class ExtrasTypeDialog(
     private val context: Context,
@@ -35,6 +37,7 @@ class ExtrasTypeDialog(
         adapter.selectedItem = initial
 
         typeRecycler.adapter = adapter
+        typeRecycler.addItemDecoration(MarginItemDecoration(context.dpToPx(8)))
         typeRecycler.scrollToPosition(sortedTypes.indexOf(initial))
     }
 
@@ -78,13 +81,9 @@ class ExtrasTypeDialog(
                 binding.selectionWrapper.setOnClickListener {
                     onClick()
                 }
-
-                binding.selection.apply {
-                    setOnClickListener {
-                        onClick()
-                    }
+                binding.selectionWrapper.isChecked = selectedItem == info
+                binding.selectionText.apply {
                     setText(info.nameRes)
-                    isChecked = selectedItem == info
                 }
             }
         }
