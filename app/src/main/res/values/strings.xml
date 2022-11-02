@@ -48,6 +48,7 @@
     <string name="double_a">Double Array</string>
     <string name="string_a">String Array</string>
     <string name="component">Component</string>
+    <string name="uri">Uri</string>
 
     <string name="activities">Activities (%d)</string>
     <string name="services">Services (%d)</string>
