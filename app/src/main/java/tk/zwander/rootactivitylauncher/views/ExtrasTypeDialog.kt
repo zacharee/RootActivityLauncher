@@ -8,7 +8,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraType
-import tk.zwander.rootactivitylauncher.databinding.ExtraItemBinding
 import tk.zwander.rootactivitylauncher.databinding.ExtraTypeDialogBinding
 import tk.zwander.rootactivitylauncher.databinding.ExtraTypeItemBinding
 
@@ -25,10 +24,18 @@ class ExtrasTypeDialog(
         .setPositiveButton(android.R.string.cancel, null)
         .create()
 
+    private val sortedTypes = ExtraType.values().sortedBy {
+        context.resources.getString(it.nameRes)
+    }
+
     init {
-        view.extraTypeList.adapter = Adapter().apply {
-            selectedItem = initial
-        }
+        val typeRecycler = view.extraTypeList
+        val adapter = Adapter()
+
+        adapter.selectedItem = initial
+
+        typeRecycler.adapter = adapter
+        typeRecycler.scrollToPosition(sortedTypes.indexOf(initial))
     }
 
     fun show() {
@@ -36,24 +43,26 @@ class ExtrasTypeDialog(
     }
 
     private inner class Adapter : RecyclerView.Adapter<Adapter.VH>() {
+
         var selectedItem: ExtraType = ExtraType.STRING
             set(value) {
                 val previous = field
                 field = value
-                notifyItemChanged(ExtraType.values().indexOf(value))
-                notifyItemChanged(ExtraType.values().indexOf(previous))
+                notifyItemChanged(sortedTypes.indexOf(value))
+                notifyItemChanged(sortedTypes.indexOf(previous))
             }
 
         override fun getItemCount(): Int {
-            return ExtraType.values().size
+            return sortedTypes.size
         }
 
         override fun onBindViewHolder(holder: VH, position: Int) {
-            holder.onBind(ExtraType.values()[position])
+            holder.onBind(sortedTypes[position])
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-            return VH(LayoutInflater.from(parent.context).inflate(R.layout.extra_type_item, parent, false))
+            return VH(LayoutInflater.from(parent.context)
+                .inflate(R.layout.extra_type_item, parent, false))
         }
 
         private inner class VH(view: View) : RecyclerView.ViewHolder(view) {

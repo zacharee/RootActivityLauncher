@@ -1,18 +1,19 @@
 package tk.zwander.rootactivitylauncher.adapters
 
+import android.annotation.SuppressLint
+import android.view.GestureDetector
+import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.widget.doOnTextChanged
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SortedList
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
-import tk.zwander.rootactivitylauncher.data.ExtraType
 import tk.zwander.rootactivitylauncher.databinding.ExtraItemBinding
-import tk.zwander.rootactivitylauncher.databinding.ExtraTypeDialogBinding
 import tk.zwander.rootactivitylauncher.views.ExtrasTypeDialog
 
 class ExtrasDialogAdapter : RecyclerView.Adapter<ExtrasDialogAdapter.BaseVH<out Any>>() {
@@ -73,9 +74,11 @@ class ExtrasDialogAdapter : RecyclerView.Adapter<ExtrasDialogAdapter.BaseVH<out 
             VIEWTYPE_ADD -> AddVH(
                 inflater.inflate(R.layout.extra_add_item, parent, false)
             )
+
             VIEWTYPE_EXTRA -> ExtraVH(
                 inflater.inflate(R.layout.extra_item, parent, false)
             )
+
             else -> throw IllegalArgumentException("invalid view type: $viewType")
         }
     }
@@ -100,7 +103,7 @@ class ExtrasDialogAdapter : RecyclerView.Adapter<ExtrasDialogAdapter.BaseVH<out 
         }
     }
 
-    abstract inner class BaseVH<T: Any>(view: View) : RecyclerView.ViewHolder(view) {
+    abstract inner class BaseVH<T : Any>(view: View) : RecyclerView.ViewHolder(view) {
         abstract fun bind(data: T)
     }
 
@@ -116,21 +119,41 @@ class ExtrasDialogAdapter : RecyclerView.Adapter<ExtrasDialogAdapter.BaseVH<out 
     inner class ExtraVH(view: View) : BaseVH<ExtraInfo>(view) {
         private val binding = ExtraItemBinding.bind(itemView)
 
+        @SuppressLint("ClickableViewAccessibility")
         override fun bind(data: ExtraInfo) {
             binding.apply {
                 keyField.setText(data.key, TextView.BufferType.EDITABLE)
                 valueField.setText(data.value, TextView.BufferType.EDITABLE)
-                extraTypeField.setText(root.context.resources.getString(data.safeType.nameRes), TextView.BufferType.EDITABLE)
-                extraTypeField.setOnClickListener {
-                    ExtrasTypeDialog(
-                        context = it.context,
-                        initial = data.safeType,
-                        selectionListener = { type ->
-                            data.type = type
-                            extraTypeField.setText(root.context.resources.getString(type.nameRes), TextView.BufferType.EDITABLE)
+                extraTypeField.setText(
+                    root.context.resources.getString(data.safeType.nameRes),
+                    TextView.BufferType.EDITABLE
+                )
+                extraTypeField.setOnTouchListener(object : View.OnTouchListener {
+                    private val gestureDetector = GestureDetector(
+                        binding.root.context,
+                        object : SimpleOnGestureListener() {
+                            override fun onSingleTapUp(e: MotionEvent?): Boolean {
+                                ExtrasTypeDialog(
+                                    context = binding.root.context,
+                                    initial = data.safeType,
+                                    selectionListener = { type ->
+                                        data.type = type
+                                        extraTypeField.setText(
+                                            root.context.resources.getString(type.nameRes),
+                                            TextView.BufferType.EDITABLE
+                                        )
+                                    }
+                                ).show()
+
+                                return super.onSingleTapConfirmed(e)
+                            }
                         }
-                    ).show()
-                }
+                    )
+
+                    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+                        return gestureDetector.onTouchEvent(event)
+                    }
+                })
                 keyField.doOnTextChanged { text, _, _, _ ->
                     items[bindingAdapterPosition - 1].key = text.toString()
                 }
@@ -140,7 +163,8 @@ class ExtrasDialogAdapter : RecyclerView.Adapter<ExtrasDialogAdapter.BaseVH<out 
                 remove.setOnClickListener {
                     try {
                         items.removeItemAt(bindingAdapterPosition - 1)
-                    } catch (_: ArrayIndexOutOfBoundsException) {}
+                    } catch (_: ArrayIndexOutOfBoundsException) {
+                    }
                 }
             }
         }
