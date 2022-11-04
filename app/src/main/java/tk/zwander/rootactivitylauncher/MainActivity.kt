@@ -13,8 +13,8 @@ import android.util.Log
 import android.view.MenuItem
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.ViewCompat
@@ -49,7 +49,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 @SuppressLint("RestrictedApi")
-open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
+open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
     SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener, PermissionResultListener {
     protected open val isForTasker = false
     protected open var selectedItem: Pair<ComponentType, ComponentName>? = null
@@ -205,7 +205,7 @@ open class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(),
 
         packageUpdateReceiver.register()
 
-        supportActionBar?.setDisplayShowHomeEnabled(false)
+        actionBar?.setDisplayShowHomeEnabled(false)
 
         binding.useRegex.setOnCheckedChangeListener { _, isChecked ->
 

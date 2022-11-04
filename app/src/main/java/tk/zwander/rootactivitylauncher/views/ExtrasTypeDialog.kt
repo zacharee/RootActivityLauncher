@@ -46,7 +46,6 @@ class ExtrasTypeDialog(
     }
 
     private inner class Adapter : RecyclerView.Adapter<Adapter.VH>() {
-
         var selectedItem: ExtraType = ExtraType.STRING
             set(value) {
                 val previous = field
