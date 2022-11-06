@@ -16,7 +16,6 @@ import kotlinx.coroutines.*
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
-import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.databinding.ComponentItemBinding
 import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.ComponentInfoDialog
@@ -25,9 +24,8 @@ import tk.zwander.rootactivitylauncher.views.components.ComponentBar
 import tk.zwander.rootactivitylauncher.views.components.ExtrasDialog
 
 abstract class BaseComponentAdapter<
-        Self : BaseComponentAdapter<Self, DataClass, VHClass>,
         DataClass : BaseComponentInfo,
-        VHClass : BaseComponentAdapter<Self, DataClass, VHClass>.BaseComponentVH>(
+        VHClass : BaseComponentAdapter<DataClass, VHClass>.BaseComponentVH>(
     dataClass: Class<DataClass>,
     private val isForTasker: Boolean,
     private val selectionCallback: (BaseComponentInfo) -> Unit
@@ -81,8 +79,6 @@ abstract class BaseComponentAdapter<
 
     abstract inner class BaseComponentVH(view: View) : RecyclerView.ViewHolder(view) {
         private val binding = ComponentItemBinding.bind(itemView)
-
-        internal abstract val componentType: ComponentType
 
         internal val currentComponentKey: String
             get() = currentList[bindingAdapterPosition].run {

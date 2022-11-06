@@ -3,7 +3,6 @@ package tk.zwander.rootactivitylauncher.views.components
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.pm.ServiceInfo
-import android.graphics.Paint.Align
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -31,11 +30,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,7 +40,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.drawable.toBitmap
 import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
 import com.github.skgmn.composetooltip.AnchorEdge
 import com.github.skgmn.composetooltip.Tooltip
 import kotlinx.coroutines.Dispatchers
@@ -75,12 +71,12 @@ sealed class Button<T>(protected val data: T) {
 
     abstract fun onClick(context: Context)
 
-    class ComponentInfoButton(data: Any, private val onClick: () -> Unit) : Button<Any>(data) {
+    class ComponentInfoButton(data: Any, private val onClick: (info: Any) -> Unit) : Button<Any>(data) {
         override val iconRes = R.drawable.ic_baseline_help_outline_24
         override val labelRes = R.string.component_info
 
         override fun onClick(context: Context) {
-            onClick()
+            onClick(data)
         }
     }
 

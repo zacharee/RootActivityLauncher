@@ -4,12 +4,11 @@ import android.content.Context
 import android.view.View
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
-import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.data.component.ReceiverInfo
 import tk.zwander.rootactivitylauncher.util.launch.launchReceiver
 
 class ReceiverAdapter(isForTasker: Boolean, selectionCallback: (BaseComponentInfo) -> Unit) :
-    BaseComponentAdapter<ReceiverAdapter, ReceiverInfo, ReceiverAdapter.ReceiverVH>(
+    BaseComponentAdapter<ReceiverInfo, ReceiverAdapter.ReceiverVH>(
         ReceiverInfo::class.java,
         isForTasker,
         selectionCallback
@@ -19,8 +18,6 @@ class ReceiverAdapter(isForTasker: Boolean, selectionCallback: (BaseComponentInf
     }
 
     inner class ReceiverVH(view: View) : BaseComponentVH(view) {
-        override val componentType = ComponentType.RECEIVER
-
         override fun onLaunch(data: ReceiverInfo, context: Context, extras: List<ExtraInfo>) {
             context.launchReceiver(extras, currentComponentKey)
         }

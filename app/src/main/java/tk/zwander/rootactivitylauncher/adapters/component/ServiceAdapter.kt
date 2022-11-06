@@ -4,12 +4,11 @@ import android.content.Context
 import android.view.View
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
-import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.util.launch.launchService
 
 class ServiceAdapter(isForTasker: Boolean, selectionCallback: (BaseComponentInfo) -> Unit) :
-    BaseComponentAdapter<ServiceAdapter, ServiceInfo, ServiceAdapter.ServiceVH>(
+    BaseComponentAdapter<ServiceInfo, ServiceAdapter.ServiceVH>(
         ServiceInfo::class.java,
         isForTasker,
         selectionCallback
@@ -19,8 +18,6 @@ class ServiceAdapter(isForTasker: Boolean, selectionCallback: (BaseComponentInfo
     }
 
     inner class ServiceVH(view: View) : BaseComponentVH(view) {
-        override val componentType: ComponentType = ComponentType.SERVICE
-
         override fun onLaunch(data: ServiceInfo, context: Context, extras: List<ExtraInfo>) {
             context.launchService(extras, currentComponentKey)
         }
