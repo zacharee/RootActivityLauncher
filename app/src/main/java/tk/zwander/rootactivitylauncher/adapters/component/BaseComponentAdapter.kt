@@ -1,37 +1,28 @@
 package tk.zwander.rootactivitylauncher.adapters.component
 
-import android.content.ComponentName
 import android.content.Context
-import android.content.pm.ActivityInfo
-import android.content.pm.IPackageManager
-import android.content.pm.PackageManager
-import android.content.pm.ServiceInfo
 import android.net.Uri
-import android.os.UserHandle
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.CompoundButton
-import android.widget.Toast
-import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.IconCompat
-import androidx.core.graphics.drawable.toBitmap
-import androidx.core.view.isVisible
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.recyclerview.widget.*
-import eu.chainfire.libsuperuser.Shell
+import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.*
-import rikka.shizuku.Shizuku
-import rikka.shizuku.ShizukuBinderWrapper
-import rikka.shizuku.SystemServiceHelper
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
+import tk.zwander.rootactivitylauncher.databinding.ComponentItemBinding
 import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.ComponentInfoDialog
-import tk.zwander.rootactivitylauncher.views.ExtrasDialog
-import android.util.TypedValue
-import tk.zwander.rootactivitylauncher.databinding.ComponentItemBinding
+import tk.zwander.rootactivitylauncher.views.components.Button
+import tk.zwander.rootactivitylauncher.views.components.ComponentBar
+import tk.zwander.rootactivitylauncher.views.components.ExtrasDialog
 
 abstract class BaseComponentAdapter<
         Self : BaseComponentAdapter<Self, DataClass, VHClass>,
@@ -60,7 +51,6 @@ abstract class BaseComponentAdapter<
             override fun areContentsTheSame(oldItem: DataClass, newItem: DataClass): Boolean {
                 return true
             }
-
         })
     }
 
@@ -94,12 +84,6 @@ abstract class BaseComponentAdapter<
 
         internal abstract val componentType: ComponentType
 
-        private val currentExtras: List<ExtraInfo>
-            get() = itemView.context.findExtrasForComponent(currentComponentKey)
-        private val currentGlobalExtras: List<ExtraInfo>
-            get() = itemView.context.findExtrasForComponent(currentPackageName)
-        private val currentPackageName: String
-            get() = currentList[bindingAdapterPosition].info.packageName
         internal val currentComponentKey: String
             get() = currentList[bindingAdapterPosition].run {
                 constructComponentKey(
@@ -108,79 +92,8 @@ abstract class BaseComponentAdapter<
                 )
             }
 
-        private val componentEnabledListener = object : CompoundButton.OnCheckedChangeListener {
-            override fun onCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
-                val d = currentList[bindingAdapterPosition]
-                val l = this
-
-                launch(Dispatchers.Main) {
-                    val hasRoot = withContext(Dispatchers.IO) {
-                        Shell.SU.available()
-                    }
-
-                    if (hasRoot || (Shizuku.pingBinder() && itemView.context.hasShizukuPermission)) {
-                        val result = withContext(Dispatchers.IO) {
-                            if (hasRoot) {
-                                try {
-                                    Shell.Pool.SU.run("pm ${if (isChecked) "enable" else "disable"} $currentComponentKey") == 0
-                                } catch (e: Exception) {
-                                    false
-                                }
-                            } else {
-                                val ipm = IPackageManager.Stub.asInterface(
-                                    ShizukuBinderWrapper(
-                                        SystemServiceHelper.getSystemService("package")
-                                    )
-                                )
-
-                                try {
-                                    ipm.setComponentEnabledSetting(
-                                        ComponentName.unflattenFromString(currentComponentKey),
-                                        if (isChecked) PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-                                        else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                                        0,
-                                        UserHandle.USER_SYSTEM
-                                    )
-
-                                    true
-                                } catch (e: Exception) {
-                                    launch(Dispatchers.Main) {
-                                        Toast.makeText(
-                                            itemView.context,
-                                            R.string.requires_root,
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-                                    false
-                                }
-                            }
-                        }
-
-                        if (result) {
-                            updateLaunchVisibility(d)
-                        } else {
-                            buttonView.setOnCheckedChangeListener(null)
-                            buttonView.isChecked = !isChecked
-                            buttonView.setOnCheckedChangeListener(l)
-                        }
-                    } else {
-                        Toast.makeText(itemView.context, R.string.requires_root, Toast.LENGTH_SHORT)
-                            .show()
-                        buttonView.setOnCheckedChangeListener(null)
-                        buttonView.isChecked = !isChecked
-                        buttonView.setOnCheckedChangeListener(l)
-                    }
-                }
-            }
-        }
-
-        internal var prevPos = -1
-
         init {
             itemView.apply {
-                binding.actionWrapper.isVisible = !isForTasker
-                binding.enabled.isVisible = !isForTasker
-
                 if (isForTasker) {
                     binding.root.isClickable = true
                     binding.root.isFocusable = true
@@ -196,37 +109,6 @@ abstract class BaseComponentAdapter<
                         selectionCallback(currentList[bindingAdapterPosition])
                     }
                 }
-
-                binding.setExtras.setOnClickListener {
-                    ExtrasDialog(context, currentComponentKey)
-                        .show()
-                }
-                binding.launch.setOnClickListener {
-                    onLaunch(
-                        currentList[bindingAdapterPosition],
-                        context,
-                        currentGlobalExtras + currentExtras
-                    )
-                }
-                binding.shortcut.setOnClickListener {
-                    val d = currentList[bindingAdapterPosition]
-                    context.createShortcut(
-                        d.label.run { if (!isNullOrBlank()) this else d.info.applicationInfo.loadLabel(context.packageManager) },
-                        IconCompat.createWithBitmap(
-                            (binding.icon.drawable ?: ContextCompat.getDrawable(
-                                context,
-                                R.mipmap.ic_launcher
-                            ))!!.toBitmap()
-                        ),
-                        currentComponentKey,
-                        componentType
-                    )
-                }
-                binding.info.setOnClickListener {
-                    val d = currentList[bindingAdapterPosition]
-                    ComponentInfoDialog(context, d.info)
-                        .show()
-                }
             }
         }
 
@@ -236,44 +118,55 @@ abstract class BaseComponentAdapter<
 
         open fun onBind(data: DataClass) {
             itemView.apply {
-                binding.name.text = data.label
-                binding.cmp.text = data.info.name
+                binding.composeView.setContent {
+                    var showingIntentOptions by remember {
+                        mutableStateOf(false)
+                    }
 
-                val info = data.info
-                val requiresPermission = (info is ActivityInfo && info.permission != null) || (info is ServiceInfo && info.permission != null)
-
-                binding.launchStatusIndicator.setColorFilter(
-                    ContextCompat.getColor(
-                        context,
-                        when {
-                            !data.info.exported -> R.color.colorUnexported
-                            requiresPermission -> R.color.colorNeedsPermission
-                            else -> R.color.colorExported
-                        }
+                    ComponentBar(
+                        icon = rememberAsyncImagePainter(model = getCoilData(data)),
+                        name = data.label.toString(),
+                        component = data,
+                        whichButtons = listOf(
+                            Button.ComponentInfoButton(data.info) {
+                                ComponentInfoDialog(
+                                    context,
+                                    data.info
+                                ).show()
+                            },
+                            Button.IntentDialogButton(data.component.flattenToString()) {
+                                showingIntentOptions = true
+                            },
+                            Button.CreateShortcutButton(data),
+                            Button.LaunchButton(data)
+                        )
                     )
-                )
 
-                getPicassoUri(data)?.apply {
-                    picasso.load(this)
-                        .fit()
-                        .centerInside()
-                        .into(binding.icon)
-                } ?: binding.icon.setImageDrawable(null)
-
-                binding.enabled.setOnCheckedChangeListener(null)
-                if (binding.enabled.isChecked != data.info.isActuallyEnabled(context)) binding.enabled.isChecked = data.info.isActuallyEnabled(context)
-                updateLaunchVisibility(data)
-                binding.enabled.setOnCheckedChangeListener(componentEnabledListener)
+                    if (showingIntentOptions) {
+                        ExtrasDialog(
+                            componentKey = data.component.flattenToString(),
+                            onDismissRequest = { showingIntentOptions = false }
+                        )
+                    }
+                }
             }
         }
 
         open fun onLaunch(data: DataClass, context: Context, extras: List<ExtraInfo>) {}
 
-        abstract fun getPicassoUri(data: DataClass): Uri?
+        private fun getCoilData(data: DataClass): Any? {
+            val res = data.info.iconResource.run {
+                if (this == 0) data.info.applicationInfo.iconRes.run {
+                    if (this == 0) data.info.applicationInfo.roundIconRes
+                    else this
+                }
+                else this
+            }
 
-        private fun updateLaunchVisibility(data: DataClass) {
-            itemView.apply {
-                if (binding.launch.isVisible != data.info.isActuallyEnabled(context)) binding.launch.isVisible = data.info.isActuallyEnabled(context)
+            return if (res != 0) {
+                Uri.parse("android.resource://${data.info.packageName}/$res")
+            } else {
+                data.info.applicationInfo.loadIcon(itemView.context.packageManager)
             }
         }
     }

@@ -118,8 +118,10 @@ suspend fun Context.setComponentEnabled(info: BaseComponentInfo, enabled: Boolea
 
         result
     } else {
-        Toast.makeText(this, R.string.requires_root, Toast.LENGTH_SHORT)
-            .show()
+        withContext(Dispatchers.Main) {
+            Toast.makeText(this@setComponentEnabled, R.string.requires_root, Toast.LENGTH_SHORT)
+                .show()
+        }
         false
     }
 }

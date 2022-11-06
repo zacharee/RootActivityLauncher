@@ -2,20 +2,34 @@ package tk.zwander.rootactivitylauncher.views.components
 
 import android.content.Context
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -24,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -46,6 +61,10 @@ class ExtrasDialogModel(private val context: Context, private val componentKey: 
         addAll(context.findExtrasForComponent(componentKey).map {
             UUID.randomUUID() to it
         })
+
+        if (isEmpty()) {
+            add(UUID.randomUUID() to ExtraInfo("", ""))
+        }
     }
 
     var action by mutableStateOf(context.findActionForComponent(componentKey))
@@ -56,6 +75,10 @@ class ExtrasDialogModel(private val context: Context, private val componentKey: 
         addAll(context.findCategoriesForComponent(componentKey).map {
             UUID.randomUUID() to it
         })
+
+        if (isEmpty()) {
+            add(UUID.randomUUID() to "")
+        }
     }
 }
 
@@ -119,8 +142,8 @@ fun ExtrasDialogContents(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.padding(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         OutlinedTextField(
             value = model.action,
@@ -146,12 +169,16 @@ fun ExtrasDialogContents(
             when {
                 newValue.isNullOrBlank() -> {
                     if (!isLast) {
-                        model.categories.removeAll { it.first == id }
+                        val next = model.categories[index + 1]
+
+                        if (next.second.isNullOrBlank()) {
+                            model.categories[index] = id to newValue
+                            model.categories.removeAll { it.first == next.first }
+                        }
                     }
                 }
 
                 else -> {
-                    model.categories.removeAt(index)
                     model.categories[index] = id to newValue
 
                     if (isLast) {
@@ -161,15 +188,10 @@ fun ExtrasDialogContents(
             }
         }
 
-        if (model.categories.isEmpty()) {
-            CategoryField(
-                value = "",
-                onValueChange = {
-                    model.categories.add(UUID.randomUUID() to it)
-                }
-            )
-        } else {
-            model.categories.forEachIndexed { index, cat ->
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            itemsIndexed(items = model.categories, key = { _, item -> item.first }) { index, cat ->
                 CategoryField(
                     value = cat.second ?: "",
                     onValueChange = {
@@ -194,19 +216,29 @@ fun ExtrasDialogContents(
             when {
                 (newKey.isNullOrBlank() && newValue.isNullOrBlank() && newType == null) -> {
                     if (!isLast) {
-                        model.extras.removeAll { it.first == id }
+                        val next = model.extras[index + 1]
+
+                        if (next.second.run { key.isBlank() && value.isBlank() }) {
+                            val old = model.extras[index]
+                            model.extras[index] = id to ExtraInfo(
+                                key = newKey ?: old.second.key,
+                                value = newValue ?: old.second.value,
+                                type = newType ?: old.second.type
+                            )
+                            model.categories.removeAll { it.first == next.first }
+                        }
                     }
                 }
 
                 else -> {
-                    val old = model.extras.removeAt(index)
+                    val old = model.extras[index]
                     model.extras[index] = id to ExtraInfo(
                         key = newKey ?: old.second.key,
                         value = newValue ?: old.second.value,
                         type = newType ?: old.second.type
                     )
 
-                    if (isLast) {
+                    if (isLast && !newKey.isNullOrBlank()) {
                         model.extras.add(UUID.randomUUID() to ExtraInfo("", ""))
                     }
                 }
@@ -217,23 +249,11 @@ fun ExtrasDialogContents(
             modifier = Modifier,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            if (model.extras.isEmpty()) {
-                item {
-                    ExtraItem(
-                        extraInfo = ExtraInfo("", "")
-                    ) { key, type, value ->
-                        model.extras.add(
-                            UUID.randomUUID() to ExtraInfo(key ?: "", value ?: "", type)
-                        )
-                    }
-                }
-            } else {
-                itemsIndexed(items = model.extras, key = { _, item -> item.first }) { index, item ->
-                    ExtraItem(
-                        extraInfo = item.second
-                    ) { key, type, value ->
-                        handleExtraUpdate(item.first, index, key, type, value)
-                    }
+            itemsIndexed(items = model.extras, key = { _, item -> item.first }) { index, item ->
+                ExtraItem(
+                    extraInfo = item.second
+                ) { key, type, value ->
+                    handleExtraUpdate(item.first, index, key, type, value)
                 }
             }
         }
@@ -265,50 +285,85 @@ private fun ExtraItem(
         mutableStateOf(false)
     }
 
-    Column(
+    OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            OutlinedTextField(
-                value = extraInfo.key,
-                onValueChange = {
-                    onUpdate(it, null, null)
-                },
-                label = {
-                    Text(text = stringResource(id = R.string.hint_key))
-                },
-                modifier = Modifier.weight(1f)
-            )
-
-            OutlinedTextField(
-                value = extraInfo.safeType.nameRes.let { stringResource(id = it) },
-                onValueChange = {},
-                label = {
-                    Text(text = stringResource(id = R.string.type))
-                },
+            Row(
                 modifier = Modifier
-                    .clickable {
-                        showingTypeDialog = true
-                    }
-                    .weight(1f),
-                readOnly = true
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
+            ) {
+                TextField(
+                    value = extraInfo.key,
+                    onValueChange = {
+                        onUpdate(it, null, null)
+                    },
+                    label = {
+                        Text(text = stringResource(id = R.string.hint_key))
+                    },
+                    modifier = Modifier.weight(1f),
+                    colors = TextFieldDefaults.textFieldColors(
+                        containerColor = Color.Transparent
+                    )
+                )
+
+                Divider(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .fillMaxHeight(),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(IntrinsicSize.Min)
+                        .width(IntrinsicSize.Min)
+                ) {
+                    TextField(
+                        value = extraInfo.safeType.nameRes.let { stringResource(id = it) },
+                        onValueChange = {},
+                        label = {
+                            Text(text = stringResource(id = R.string.type))
+                        },
+                        readOnly = true,
+                        colors = TextFieldDefaults.textFieldColors(
+                            containerColor = Color.Transparent
+                        )
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clickable(
+                                interactionSource = remember {
+                                    MutableInteractionSource()
+                                },
+                                indication = rememberRipple()
+                            ) {
+                                showingTypeDialog = true
+                            }
+                    )
+                }
+            }
+
+            TextField(
+                value = extraInfo.value,
+                onValueChange = {
+                    onUpdate(null, null, it)
+                },
+                label = {
+                    Text(text = stringResource(id = R.string.hint_value))
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.textFieldColors(
+                    containerColor = Color.Transparent
+                )
             )
         }
-
-        OutlinedTextField(
-            value = extraInfo.value,
-            onValueChange = {
-                onUpdate(null, null, it)
-            },
-            label = {
-                Text(text = stringResource(id = R.string.hint_value))
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
     }
 
     if (showingTypeDialog) {
@@ -324,6 +379,7 @@ private fun ExtraItem(
                     initial = extraInfo.safeType,
                     onTypeSelected = {
                         onUpdate(null, it, null)
+                        showingTypeDialog = false
                     },
                     modifier = Modifier.fillMaxWidth(0.75f)
                 )

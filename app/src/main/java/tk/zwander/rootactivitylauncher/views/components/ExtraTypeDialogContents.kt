@@ -10,6 +10,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import tk.zwander.rootactivitylauncher.data.ExtraType
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExtrasTypeDialogContents(
     initial: ExtraType,
@@ -36,23 +40,22 @@ fun ExtrasTypeDialogContents(
 
     LazyColumn(
         modifier = modifier,
-        contentPadding = PaddingValues(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(items = sortedTypes, key = { it.value }) { type ->
             OutlinedCard(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .selectable(
-                        selected = type == initial,
-                        interactionSource = remember {
-                            MutableInteractionSource()
-                        },
-                        indication = rememberRipple(),
-                        onClick = {
-                            onTypeSelected(type)
-                        }
+                    .fillMaxWidth(),
+                colors = if (initial == type) {
+                    CardDefaults.outlinedCardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
+                } else {
+                    CardDefaults.outlinedCardColors()
+                },
+                onClick = {
+                    onTypeSelected(type)
+                }
             ) {
                 Box(
                     modifier = Modifier

@@ -51,6 +51,9 @@
     <string name="component">Component</string>
     <string name="uri">Uri</string>
     <string name="intent">Intent</string>
+    <string name="exported">Exported</string>
+    <string name="unexported">Unexported</string>
+    <string name="permission_required">Permission Required</string>
 
     <string name="activities">Activities (%d)</string>
     <string name="services">Services (%d)</string>
