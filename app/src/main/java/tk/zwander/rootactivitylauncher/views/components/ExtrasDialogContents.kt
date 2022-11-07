@@ -62,9 +62,7 @@ class ExtrasDialogModel(private val context: Context, private val componentKey: 
             UUID.randomUUID() to it
         })
 
-        if (isEmpty()) {
-            add(UUID.randomUUID() to ExtraInfo("", ""))
-        }
+        add(UUID.randomUUID() to ExtraInfo("", ""))
     }
 
     var action by mutableStateOf(context.findActionForComponent(componentKey))
@@ -76,9 +74,7 @@ class ExtrasDialogModel(private val context: Context, private val componentKey: 
             UUID.randomUUID() to it
         })
 
-        if (isEmpty()) {
-            add(UUID.randomUUID() to "")
-        }
+        add(UUID.randomUUID() to "")
     }
 }
 
@@ -108,7 +104,10 @@ fun ExtrasDialog(
                     context.updateDataForComponent(componentKey, model.data)
                     context.updateCategoriesForComponent(
                         componentKey,
-                        model.categories.mapNotNull { it.second })
+                        model.categories.mapNotNull { if (it.second.isNullOrBlank()) null else it.second }
+                    )
+
+                    onDismissRequest()
                 }
             ) {
                 Text(text = stringResource(id = android.R.string.ok))
@@ -175,6 +174,8 @@ fun ExtrasDialogContents(
                             model.categories[index] = id to newValue
                             model.categories.removeAll { it.first == next.first }
                         }
+                    } else {
+                        model.categories[index] = id to newValue
                     }
                 }
 
@@ -225,8 +226,15 @@ fun ExtrasDialogContents(
                                 value = newValue ?: old.second.value,
                                 type = newType ?: old.second.type
                             )
-                            model.categories.removeAll { it.first == next.first }
+                            model.extras.removeAll { it.first == next.first }
                         }
+                    } else {
+                        val old = model.extras[index]
+                        model.extras[index] = id to ExtraInfo(
+                            key = newKey ?: old.second.key,
+                            value = newValue ?: old.second.value,
+                            type = newType ?: old.second.type
+                        )
                     }
                 }
 

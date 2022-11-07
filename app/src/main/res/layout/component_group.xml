@@ -41,20 +41,27 @@
 
     </LinearLayout>
 
-    <tk.zwander.rootactivitylauncher.views.ShadowFadingEdgeRecyclerView
-        android:id="@+id/recycler"
+<!--    <tk.zwander.rootactivitylauncher.views.ShadowFadingEdgeRecyclerView-->
+<!--        android:id="@+id/recycler"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent"-->
+<!--        android:visibility="gone"-->
+<!--        android:scrollbars="vertical"-->
+<!--        android:scrollbarThumbVertical="@drawable/scroll_thumb"-->
+<!--        android:requiresFadingEdge="vertical"-->
+<!--        android:fadingEdgeLength="@dimen/item_recycler_fading_edge_length"-->
+<!--        app:layoutManager="tk.zwander.rootactivitylauncher.util.PredictiveLinearLayoutManager"-->
+<!--        android:nestedScrollingEnabled="true"-->
+<!--        tools:listitem="@layout/component_item"-->
+<!--        tools:visibility="visible"-->
+<!--        tools:ignore="RtlSymmetry"-->
+<!--        />-->
+
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"
-        android:scrollbars="vertical"
-        android:scrollbarThumbVertical="@drawable/scroll_thumb"
-        android:requiresFadingEdge="vertical"
-        android:fadingEdgeLength="@dimen/item_recycler_fading_edge_length"
-        app:layoutManager="tk.zwander.rootactivitylauncher.util.PredictiveLinearLayoutManager"
-        android:nestedScrollingEnabled="true"
-        tools:listitem="@layout/component_item"
-        tools:visibility="visible"
-        tools:ignore="RtlSymmetry"
         />
 
 </merge>

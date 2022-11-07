@@ -98,12 +98,12 @@ sealed class Button<T>(protected val data: T) {
         }
     }
 
-    class SaveApkButton(data: AppInfo, private val onClick: () -> Unit) : Button<AppInfo>(data) {
+    class SaveApkButton(data: AppInfo, private val onClick: (AppInfo) -> Unit) : Button<AppInfo>(data) {
         override val iconRes = R.drawable.save
         override val labelRes = R.string.extract_apk
 
         override fun onClick(context: Context) {
-            onClick()
+            onClick(data)
         }
     }
 
@@ -156,14 +156,20 @@ fun AppBar(
 ) {
     val context = LocalContext.current
 
+    var enabled by remember {
+        mutableStateOf(app.info.isActuallyEnabled(context))
+    }
+
     BarGuts(
         icon = icon,
         name = name,
         subLabel = app.info.packageName,
-        enabled = app.info.isActuallyEnabled(context),
+        enabled = enabled,
         availability = Availability.NA,
         onEnabledChanged = {
-            context.setPackageEnabled(app.info.packageName, it)
+            if (context.setPackageEnabled(app.info.packageName, it)) {
+                enabled = it
+            }
         },
         whichButtons = whichButtons,
         modifier = modifier,
@@ -182,13 +188,19 @@ fun ComponentBar(
 ) {
     val context = LocalContext.current
 
+    var enabled by remember {
+        mutableStateOf(component.info.isActuallyEnabled(context))
+    }
+
     BarGuts(
         icon = icon,
         name = name,
         subLabel = component.component.flattenToString(),
-        enabled = component.info.isActuallyEnabled(context),
+        enabled = enabled,
         onEnabledChanged = {
-            context.setComponentEnabled(component, it)
+            if (context.setComponentEnabled(component, it)) {
+                enabled = it
+            }
         },
         availability = run {
             val requiresPermission = (component.info as? ActivityInfo)?.permission != null ||
@@ -213,7 +225,7 @@ private fun BarGuts(
     name: String,
     subLabel: String,
     enabled: Boolean,
-    onEnabledChanged: suspend (Boolean) -> Boolean,
+    onEnabledChanged: suspend (Boolean) -> Unit,
     availability: Availability,
     whichButtons: List<Button<*>>,
     modifier: Modifier = Modifier,
@@ -256,7 +268,6 @@ private fun BarGuts(
 
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
                     text = name,
@@ -274,7 +285,7 @@ private fun BarGuts(
                 Switch(
                     checked = enabled,
                     onCheckedChange = {
-                        scope.launch(Dispatchers.IO) {
+                        scope.launch(Dispatchers.Main) {
                             onEnabledChanged(it)
                         }
                     }

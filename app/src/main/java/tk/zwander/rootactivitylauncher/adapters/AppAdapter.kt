@@ -5,6 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Modifier
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
@@ -16,11 +19,13 @@ import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.EnabledFilterMode
 import tk.zwander.rootactivitylauncher.data.ExportedFilterMode
 import tk.zwander.rootactivitylauncher.data.PermissionFilterMode
+import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.databinding.AppItemBinding
 import tk.zwander.rootactivitylauncher.picasso.AppIconHandler
 import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.ComponentInfoDialog
 import tk.zwander.rootactivitylauncher.views.ExtrasDialog
+import tk.zwander.rootactivitylauncher.views.components.ComponentGroup
 import kotlin.collections.HashMap
 
 class AppAdapter(
@@ -28,7 +33,8 @@ class AppAdapter(
     private val scope: CoroutineScope,
     private val isForTasker: Boolean,
     private val progressCallback: (Int) -> Unit,
-    private val extractCallback: (AppInfo) -> Unit
+    private val extractCallback: (AppInfo) -> Unit,
+    private val selectionCallback: (BaseComponentInfo) -> Unit
 ) : RecyclerView.Adapter<AppAdapter.AppVH>(), FastScrollRecyclerView.SectionedAdapter {
     init {
         setHasStableIds(true)
@@ -118,67 +124,33 @@ class AppAdapter(
         override: Boolean = false,
         progress: ((Int, Int) -> Unit)? = null
     ) {
-        if (override || newState != state) {
-            updateState { newState }
-
-            val total = orig.values.sumOf { it.totalUnfilteredSize }
-            var current = 0
-
-            orig.values.forEachParallel {
-                it.onFilterChange(
-                    context,
-                    newState.currentQuery,
-                    newState.useRegex,
-                    newState.includeComponents,
-                    newState.enabledFilterMode,
-                    newState.exportedFilterMode,
-                    newState.permissionFilterMode,
-                    override
-                ) { _, _ ->
-                    progress?.invoke(current++, total)
-                }
-            }
-            sortAndSubmitList(filter(newState))
-            updateState { newState.copy(hasLoadedItems = true) }
-        }
+//        if (override || newState != state) {
+//            updateState { newState }
+//
+//            val total = orig.values.sumOf { it.totalUnfilteredSize }
+//            var current = 0
+//
+//            orig.values.forEachParallel {
+//                it.onFilterChange(
+//                    newState.currentQuery,
+//                    newState.useRegex,
+//                    newState.includeComponents,
+//                    newState.enabledFilterMode,
+//                    newState.exportedFilterMode,
+//                    newState.permissionFilterMode,
+//                    override
+//                ) { _, _ ->
+//                    progress?.invoke(current++, total)
+//                }
+//            }
+//            sortAndSubmitList(filter(newState))
+//            updateState { newState.copy(hasLoadedItems = true) }
+//        }
     }
 
-    private fun filter(newState: State): List<AppInfo> {
-        return orig.values.filter { matches(it, newState) }
-    }
-
-    private fun matches(data: AppInfo, state: State): Boolean {
-        if (state.currentQuery.isBlank()) return true
-
-        val activityFilterEmpty = data.filteredActivities.isEmpty()
-        val serviceFilterEmpty = data.filteredServices.isEmpty()
-        val receiverFilterEmpty = data.filteredReceivers.isEmpty()
-
-        if (state.includeComponents && (!activityFilterEmpty || !serviceFilterEmpty || !receiverFilterEmpty)) return true
-
-        val advancedMatch = AdvancedSearcher.matchesHasPermission(state.currentQuery, data)
-                || AdvancedSearcher.matchesRequiresPermission(state.currentQuery, data)
-                || AdvancedSearcher.matchesDeclaresPermission(state.currentQuery, data)
-                || AdvancedSearcher.matchesRequiresFeature(state.currentQuery, data)
-
-        if (advancedMatch) return true
-
-        if (state.useRegex && state.currentQuery.isValidRegex()) {
-            if (Regex(state.currentQuery).run {
-                    containsMatchIn(data.info.packageName)
-                            || containsMatchIn(data.label)
-                }) {
-                return true
-            }
-        } else {
-            if (data.label.contains(state.currentQuery, true)
-                || data.info.packageName.contains(state.currentQuery, true)) {
-                return true
-            }
-        }
-
-        return false
-    }
+//    private fun filter(newState: State): List<AppInfo> {
+//        return orig.values.filter { matches(it, newState) }
+//    }
 
     inner class AppVH(view: View) : RecyclerView.ViewHolder(view) {
         private val binding = AppItemBinding.bind(itemView)
@@ -196,37 +168,6 @@ class AppAdapter(
         }
 
         init {
-            binding.activitiesComponent.addItemDecoration(innerDividerItemDecoration)
-            binding.servicesComponent.addItemDecoration(innerDividerItemDecoration)
-            binding.receiversComponent.addItemDecoration(innerDividerItemDecoration)
-
-            binding.activitiesComponent.setOnTitleClickListener {
-                if (bindingAdapterPosition == -1) return@setOnTitleClickListener
-
-                val d = async.currentList[bindingAdapterPosition]
-                d.activitiesExpanded = !d.activitiesExpanded
-
-                notifyItemChanged(bindingAdapterPosition, listOf(Unit))
-            }
-
-            binding.servicesComponent.setOnTitleClickListener {
-                if (bindingAdapterPosition == -1) return@setOnTitleClickListener
-
-                val d = async.currentList[bindingAdapterPosition]
-                d.servicesExpanded = !d.servicesExpanded
-
-                notifyItemChanged(bindingAdapterPosition, listOf(Unit))
-            }
-
-            binding.receiversComponent.setOnTitleClickListener {
-                if (bindingAdapterPosition == -1) return@setOnTitleClickListener
-
-                val d = async.currentList[bindingAdapterPosition]
-                d.receiversExpanded = !d.receiversExpanded
-
-                notifyItemChanged(bindingAdapterPosition, listOf(Unit))
-            }
-
             binding.appInfo.setOnClickListener {
                 if (bindingAdapterPosition == -1) return@setOnClickListener
 
@@ -280,65 +221,55 @@ class AppAdapter(
                 binding.appEnabled.setOnCheckedChangeListener(enabledListener)
             }
 
-            if (binding.activitiesComponent.adapter !== data.activityAdapter) {
-                binding.activitiesComponent.adapter = data.activityAdapter
+            binding.activitiesComponent.setContent {
+
             }
 
-            if (binding.servicesComponent.adapter !== data.serviceAdapter) {
-                binding.servicesComponent.adapter = data.serviceAdapter
-            }
+            binding.servicesComponent.setContent {
+                ComponentGroup(
+                    titleRes = R.string.services,
+                    items = data.filteredServices,
+                    expanded = data.servicesExpanded,
+                    onExpandChange = {
+                        data.servicesExpanded = it
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    forTasker = isForTasker,
+                    onItemSelected = selectionCallback,
+                    count = data.servicesSize
+                )
 
-            if (binding.receiversComponent.adapter !== data.receiverAdapter) {
-                binding.receiversComponent.adapter = data.receiverAdapter
-            }
-
-            binding.activitiesComponent.updateLayoutManager(itemView.width)
-            binding.servicesComponent.updateLayoutManager(itemView.width)
-            binding.receiversComponent.updateLayoutManager(itemView.width)
-
-            binding.activitiesComponent.count = data.activitiesSize
-            binding.servicesComponent.count = data.servicesSize
-            binding.receiversComponent.count = data.receiversSize
-
-            binding.activitiesComponent.isVisible = data.activitiesSize > 0
-            binding.servicesComponent.isVisible = data.servicesSize > 0
-            binding.receiversComponent.isVisible = data.receiversSize > 0
-
-            if (data.activitiesExpanded) {
-                scope.async(Dispatchers.Main) {
-                    data.loadActivities { current, total ->
-                        progressCallback((current / total.toFloat() * 100f).toInt())
+                LaunchedEffect(key1 = data.servicesExpanded) {
+                    if (data.servicesExpanded) {
+                        data.loadServices { current, total ->
+                            progressCallback((current / total.toFloat() * 100f).toInt())
+                        }
                     }
-
-                    binding.activitiesComponent.updateHeight(data.activitiesSize)
-                    data.activityAdapter.setItems(data.filteredActivities)
                 }
             }
-            binding.activitiesComponent.expanded = data.activitiesExpanded
 
-            if (data.servicesExpanded) {
-                scope.async(Dispatchers.Main) {
-                    data.loadServices { current, total ->
-                        progressCallback((current / total.toFloat() * 100f).toInt())
+            binding.receiversComponent.setContent {
+                ComponentGroup(
+                    titleRes = R.string.receivers,
+                    items = data.filteredReceivers,
+                    expanded = data.receiversExpanded,
+                    onExpandChange = {
+                        data.receiversExpanded = it
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    forTasker = isForTasker,
+                    onItemSelected = selectionCallback,
+                    count = data.receiversSize
+                )
+
+                LaunchedEffect(key1 = data.receiversExpanded) {
+                    if (data.receiversExpanded) {
+                        data.loadReceivers { current, total ->
+                            progressCallback((current / total.toFloat() * 100f).toInt())
+                        }
                     }
-
-                    binding.servicesComponent.updateHeight(data.servicesSize)
-                    data.serviceAdapter.setItems(data.filteredServices)
                 }
             }
-            binding.servicesComponent.expanded = data.servicesExpanded
-
-            if (data.receiversExpanded) {
-                scope.async(Dispatchers.Main) {
-                    data.loadReceivers { current, total ->
-                        progressCallback((current / total.toFloat() * 100f).toInt())
-                    }
-
-                    binding.receiversComponent.updateHeight(data.receiversSize)
-                    data.receiverAdapter.setItems(data.filteredReceivers)
-                }
-            }
-            binding.receiversComponent.expanded = data.receiversExpanded
         }
     }
 

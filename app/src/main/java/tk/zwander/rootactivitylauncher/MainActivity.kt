@@ -17,6 +17,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.SearchView
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsAnimationCompat
@@ -32,21 +42,25 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.hmomeni.progresscircula.ProgressCircula
 import jp.wasabeef.recyclerview.animators.FadeInAnimator
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.FlowCollector
 import rikka.shizuku.Shizuku
 import tk.zwander.patreonsupportersretrieval.view.SupporterView
 import tk.zwander.rootactivitylauncher.adapters.AppAdapter
 import tk.zwander.rootactivitylauncher.adapters.CustomAnimationAdapter
 import tk.zwander.rootactivitylauncher.data.AppInfo
+import tk.zwander.rootactivitylauncher.data.MainModel
 import tk.zwander.rootactivitylauncher.data.component.*
 import tk.zwander.rootactivitylauncher.databinding.ActivityMainBinding
 import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.AdvancedUsageDialog
 import tk.zwander.rootactivitylauncher.views.FilterDialog
+import tk.zwander.rootactivitylauncher.views.components.AppItem
 import java.io.File
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.collections.ArrayList
 
 @SuppressLint("RestrictedApi")
 open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
@@ -55,26 +69,31 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
     protected open var selectedItem: Pair<ComponentType, ComponentName>? = null
     protected val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
 
+    private val appListState = LazyListState()
+    private val model = MainModel
+
     @Volatile
     private var extractInfo: AppInfo? = null
 
-    private val appAdapter by lazy {
-        fun onExtract(d: AppInfo) {
-            extractInfo = d
-            extractLauncher.launch(null)
-        }
-
-        AppAdapter(this, this, isForTasker, ::updateProgress, ::onExtract)
-    }
-    private val appListLayoutManager: RecyclerView.LayoutManager
-        get() = binding.appList.layoutManager as RecyclerView.LayoutManager
+    //    private val appAdapter by lazy {
+//        fun onExtract(d: AppInfo) {
+//            extractInfo = d
+//            extractLauncher.launch(null)
+//        }
+//
+//        AppAdapter(this, this, isForTasker, ::updateProgress, ::onExtract) {
+//            selectedItem = it.type() to it.component
+//        }
+//    }
+//    private val appListLayoutManager: RecyclerView.LayoutManager
+//        get() = binding.appList.layoutManager as RecyclerView.LayoutManager
     private val menu by lazy { binding.actionMenuView.menu as MenuBuilder }
 
     private val progress by lazy { menu.findItem(R.id.progress) }
     private val progressView: ProgressCircula?
         get() = (progress?.actionView as ProgressCircula?)
 
-//    private val search by lazy { menu.findItem(R.id.action_search) }
+    //    private val search by lazy { menu.findItem(R.id.action_search) }
     private val searchView: SearchView by lazy { binding.searchView }
 
     private val filter by lazy { menu.findItem(R.id.action_filter) }
@@ -105,17 +124,23 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
                         if (host != null) {
                             val loaded = loadApp(getPackageInfo(host))
 
-                            appAdapter.addItem(loaded, ::updateProgress)
+//                            appAdapter.addItem(loaded, ::updateProgress)
+                            model.apps.add(loaded)
                         }
                     }
+
                     Intent.ACTION_PACKAGE_REMOVED -> {
                         if (host != null) {
-                            appAdapter.removeItem(host, ::updateProgress)
+//                            appAdapter.removeItem(host, ::updateProgress)
+                            model.apps.removeAll { it.info.packageName == host }
                         }
                     }
+
                     Intent.ACTION_PACKAGE_REPLACED -> {
                         if (host != null) {
-                            appAdapter.updateItem(loadApp(getPackageInfo(host)))
+                            model.apps[model.apps.indexOfFirst { it.info.packageName == host }] =
+                                loadApp(getPackageInfo(host))
+//                            appAdapter.updateItem(loadApp(getPackageInfo(host)))
                         }
                     }
                 }
@@ -150,7 +175,10 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
                 splitName to s
             }
 
-            val baseFile = dir.createFile("application/vnd.android.package-archive", extractInfo.info.packageName) ?: return@registerForActivityResult
+            val baseFile = dir.createFile(
+                "application/vnd.android.package-archive",
+                extractInfo.info.packageName
+            ) ?: return@registerForActivityResult
             contentResolver.openOutputStream(baseFile.uri).use { writer ->
                 Log.e("RootActivityLauncher", "$baseDir")
                 try {
@@ -159,7 +187,11 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
                     }
                 } catch (e: Exception) {
                     Log.e("RootActivityLauncher", "Extraction failed", e)
-                    Toast.makeText(this, resources.getString(R.string.extraction_failed, e.message), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        resources.getString(R.string.extraction_failed, e.message),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
 
@@ -167,7 +199,10 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
                 val name = split.first
                 val path = File(split.second)
 
-                val file = dir.createFile("application/vnd.android.package-archive", "${extractInfo.info.packageName}_$name")
+                val file = dir.createFile(
+                    "application/vnd.android.package-archive",
+                    "${extractInfo.info.packageName}_$name"
+                )
                     ?: return@registerForActivityResult
                 contentResolver.openOutputStream(file.uri).use { writer ->
                     try {
@@ -176,14 +211,19 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
                         }
                     } catch (e: Exception) {
                         Log.e("RootActivityLauncher", "Extraction failed", e)
-                        Toast.makeText(this, resources.getString(R.string.extraction_failed, e.message), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this,
+                            resources.getString(R.string.extraction_failed, e.message),
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
         }
     }
 
-    private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission(), ::onPermissionResult)
+    private val permissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission(), ::onPermissionResult)
 
     private var currentDataJob: Deferred<*>? = null
 
@@ -208,13 +248,21 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
         actionBar?.setDisplayShowHomeEnabled(false)
 
         binding.useRegex.setOnCheckedChangeListener { _, isChecked ->
-
-            onFilterChangeWithLoader({ it.copy(useRegex = isChecked) })
-            binding.appList.scrollToPosition(0)
+            model.useRegex = isChecked
+//            onFilterChangeWithLoader({ it.copy(useRegex = isChecked) })
+            launch {
+                appListState.scrollToItem(0)
+            }
+//            binding.appList.scrollToPosition(0)
         }
         binding.includeComponents.setOnCheckedChangeListener { _, isChecked ->
-            onFilterChangeWithLoader({ it.copy(includeComponents = isChecked) })
-            binding.appList.scrollToPosition(0)
+            model.includeComponents = isChecked
+//            onFilterChangeWithLoader({ it.copy(includeComponents = isChecked) })
+//            binding.appList.scrollToPosition(0)
+
+            launch {
+                appListState.scrollToItem(0)
+            }
         }
         binding.root.apply {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
@@ -243,7 +291,8 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
                             insets: WindowInsetsCompat,
                             runningAnimations: MutableList<WindowInsetsAnimationCompat>
                         ): WindowInsetsCompat {
-                            val i = insets.getInsets(WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.systemBars())
+                            val i =
+                                insets.getInsets(WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.systemBars())
 
                             updateLayoutParams<ViewGroup.MarginLayoutParams> {
                                 leftMargin = i.left
@@ -272,67 +321,85 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
                     R.id.action_filter -> {
                         FilterDialog(
                             this@MainActivity,
-                            appAdapter.state.enabledFilterMode,
-                            appAdapter.state.exportedFilterMode,
-                            appAdapter.state.permissionFilterMode
+                            model.enabledFilterMode,
+                            model.exportedFilterMode,
+                            model.permissionFilterMode
                         ) { enabledMode, exportedMode, permissionMode ->
-                            onFilterChangeWithLoader({
-                                it.copy(
-                                    enabledFilterMode = enabledMode,
-                                    exportedFilterMode = exportedMode,
-                                    permissionFilterMode = permissionMode
-                                )
-                            })
+                            model.enabledFilterMode = enabledMode
+                            model.exportedFilterMode = exportedMode
+                            model.permissionFilterMode = permissionMode
+
+//                            onFilterChangeWithLoader({
+//                                it.copy(
+//                                    enabledFilterMode = enabledMode,
+//                                    exportedFilterMode = exportedMode,
+//                                    permissionFilterMode = permissionMode
+//                                )
+//                            })
                         }.show()
                         true
                     }
+
                     R.id.scroll_top -> {
-                        val vis =
-                            (appListLayoutManager).findFirstVisibleItemPosition()
-                        if (vis > 20) {
-                            binding.appList.scrollToPosition(0)
-                        } else {
-                            binding.appList.smoothScrollToPosition(0)
+                        val vis = appListState.firstVisibleItemIndex
+                        launch {
+                            if (vis > 20) {
+                                appListState.scrollToItem(0)
+                            } else {
+                                appListState.animateScrollToItem(0)
+                            }
                         }
                         true
                     }
+
                     R.id.scroll_bottom -> {
-                        val vis = (appListLayoutManager).findLastVisibleItemPosition()
-                        if (appAdapter.itemCount - vis > 20) {
-                            binding.appList.scrollToPosition(appAdapter.itemCount - 1)
-                        } else {
-                            binding.appList.smoothScrollToPosition(appAdapter.itemCount - 1)
+                        val vis =
+                            appListState.firstVisibleItemIndex + appListState.layoutInfo.visibleItemsInfo.size
+                        launch {
+                            if (model.apps.size - vis > 20) {
+                                appListState.scrollToItem(model.apps.size - 1)
+                            } else {
+                                appListState.animateScrollToItem(model.apps.size - 1)
+                            }
                         }
                         true
                     }
+
                     R.id.action_twitter -> {
                         launchUrl("https://twitter.com/Wander1236")
                         true
                     }
+
                     R.id.action_web -> {
                         launchUrl("https://zwander.dev")
                         true
                     }
+
                     R.id.action_github -> {
                         launchUrl("https://github.com/zacharee")
                         true
                     }
+
                     R.id.action_email -> {
                         launchEmail("zachary@zwander.dev", resources.getString(R.string.app_name))
                         true
                     }
+
                     R.id.action_telegram -> {
                         launchUrl("https://bit.ly/ZachareeTG")
                         true
                     }
+
                     R.id.action_discord -> {
                         launchUrl("https://bit.ly/zwanderDiscord")
                         true
                     }
+
                     R.id.action_patreon -> {
                         launchUrl("https://bit.ly/zwanderPatreon")
                         true
                     }
+
                     R.id.action_supporters -> {
                         MaterialAlertDialogBuilder(this@MainActivity)
                             .setTitle(R.string.supporters)
@@ -342,11 +409,13 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
                             .show()
                         true
                     }
+
                     R.id.action_advanced_search -> {
                         AdvancedUsageDialog(this@MainActivity)
                             .show()
                         true
                     }
+
                     else -> false
                 }
             }
@@ -354,14 +423,14 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
             override fun onMenuModeChange(menu: MenuBuilder) {}
         })
 
-        updateScrollButtonState()
+        updateScrollButtonState(appListState.firstVisibleItemIndex)
 
         searchView.setOnQueryTextListener(this)
         searchView.setOnSearchClickListener {
             it.postDelayed({
                 setSearchWrapperState(true)
             }, 100)
-            onFilterChangeWithLoader(override = !appAdapter.state.hasLoadedItems)
+//            onFilterChangeWithLoader(override = !model.hasLoadedItems)
             hideActionsForSearch(true)
         }
         searchView.setOnCloseListener {
@@ -370,27 +439,98 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
             false
         }
 
-        binding.appList.adapter = CustomAnimationAdapter(appAdapter)
-        binding.appList.itemAnimator = FadeInAnimator()
-        binding.appList.layoutManager = getAppropriateLayoutManager(resources.configuration.screenWidthDp)
-        binding.appList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                updateScrollButtonState()
+//        binding.appList.adapter = CustomAnimationAdapter(appAdapter)
+//        binding.appList.itemAnimator = FadeInAnimator()
+//        binding.appList.layoutManager = getAppropriateLayoutManager(resources.configuration.screenWidthDp)
+//        binding.appList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+//            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+//                updateScrollButtonState()
+//            }
+//        })
+
+        launch {
+            snapshotFlow { appListState.firstVisibleItemIndex }.collect {
+                updateScrollButtonState(it)
             }
-        })
-        binding.refresh.setOnRefreshListener(this)
+        }
+
+        binding.appList.setContent {
+            LaunchedEffect(MainModel.progress) {
+                val progressing = MainModel.progress != null
+
+                binding.scrim.isVisible = progressing
+                progress.isVisible = progressing
+                searchView.isVisible = !progressing
+                filter.isVisible = !progressing
+                scrollToTop.isVisible = !progressing
+                scrollToBottom.isVisible = !progressing
+            }
+
+            LaunchedEffect(
+                MainModel.enabledFilterMode,
+                MainModel.exportedFilterMode,
+                MainModel.permissionFilterMode,
+                MainModel.query,
+                MainModel.useRegex,
+                MainModel.includeComponents,
+                MainModel.apps.toList()
+            ) {
+                launch(Dispatchers.IO) {
+                    val filteredApps = MainModel.apps.filter { app ->
+                        MainModel.matches(app).also {
+                            if (it) {
+                                app.onFilterChange()
+                            }
+                        }
+                    }
+
+                    MainModel.filteredApps.clear()
+                    MainModel.filteredApps.addAll(
+                        filteredApps.sortedBy { it.label.toString().lowercase() }
+                    )
+
+                    MainModel.progress = null
+                }
+            }
+
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(8.dp)
+            ) {
+                items(items = MainModel.filteredApps, key = { it.info.packageName }) {
+                    AppItem(
+                        info = it,
+                        isForTasker = isForTasker,
+                        selectionCallback = {
+                            selectedItem = it.type() to it.component
+                        },
+                        progressCallback = {
+                            MainModel.progress = it
+                        },
+                        extractCallback = {
+                            extractInfo = it
+                            extractLauncher.launch(null)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
+
+//        binding.refresh.setOnRefreshListener(this)
         currentDataJob = loadDataAsync()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
-        binding.appList.layoutManager = getAppropriateLayoutManager(newConfig.screenWidthDp)
+//        binding.appList.layoutManager = getAppropriateLayoutManager(newConfig.screenWidthDp)
     }
 
     override fun onQueryTextChange(newText: String?): Boolean {
-        onFilterChangeWithLoader({ it.copy(currentQuery = newText ?: "") })
-        binding.appList.scrollToPosition(0)
+        model.query = newText ?: ""
+//        onFilterChangeWithLoader({ it.copy(currentQuery = newText ?: "") })
+//        binding.appList.scrollToPosition(0)
         return true
     }
 
@@ -403,10 +543,10 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
     }
 
     override fun onRefresh() {
-        binding.refresh.isRefreshing = true
+//        binding.refresh.isRefreshing = true
         if (currentDataJob?.isActive == true) currentDataJob?.cancel()
         currentDataJob = loadDataAsync()
-        binding.refresh.isRefreshing = false
+//        binding.refresh.isRefreshing = false
     }
 
     override fun onDestroy() {
@@ -418,28 +558,31 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
         cancel()
     }
 
-    private fun updateProgress(progress: Int) {
-        progressView?.progress = progress
-        binding.scrimProgress.progress = progress
-    }
+//    private fun updateProgress(progress: Int) {
+//        progressView?.progress = progress
+//        binding.scrimProgress.progress = progress
+//    }
 
-    private fun updateScrollButtonState() {
+    private fun updateScrollButtonState(visIndex: Int) {
         val isActive = currentDataJob?.isActive == true
-        val newTopVis = binding.appList.computeVerticalScrollOffset() > 0 && !isActive
+        val newTopVis = visIndex > 0 && !isActive
         val newBotVis = run {
-            val pos = when (val manager = appListLayoutManager) {
-                is StaggeredGridLayoutManager -> {
-                    IntArray(50).apply { manager.findLastCompletelyVisibleItemPositions(this) }
-                        .maxOrNull() ?: 0
-                }
-                is LinearLayoutManager -> {
-                    manager.findLastCompletelyVisibleItemPosition()
-                }
-                else -> {
-                    throw IllegalStateException("Invalid layout manager $manager")
-                }
-            }
-            pos < appAdapter.itemCount - 1 && !isActive
+//            val pos = when (val manager = appListLayoutManager) {
+//                is StaggeredGridLayoutManager -> {
+//                    IntArray(50).apply { manager.findLastCompletelyVisibleItemPositions(this) }
+//                        .maxOrNull() ?: 0
+//                }
+//                is LinearLayoutManager -> {
+//                    manager.findLastCompletelyVisibleItemPosition()
+//                }
+//                else -> {
+//                    throw IllegalStateException("Invalid layout manager $manager")
+//                }
+//            }
+
+            val pos =
+                appListState.firstVisibleItemIndex + appListState.layoutInfo.visibleItemsInfo.size
+            pos < model.apps.size - 1 && !isActive
         }
 
         if (scrollToTop?.isVisible != newTopVis) {
@@ -466,13 +609,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
     private fun loadDataAsync(silent: Boolean = false): Deferred<*> {
         return async(Dispatchers.Main) {
             if (!silent) {
-                updateProgress(0)
-                binding.scrim.isVisible = true
-                progress.isVisible = true
-                searchView.isVisible = false
-                filter.isVisible = false
-                scrollToTop.isVisible = false
-                scrollToBottom.isVisible = false
+                model.progress = 0
             }
 
             //This mess is because of a bug in Marshmallow and possibly earlier that
@@ -495,7 +632,8 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
                 )
             } else {
                 @Suppress("DEPRECATION")
-                val packages = packageManager.getInstalledPackagesCompat(PackageManager.GET_DISABLED_COMPONENTS)
+                val packages =
+                    packageManager.getInstalledPackagesCompat(PackageManager.GET_DISABLED_COMPONENTS)
                 packages.map { info ->
                     try {
                         //Try to get all the components for this package at once.
@@ -510,7 +648,11 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
                     } catch (e: Exception) {
                         //The resulting PackageInfo was too large. Retrieve each set
                         //separately and combine them.
-                        Log.e("RootActivityLauncher", "Unable to get full info, splitting ${info.packageName}", e)
+                        Log.e(
+                            "RootActivityLauncher",
+                            "Unable to get full info, splitting ${info.packageName}",
+                            e
+                        )
                         val awaits = listOf(
                             PackageManager.GET_ACTIVITIES,
                             PackageManager.GET_SERVICES,
@@ -522,7 +664,11 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
                                 try {
                                     packageManager.getPackageInfoCompat(info.packageName, flag)
                                 } catch (e: Exception) {
-                                    Log.e("RootActivityLauncher", "Unable to get split info for ${info.packageName} for flag $flag", e)
+                                    Log.e(
+                                        "RootActivityLauncher",
+                                        "Unable to get split info for ${info.packageName} for flag $flag",
+                                        e
+                                    )
                                     null
                                 }
                             }
@@ -556,7 +702,8 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
                 }
 
                 if (!silent) {
-                    val p = (progressIndex.incrementAndGet().toFloat() / max.toFloat() * 100f).toInt()
+                    val p =
+                        (progressIndex.incrementAndGet().toFloat() / max.toFloat() * 100f).toInt()
                     val time = System.currentTimeMillis()
 
                     if (time - lastUpdate.get() >= 10) {
@@ -565,33 +712,36 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
                             previousProgress.set(p)
 
                             launch(Dispatchers.Main) {
-                                updateProgress(p)
+                                model.progress = p
                             }
                         }
                     }
                 }
             }
 
-            appAdapter.setItems(loaded)
+            model.apps.clear()
+            model.apps.addAll(loaded)
 
             if (!silent) {
-                progress.isVisible = false
-                binding.scrim.isVisible = false
+                model.progress = null
 
-                binding.refresh.postDelayed({
-                    updateScrollButtonState()
-                    searchView.isVisible = true
-                    filter.isVisible = true
+//                progress.isVisible = false
+//                binding.scrim.isVisible = false
+
+                binding.root.postDelayed({
+                    updateScrollButtonState(appListState.firstVisibleItemIndex)
+//                    searchView.isVisible = true
+//                    filter.isVisible = true
                 }, 10)
             } else {
-                binding.refresh.postDelayed({
-                    updateScrollButtonState()
+                binding.root.postDelayed({
+                    updateScrollButtonState(appListState.firstVisibleItemIndex)
                 }, 10)
             }
 
-            if (appAdapter.state.hasFilters) {
-                onFilterChangeWithLoader(override = true)
-            }
+//            if (appAdapter.state.hasFilters) {
+//                onFilterChangeWithLoader(override = true)
+//            }
         }
     }
 
@@ -609,53 +759,53 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
         )
     }
 
-    private fun onFilterChangeWithLoader(
-        newState: (AppAdapter.State) -> AppAdapter.State = { it },
-        override: Boolean = false
-    ) {
-        async(Dispatchers.Main) {
-            val initialLoad = !appAdapter.state.hasLoadedItems
-
-            if (initialLoad) {
-                binding.scrim.isVisible = true
-                progress.isVisible = true
-                progressView?.indeterminate = true
-
-                searchView.clearFocus()
-            }
-
-            withContext(Dispatchers.IO) {
-                val previousUpdateTime = AtomicLong(0)
-
-                appAdapter.onFilterChange(
-                    newState(appAdapter.state),
-                    override
-                ) { current, total ->
-                    val currentTime = System.currentTimeMillis()
-
-                    // It's possible for updates to come through too quickly for the UI thread to handle.
-                    // This makes sure we don't overload it by only allowing updates every 10ms.
-                    if (currentTime - previousUpdateTime.get() > 10) {
-                        previousUpdateTime.set(currentTime)
-
-                        launch(Dispatchers.Main) {
-                            updateProgress((current / total.toFloat() * 100f).toInt())
-                        }
-                    }
-                }
-            }
-
-            binding.scrim.isVisible = false
-            progress.isVisible = false
-            progressView?.indeterminate = false
-
-            searchView.let {
-                if (!it.isIconified) {
-                    it.requestFocus()
-                }
-            }
-        }
-    }
+//    private fun onFilterChangeWithLoader(
+//        newState: (AppAdapter.State) -> AppAdapter.State = { it },
+//        override: Boolean = false
+//    ) {
+//        async(Dispatchers.Main) {
+//            val initialLoad = !model.hasLoadedItems
+//
+//            if (initialLoad) {
+//                binding.scrim.isVisible = true
+//                progress.isVisible = true
+//                progressView?.indeterminate = true
+//
+//                searchView.clearFocus()
+//            }
+//
+//            withContext(Dispatchers.IO) {
+//                val previousUpdateTime = AtomicLong(0)
+//
+//                appAdapter.onFilterChange(
+//                    newState(appAdapter.state),
+//                    override
+//                ) { current, total ->
+//                    val currentTime = System.currentTimeMillis()
+//
+//                    // It's possible for updates to come through too quickly for the UI thread to handle.
+//                    // This makes sure we don't overload it by only allowing updates every 10ms.
+//                    if (currentTime - previousUpdateTime.get() > 10) {
+//                        previousUpdateTime.set(currentTime)
+//
+//                        launch(Dispatchers.Main) {
+//                            updateProgress((current / total.toFloat() * 100f).toInt())
+//                        }
+//                    }
+//                }
+//            }
+//
+//            binding.scrim.isVisible = false
+//            progress.isVisible = false
+//            progressView?.indeterminate = false
+//
+//            searchView.let {
+//                if (!it.isIconified) {
+//                    it.requestFocus()
+//                }
+//            }
+//        }
+//    }
 
     private suspend fun loadApp(app: PackageInfo): AppInfo = coroutineScope {
         val activities = app.activities
@@ -664,7 +814,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
 
         val appLabel = app.applicationInfo.loadLabel(packageManager)
 
-        val activitiesLoader: suspend (suspend (Int, Int) -> Unit) -> Collection<ActivityInfo> = {
+        val activitiesLoader: ((Int, Int) -> Unit) -> Collection<ActivityInfo> = {
             val activityInfos = LinkedList<ActivityInfo>()
 
             activities?.forEachIndexed { index, act ->
@@ -680,7 +830,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
 
             activityInfos
         }
-        val servicesLoader: suspend (suspend (Int, Int) -> Unit) -> Collection<ServiceInfo> = {
+        val servicesLoader: ((Int, Int) -> Unit) -> Collection<ServiceInfo> = {
             val serviceInfos = LinkedList<ServiceInfo>()
 
             services?.forEachIndexed { index, srv ->
@@ -696,7 +846,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
 
             serviceInfos
         }
-        val receiversLoader: suspend (suspend (Int, Int) -> Unit) -> Collection<ReceiverInfo> = {
+        val receiversLoader: ((Int, Int) -> Unit) -> Collection<ReceiverInfo> = {
             val receiverInfos = LinkedList<ReceiverInfo>()
 
             receivers?.forEachIndexed { index, rec ->
@@ -725,7 +875,8 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
             isForTasker = isForTasker,
             selectionCallback = { info ->
                 selectedItem = info.type() to info.component
-            }
+            },
+            context = this@MainActivity
         )
     }
 

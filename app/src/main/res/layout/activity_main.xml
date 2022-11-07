@@ -18,24 +18,32 @@
             android:layout_height="0dp"
             android:layout_weight="1">
 
-            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-                android:id="@+id/refresh"
+            <androidx.compose.ui.platform.ComposeView
+                android:id="@+id/app_list"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                />
 
-                <tk.zwander.rootactivitylauncher.views.NestedRecyclerView
-                    android:id="@+id/app_list"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    app:fastScrollAutoHide="true"
-                    app:fastScrollPopupBgColor="?colorAccent"
-                    app:fastScrollPopupTextColor="?android:textColorPrimary"
-                    app:fastScrollThumbColor="?colorAccent"
-                    app:fastScrollThumbInactiveColor="?android:textColorSecondary"
-                    app:layoutManager="tk.zwander.rootactivitylauncher.util.PredictiveLinearLayoutManager"
-                    tools:listitem="@layout/app_item" />
+<!--            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout-->
+<!--                android:id="@+id/refresh"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="match_parent">-->
 
-            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+<!--                <tk.zwander.rootactivitylauncher.views.NestedRecyclerView-->
+<!--                    android:id="@+id/app_list"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="match_parent"-->
+<!--                    app:fastScrollAutoHide="true"-->
+<!--                    app:fastScrollPopupBgColor="?colorAccent"-->
+<!--                    app:fastScrollPopupTextColor="?android:textColorPrimary"-->
+<!--                    app:fastScrollThumbColor="?colorAccent"-->
+<!--                    app:fastScrollThumbInactiveColor="?android:textColorSecondary"-->
+<!--                    app:layoutManager="tk.zwander.rootactivitylauncher.util.PredictiveLinearLayoutManager"-->
+<!--                    tools:listitem="@layout/app_item" />-->
+
+
+
+<!--            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>-->
 
         </FrameLayout>
 
