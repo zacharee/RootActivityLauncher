@@ -1,6 +1,5 @@
 package tk.zwander.rootactivitylauncher.util
 
-import android.content.ComponentName
 import android.content.Context
 import android.content.pm.IPackageManager
 import android.content.pm.PackageManager

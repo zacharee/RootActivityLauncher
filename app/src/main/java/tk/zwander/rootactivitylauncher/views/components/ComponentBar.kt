@@ -13,11 +13,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -41,9 +41,9 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.drawable.toBitmap
-import coil.compose.rememberAsyncImagePainter
 import com.github.skgmn.composetooltip.AnchorEdge
 import com.github.skgmn.composetooltip.Tooltip
+import com.github.skgmn.composetooltip.rememberTooltipStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import tk.zwander.rootactivitylauncher.R
@@ -251,12 +251,32 @@ private fun BarGuts(
             Box(
                 modifier = Modifier.size(if (availability == Availability.NA) 48.dp else 36.dp)
             ) {
+                var showingTooltip by remember {
+                    mutableStateOf(false)
+                }
+
                 Image(
                     painter = icon,
                     contentDescription = name,
                     modifier = Modifier
                         .size(if (availability == Availability.NA) 48.dp else 32.dp)
                         .align(Alignment.Center)
+                        .then(
+                            if (availability != Availability.NA) {
+                                Modifier.combinedClickable(
+                                    interactionSource = remember {
+                                        MutableInteractionSource()
+                                    },
+                                    indication = null,
+                                    onClick = {},
+                                    onLongClick = {
+                                        showingTooltip = true
+                                    }
+                                )
+                            } else {
+                                Modifier
+                            }
+                        )
                 )
 
                 if (availability != Availability.NA) {
@@ -267,6 +287,20 @@ private fun BarGuts(
                             .align(Alignment.BottomEnd)
                             .background(colorResource(id = availability.tintRes))
                     )
+                }
+
+                if (showingTooltip) {
+                    Tooltip(
+                        anchorEdge = AnchorEdge.Top,
+                        onDismissRequest = { showingTooltip = false },
+                        tooltipStyle = rememberTooltipStyle(
+                            color = MaterialTheme.colorScheme.surface,
+                            tipHeight = 0.dp,
+                            tipWidth = 0.dp
+                        )
+                    ) {
+                        Text(text = stringResource(id = availability.labelRes))
+                    }
                 }
             }
 
@@ -310,33 +344,43 @@ private fun BarGuts(
                         mutableStateOf(false)
                     }
 
-                    IconButton(
-                        onClick = { button.onClick(context) },
-                        modifier = Modifier.combinedClickable(
-                            interactionSource = remember {
-                                MutableInteractionSource()
-                            },
-                            indication = rememberRipple(),
-                            enabled = true,
-                            onLongClick = {
-                                showingTooltip = true
-                            },
-                            onClick = {
-                                button.onClick(context)
-                            }
-                        )
+                    Box(
+                        modifier = Modifier.clip(CircleShape)
                     ) {
-                        Icon(
-                            painter = painterResource(id = button.iconRes),
-                            contentDescription = stringResource(id = button.labelRes)
-                        )
+                        Box(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .combinedClickable(
+                                    interactionSource = remember {
+                                        MutableInteractionSource()
+                                    },
+                                    indication = rememberRipple(bounded = false),
+                                    enabled = true,
+                                    onLongClick = {
+                                        showingTooltip = true
+                                    },
+                                    onClick = {
+                                        button.onClick(context)
+                                    }
+                                )
+                        ) {
+                            Icon(
+                                painter = painterResource(id = button.iconRes),
+                                contentDescription = stringResource(id = button.labelRes)
+                            )
 
-                        if (showingTooltip) {
-                            Tooltip(
-                                anchorEdge = AnchorEdge.Top,
-                                onDismissRequest = { showingTooltip = false }
-                            ) {
-                                Text(text = stringResource(id = button.labelRes))
+                            if (showingTooltip) {
+                                Tooltip(
+                                    anchorEdge = AnchorEdge.Top,
+                                    onDismissRequest = { showingTooltip = false },
+                                    tooltipStyle = rememberTooltipStyle(
+                                        color = MaterialTheme.colorScheme.surface,
+                                        tipHeight = 0.dp,
+                                        tipWidth = 0.dp
+                                    )
+                                ) {
+                                    Text(text = stringResource(id = button.labelRes))
+                                }
                             }
                         }
                     }

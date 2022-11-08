@@ -56,6 +56,7 @@
     <string name="permission_required">Permission Required</string>
     <string name="clear">Clear</string>
     <string name="close">Close</string>
+    <string name="menu">Menu</string>
 
     <string name="activities">Activities (%d)</string>
     <string name="services">Services (%d)</string>

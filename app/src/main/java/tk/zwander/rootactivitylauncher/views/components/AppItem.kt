@@ -1,6 +1,5 @@
 package tk.zwander.rootactivitylauncher.views.components
 
-import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +10,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.AppInfo
-import tk.zwander.rootactivitylauncher.data.MainModel
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.views.ComponentInfoDialog
 
@@ -39,8 +38,24 @@ fun AppItem(
         mutableStateOf(false)
     }
 
-    LaunchedEffect(key1 = info.activitiesExpanded) {
-        if (info.activitiesExpanded) {
+    val filteredActivities by info.filteredActivities.observeAsState()
+    val filteredServices by info.filteredServices.observeAsState()
+    val filteredReceivers by info.filteredReceivers.observeAsState()
+
+    val hasLoadedActivities by info.hasLoadedActivities.observeAsState()
+    val hasLoadedServices by info.hasLoadedServices.observeAsState()
+    val hasLoadedReceivers by info.hasLoadedReceivers.observeAsState()
+
+    val activityCount = if (hasLoadedActivities!!) filteredActivities!!.size else info._activitiesSize
+    val servicesCount = if (hasLoadedServices!!) filteredServices!!.size else info._servicesSize
+    val receiversCount = if (hasLoadedReceivers!!) filteredReceivers!!.size else info._receiversSize
+
+    val activitiesExpanded by info.activitiesExpanded.observeAsState()
+    val servicesExpanded by info.servicesExpanded.observeAsState()
+    val receiversExpanded by info.receiversExpanded.observeAsState()
+
+    LaunchedEffect(key1 = activitiesExpanded) {
+        if (activitiesExpanded == true) {
             info.loadActivities { current, total ->
                 progressCallback(current / total.toFloat())
             }
@@ -49,8 +64,8 @@ fun AppItem(
         }
     }
 
-    LaunchedEffect(key1 = info.servicesExpanded) {
-        if (info.servicesExpanded) {
+    LaunchedEffect(key1 = servicesExpanded) {
+        if (servicesExpanded == true) {
             info.loadServices { current, total ->
                 progressCallback(current / total.toFloat())
             }
@@ -59,8 +74,8 @@ fun AppItem(
         }
     }
 
-    LaunchedEffect(key1 = info.receiversExpanded) {
-        if (info.receiversExpanded) {
+    LaunchedEffect(key1 = receiversExpanded) {
+        if (receiversExpanded == true) {
             info.loadReceivers { current, total ->
                 progressCallback(current / total.toFloat())
             }
@@ -77,7 +92,7 @@ fun AppItem(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             AppBar(
-                icon = rememberAsyncImagePainter(model = context.getCoilData(info.info)),
+                icon = rememberAsyncImagePainter(model = getCoilData(info.info)),
                 name = info.label.toString(),
                 showActions = !isForTasker,
                 modifier = Modifier
@@ -98,24 +113,12 @@ fun AppItem(
                 }
             )
 
-            val activityCount = remember(MainModel.isSearching, info.hasLoadedActivities) {
-                if (MainModel.isSearching && info.hasLoadedActivities) info._loadedActivities.size else info._activitiesSize
-            }
-
-            val servicesCount = remember(MainModel.isSearching, info.hasLoadedServices) {
-                if (MainModel.isSearching && info.hasLoadedServices) info._loadedServices.size else info._servicesSize
-            }
-
-            val receiversCount = remember(MainModel.isSearching, info.hasLoadedReceivers) {
-                if (MainModel.isSearching && info.hasLoadedReceivers) info._loadedReceivers.size else info._receiversSize
-            }
-
             ComponentGroup(
                 titleRes = R.string.activities,
-                items = info.safeFilteredActivities,
-                expanded = info.activitiesExpanded,
+                items = filteredActivities ?: listOf(),
+                expanded = activitiesExpanded == true,
                 onExpandChange = {
-                    info.activitiesExpanded = it
+                    info.activitiesExpanded.value = it
                 },
                 modifier = Modifier.fillMaxWidth(),
                 forTasker = isForTasker,
@@ -125,10 +128,10 @@ fun AppItem(
 
             ComponentGroup(
                 titleRes = R.string.services,
-                items = info.safeFilteredServices,
-                expanded = info.servicesExpanded,
+                items = filteredServices ?: listOf(),
+                expanded = servicesExpanded == true,
                 onExpandChange = {
-                    info.servicesExpanded = it
+                    info.servicesExpanded.value = it
                 },
                 modifier = Modifier.fillMaxWidth(),
                 forTasker = isForTasker,
@@ -138,10 +141,10 @@ fun AppItem(
 
             ComponentGroup(
                 titleRes = R.string.receivers,
-                items = info.safeFilteredReceivers,
-                expanded = info.receiversExpanded,
+                items = filteredReceivers ?: listOf(),
+                expanded = receiversExpanded == true,
                 onExpandChange = {
-                    info.receiversExpanded = it
+                    info.receiversExpanded.value = it
                 },
                 modifier = Modifier.fillMaxWidth(),
                 forTasker = isForTasker,
@@ -159,7 +162,7 @@ fun AppItem(
     }
 }
 
-private fun Context.getCoilData(info: ApplicationInfo): Any? {
+private fun getCoilData(info: ApplicationInfo): Any? {
     val res = info.iconRes.run {
         if (this == 0) info.roundIconRes
         else this

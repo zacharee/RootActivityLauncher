@@ -1,16 +1,9 @@
 package tk.zwander.rootactivitylauncher.data
 
-import android.util.Log
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import tk.zwander.rootactivitylauncher.util.AdvancedSearcher
 import tk.zwander.rootactivitylauncher.util.forEachParallel
 import tk.zwander.rootactivitylauncher.util.isValidRegex
@@ -18,33 +11,32 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 object MainModel {
-    val apps = mutableStateListOf<AppInfo>()
-    val filteredApps = mutableStateListOf<AppInfo>()
+    val apps = MutableLiveData<List<AppInfo>>(listOf())
+    val filteredApps = MutableLiveData<List<AppInfo>>(listOf())
 
-    var enabledFilterMode by mutableStateOf(EnabledFilterMode.SHOW_ALL)
-    var exportedFilterMode by mutableStateOf(ExportedFilterMode.SHOW_ALL)
-    var permissionFilterMode by mutableStateOf(PermissionFilterMode.SHOW_ALL)
+    val enabledFilterMode = MutableLiveData<FilterMode.EnabledFilterMode>(FilterMode.EnabledFilterMode.ShowAll)
+    val exportedFilterMode = MutableLiveData<FilterMode.ExportedFilterMode>(FilterMode.ExportedFilterMode.ShowAll)
+    val permissionFilterMode = MutableLiveData<FilterMode.PermissionFilterMode>(FilterMode.PermissionFilterMode.ShowAll)
 
-    var query by mutableStateOf("")
+    val query = MutableLiveData("")
 
-    var progress by mutableStateOf<Float?>(null)
+    val progress = MutableLiveData<Float?>(null)
 
-    var useRegex by mutableStateOf(false)
-    var includeComponents by mutableStateOf(true)
+    val useRegex = MutableLiveData(false)
+    val includeComponents = MutableLiveData(true)
 
-    var isSearching by mutableStateOf(false)
+    val isSearching = MutableLiveData(false)
 
-    val hasFilters by derivedStateOf {
-        query.isNotBlank() ||
-                enabledFilterMode != EnabledFilterMode.SHOW_ALL ||
-                exportedFilterMode != ExportedFilterMode.SHOW_ALL ||
-                permissionFilterMode != PermissionFilterMode.SHOW_ALL
-    }
+    val hasFilters: Boolean
+        get() = query.value!!.isNotBlank() ||
+                enabledFilterMode.value != FilterMode.EnabledFilterMode.ShowAll ||
+                exportedFilterMode.value != FilterMode.ExportedFilterMode.ShowAll ||
+                permissionFilterMode.value != FilterMode.PermissionFilterMode.ShowAll
 
     suspend fun update() = coroutineScope {
-        val apps = apps.toList()
+        val apps = apps.value!!.toList()
         val hasFilters = hasFilters
-        val isSearching = isSearching
+        val isSearching = isSearching.value!!
 
         launch(Dispatchers.IO) {
             if (hasFilters || isSearching) {
@@ -65,11 +57,13 @@ object MainModel {
                         if (newProgress > oldProgress && newUpdateTime - 10 > lastUpdateTime.get()) {
                             lastUpdateTime.set(newUpdateTime)
 
-                            async(Dispatchers.Main) {
-                                progress = newProgress
-                            }
+                            progress.postValue(newProgress)
                         }
                     }
+                    it.onFilterChange()
+                }
+            } else {
+                apps.forEachParallel {
                     it.onFilterChange()
                 }
             }
@@ -84,23 +78,21 @@ object MainModel {
 
             val sorted = filteredApps.sortedBy { it.label.toString().lowercase() }
 
-            launch(Dispatchers.Main) {
-                MainModel.filteredApps.clear()
-                MainModel.filteredApps.addAll(sorted)
-
-                progress = null
-            }
+            MainModel.filteredApps.postValue(sorted)
+            progress.postValue(null)
         }
     }
 
-    fun matches(data: AppInfo): Boolean {
+    private fun matches(data: AppInfo): Boolean {
+        val query = query.value!!
+
         if (query.isBlank()) return true
 
-        val activityFilterEmpty = data.filteredActivities.isEmpty()
-        val serviceFilterEmpty = data.filteredServices.isEmpty()
-        val receiverFilterEmpty = data.filteredReceivers.isEmpty()
+        val activityFilterEmpty = data.filteredActivities.value!!.isEmpty()
+        val serviceFilterEmpty = data.filteredServices.value!!.isEmpty()
+        val receiverFilterEmpty = data.filteredReceivers.value!!.isEmpty()
 
-        if (includeComponents && (!activityFilterEmpty || !serviceFilterEmpty || !receiverFilterEmpty)) return true
+        if (includeComponents.value!! && (!activityFilterEmpty || !serviceFilterEmpty || !receiverFilterEmpty)) return true
 
         val advancedMatch = AdvancedSearcher.matchesHasPermission(query, data)
                 || AdvancedSearcher.matchesRequiresPermission(query, data)
@@ -109,7 +101,7 @@ object MainModel {
 
         if (advancedMatch) return true
 
-        if (useRegex && query.isValidRegex()) {
+        if (useRegex.value!! && query.isValidRegex()) {
             if (Regex(query).run {
                     containsMatchIn(data.info.packageName)
                             || containsMatchIn(data.label)

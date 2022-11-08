@@ -3,14 +3,12 @@ package tk.zwander.rootactivitylauncher.data
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.common.internal.Objects
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -37,26 +35,16 @@ data class AppInfo(
     private val isForTasker: Boolean,
     private val context: Context
 ) {
-    var filteredActivities by mutableStateOf<List<ActivityInfo>>(listOf())
-    var filteredServices by mutableStateOf<List<ServiceInfo>>(listOf())
-    var filteredReceivers by mutableStateOf<List<ReceiverInfo>>(listOf())
-
-    val safeFilteredActivities by derivedStateOf {
-        if (activitiesExpanded) filteredActivities else listOf()
-    }
-    val safeFilteredServices by derivedStateOf {
-        if (servicesExpanded) filteredServices else listOf()
-    }
-    val safeFilteredReceivers by derivedStateOf {
-        if (receiversExpanded) filteredReceivers else listOf()
-    }
+    val filteredActivities = MutableLiveData<List<ActivityInfo>>(ArrayList(_activitiesSize))
+    val filteredServices = MutableLiveData<List<ServiceInfo>>(ArrayList(_servicesSize))
+    val filteredReceivers = MutableLiveData<List<ReceiverInfo>>(ArrayList(_receiversSize))
 
     val activitiesSize: Int
-        get() = if (!MainModel.hasFilters || !hasLoadedActivities) _activitiesSize else filteredActivities.size
+        get() = if (!MainModel.hasFilters || !hasLoadedActivities.value!!) _activitiesSize else filteredActivities.value!!.size
     val servicesSize: Int
-        get() = if (!MainModel.hasFilters || !hasLoadedServices) _servicesSize else filteredServices.size
+        get() = if (!MainModel.hasFilters || !hasLoadedServices.value!!) _servicesSize else filteredServices.value!!.size
     val receiversSize: Int
-        get() = if (!MainModel.hasFilters || !hasLoadedReceivers) _receiversSize else filteredReceivers.size
+        get() = if (!MainModel.hasFilters || !hasLoadedReceivers.value!!) _receiversSize else filteredReceivers.value!!.size
 
     val totalUnfilteredSize: Int = _activitiesSize + _servicesSize + _receiversSize
 
@@ -64,16 +52,13 @@ data class AppInfo(
     val _loadedServices = ConcurrentLinkedDeque<ServiceInfo>()
     val _loadedReceivers = ConcurrentLinkedDeque<ReceiverInfo>()
 
-    var activitiesExpanded: Boolean by mutableStateOf(false)
-    var servicesExpanded: Boolean by mutableStateOf(false)
-    var receiversExpanded: Boolean by mutableStateOf(false)
+    val activitiesExpanded = MutableLiveData(false)
+    val servicesExpanded = MutableLiveData(false)
+    val receiversExpanded = MutableLiveData(false)
 
-    var hasLoadedActivities by mutableStateOf(false)
-        private set
-    var hasLoadedServices by mutableStateOf(false)
-        private set
-    var hasLoadedReceivers by mutableStateOf(false)
-        private set
+    val hasLoadedActivities = MutableLiveData(false)
+    val hasLoadedServices = MutableLiveData(false)
+    val hasLoadedReceivers = MutableLiveData(false)
 
     override fun equals(other: Any?): Boolean {
         return other is AppInfo
@@ -131,66 +116,98 @@ data class AppInfo(
 
     suspend fun onFilterChange() {
         filterChangeMutex.withLock {
-            val _filteredActivities = _loadedActivities.filter { matches(it, context) }
-            val _filteredServices = _loadedServices.filter { matches(it, context) }
-            val _filteredReceivers = _loadedReceivers.filter { matches(it, context) }
-
-            withContext(Dispatchers.Main) {
-                filteredActivities = _filteredActivities
-                filteredServices = _filteredServices
-                filteredReceivers = _filteredReceivers
+            val query = withContext(Dispatchers.Main) {
+                MainModel.query.value!!
             }
+            val enabledFilterMode = withContext(Dispatchers.Main) {
+                MainModel.enabledFilterMode.value!!
+            }
+            val exportedFilterMode = withContext(Dispatchers.Main) {
+                MainModel.exportedFilterMode.value!!
+            }
+            val permissionFilterMode = withContext(Dispatchers.Main) {
+                MainModel.permissionFilterMode.value!!
+            }
+
+            val _filteredActivities = _loadedActivities.filter {
+                matches(it, query, enabledFilterMode, exportedFilterMode, permissionFilterMode)
+            }
+            val _filteredServices = _loadedServices.filter {
+                matches(it, query, enabledFilterMode, exportedFilterMode, permissionFilterMode)
+            }
+            val _filteredReceivers = _loadedReceivers.filter {
+                matches(it, query, enabledFilterMode, exportedFilterMode, permissionFilterMode)
+            }
+
+            filteredActivities.postValue(_filteredActivities)
+            filteredServices.postValue(_filteredServices)
+            filteredReceivers.postValue(_filteredReceivers)
         }
     }
 
     private val loadActivitiesMutex = Mutex()
 
-    suspend fun loadActivities(progress: (Int, Int) -> Unit) {
+    suspend fun loadActivities(progress: (Int, Int) -> Unit) = coroutineScope {
         loadActivitiesMutex.withLock {
-            if (!hasLoadedActivities && activitiesSize > 0 && _loadedActivities.isEmpty()) {
+            if (!hasLoadedActivities.value!! && activitiesSize > 0 && _loadedActivities.isEmpty()) {
                 _loadedActivities.clear()
                 _loadedActivities.addAll(activitiesLoader(progress).toSortedSet())
-                hasLoadedActivities = true
+
+                launch(Dispatchers.Main) {
+                    hasLoadedActivities.value = true
+                }
             }
         }
     }
 
     private val loadServicesMutex = Mutex()
 
-    suspend fun loadServices(progress: (Int, Int) -> Unit) {
+    suspend fun loadServices(progress: (Int, Int) -> Unit) = coroutineScope {
         loadServicesMutex.withLock {
-            if (!hasLoadedServices && servicesSize > 0 && _loadedServices.isEmpty()) {
+            if (!hasLoadedServices.value!! && servicesSize > 0 && _loadedServices.isEmpty()) {
                 _loadedServices.clear()
                 _loadedServices.addAll(servicesLoader(progress).toSortedSet())
-                hasLoadedServices = true
+
+                launch(Dispatchers.Main) {
+                    hasLoadedServices.value = true
+                }
             }
         }
     }
 
     private val loadReceiversMutex = Mutex()
 
-    suspend fun loadReceivers(progress: (Int, Int) -> Unit) {
+    suspend fun loadReceivers(progress: (Int, Int) -> Unit) = coroutineScope {
         loadReceiversMutex.withLock {
-            if (!hasLoadedReceivers && receiversSize > 0 && _loadedReceivers.isEmpty()) {
+            if (!hasLoadedReceivers.value!! && receiversSize > 0 && _loadedReceivers.isEmpty()) {
                 _loadedReceivers.clear()
                 _loadedReceivers.addAll(receiversLoader(progress).toSortedSet())
-                hasLoadedReceivers = true
+
+                launch(Dispatchers.Main) {
+                    hasLoadedReceivers.value = true
+                }
             }
         }
     }
 
-    fun matches(data: BaseComponentInfo, context: Context): Boolean {
-        when (MainModel.enabledFilterMode) {
-            EnabledFilterMode.SHOW_DISABLED -> if (data.info.isActuallyEnabled(context)) return false
-            EnabledFilterMode.SHOW_ENABLED -> if (!data.info.isActuallyEnabled(context)) return false
+    private fun matches(
+        data: BaseComponentInfo,
+        query: String,
+        enabledFilterMode: FilterMode.EnabledFilterMode,
+        exportedFilterMode: FilterMode.ExportedFilterMode,
+        permissionFilterMode: FilterMode.PermissionFilterMode
+    ): Boolean {
+        when (enabledFilterMode) {
+            FilterMode.EnabledFilterMode.ShowDisabled -> if (data.info.isActuallyEnabled(context)) return false
+            FilterMode.EnabledFilterMode.ShowEnabled -> if (!data.info.isActuallyEnabled(context)) return false
             else -> {
                 //no-op
             }
         }
 
-        when (MainModel.exportedFilterMode) {
-            ExportedFilterMode.SHOW_EXPORTED -> if (!data.info.exported) return false
-            ExportedFilterMode.SHOW_UNEXPORTED -> if (data.info.exported) return false
+        when (exportedFilterMode) {
+            FilterMode.ExportedFilterMode.ShowExported -> if (!data.info.exported) return false
+            FilterMode.ExportedFilterMode.ShowUnexported -> if (data.info.exported) return false
             else -> {
                 //no-op
             }
@@ -202,28 +219,28 @@ data class AppInfo(
             else -> null
         }
 
-        when (MainModel.permissionFilterMode) {
-            PermissionFilterMode.SHOW_REQUIRES_NO_PERMISSION -> if (!permission.isNullOrBlank()) return false
-            PermissionFilterMode.SHOW_REQUIRES_PERMISSION -> if (permission.isNullOrBlank()) return false
+        when (permissionFilterMode) {
+            FilterMode.PermissionFilterMode.ShowNoPermissionRequired -> if (!permission.isNullOrBlank()) return false
+            FilterMode.PermissionFilterMode.ShowRequiresPermission -> if (permission.isNullOrBlank()) return false
             else -> {
                 //no-op
             }
         }
 
-        if (MainModel.query.isBlank() || !MainModel.includeComponents) return true
+        if (query.isBlank() || !MainModel.includeComponents.value!!) return true
 
-        val advancedMatch = AdvancedSearcher.matchesRequiresPermission(MainModel.query, data.info)
+        val advancedMatch = AdvancedSearcher.matchesRequiresPermission(query, data.info)
 
-        if (MainModel.useRegex && MainModel.query.isValidRegex()) {
-            if (Regex(MainModel.query).run {
+        if (MainModel.useRegex.value!! && query.isValidRegex()) {
+            if (Regex(query).run {
                     containsMatchIn(data.info.name)
                             || containsMatchIn(data.label)
                 } || advancedMatch) {
                 return true
             }
         } else {
-            if (data.info.name.contains(MainModel.query, true)
-                || (data.label.contains(MainModel.query, true))
+            if (data.info.name.contains(query, true)
+                || (data.label.contains(query, true))
                 || advancedMatch
             ) {
                 return true

@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,8 +40,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -60,8 +62,9 @@ import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.MainModel
 import tk.zwander.rootactivitylauncher.data.component.*
 import tk.zwander.rootactivitylauncher.util.*
-import tk.zwander.rootactivitylauncher.views.FilterDialog
 import tk.zwander.rootactivitylauncher.views.components.AppItem
+import tk.zwander.rootactivitylauncher.views.components.FilterDialog
+import tk.zwander.rootactivitylauncher.views.components.Menu
 import tk.zwander.rootactivitylauncher.views.components.SearchComponent
 import tk.zwander.rootactivitylauncher.views.components.SelectableCard
 import tk.zwander.rootactivitylauncher.views.components.Theme
@@ -105,7 +108,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                             val loaded = loadApp(getPackageInfo(host), packageManager)
 
                             launch(Dispatchers.Main) {
-                                MainModel.apps.add(loaded)
+                                MainModel.apps.value = MainModel.apps.value!! + loaded
                             }
                         }
                     }
@@ -113,7 +116,9 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                     Intent.ACTION_PACKAGE_REMOVED -> {
                         if (host != null) {
                             launch(Dispatchers.Main) {
-                                MainModel.apps.removeAll { it.info.packageName == host }
+                                MainModel.apps.value = MainModel.apps.value!!.toMutableList().apply {
+                                    removeAll { it.info.packageName == host }
+                                }
                             }
                         }
                     }
@@ -121,8 +126,12 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                     Intent.ACTION_PACKAGE_REPLACED -> {
                         if (host != null) {
                             launch(Dispatchers.Main) {
-                                MainModel.apps[MainModel.apps.indexOfFirst { it.info.packageName == host }] =
+                                val old = ArrayList(MainModel.apps.value!!)
+
+                                old[old.indexOfFirst { it.info.packageName == host }] =
                                     loadApp(getPackageInfo(host), packageManager)
+
+                                MainModel.apps.value = old
                             }
                         }
                     }
@@ -239,20 +248,37 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                 LazyListState()
             }
 
+            var showingFilterDialog by remember {
+                mutableStateOf(false)
+            }
+
+            val enabledFilterMode by MainModel.enabledFilterMode.observeAsState()
+            val exportedFilterMode by MainModel.exportedFilterMode.observeAsState()
+            val permissionFilterMode by MainModel.permissionFilterMode.observeAsState()
+            val query by MainModel.query.observeAsState()
+            val apps by MainModel.apps.observeAsState()
+            val filteredApps by MainModel.filteredApps.observeAsState()
+            val progress by MainModel.progress.observeAsState()
+            val isSearching by MainModel.isSearching.observeAsState()
+            val useRegex by MainModel.useRegex.observeAsState()
+            val includeComponents by MainModel.includeComponents.observeAsState()
+
             LaunchedEffect(
-                MainModel.isSearching,
-                MainModel.useRegex,
-                MainModel.includeComponents
+                isSearching,
+                useRegex,
+                includeComponents
             ) {
-                if (MainModel.isSearching) {
+                if (isSearching == true) {
                     MainModel.update()
                 }
             }
 
             LaunchedEffect(
-                MainModel.apps.toList(),
-                MainModel.hasFilters,
-                MainModel.query
+                apps,
+                enabledFilterMode,
+                exportedFilterMode,
+                permissionFilterMode,
+                query
             ) {
                 MainModel.update()
             }
@@ -277,7 +303,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                                 state = appListState
                             ) {
-                                items(items = MainModel.filteredApps, key = { it.info.packageName }) {
+                                items(items = filteredApps ?: listOf(), key = { it.info.packageName }) {
                                     AppItem(
                                         info = it,
                                         isForTasker = isForTasker,
@@ -285,9 +311,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                                             selectedItem = it.type() to it.component
                                         },
                                         progressCallback = {
-                                            scope.launch {
-                                                MainModel.progress = it
-                                            }
+                                            MainModel.progress.postValue(it)
                                         },
                                         extractCallback = {
                                             extractInfo = it
@@ -301,11 +325,10 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .background(MaterialTheme.colorScheme.surface)
-                                    .heightIn(min = 52.dp),
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
                             ) {
                                 AnimatedVisibility(
-                                    visible = MainModel.isSearching,
+                                    visible = isSearching == true,
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Row(
@@ -316,8 +339,9 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                                     ) {
                                         SelectableCard(
                                             modifier = Modifier.weight(1f),
-                                            selected = MainModel.useRegex,
-                                            onClick = { MainModel.useRegex = !MainModel.useRegex }
+                                            selected = useRegex == true,
+                                            onClick = { MainModel.useRegex.value = !useRegex!! },
+                                            unselectedColor = Color.Transparent
                                         ) {
                                             Box(
                                                 modifier = Modifier
@@ -331,8 +355,9 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
 
                                         SelectableCard(
                                             modifier = Modifier.weight(1f),
-                                            selected = MainModel.includeComponents,
-                                            onClick = { MainModel.includeComponents = !MainModel.includeComponents }
+                                            selected = includeComponents == true,
+                                            onClick = { MainModel.includeComponents.value = !includeComponents!! },
+                                            unselectedColor = Color.Transparent
                                         ) {
                                             Box(
                                                 modifier = Modifier
@@ -347,30 +372,23 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                                 }
 
                                 Row(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 56.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     SearchComponent(
-                                        expanded = MainModel.isSearching,
-                                        query = MainModel.query,
-                                        onExpandChange = { MainModel.isSearching = it },
-                                        onQueryChange = { MainModel.query = it },
+                                        expanded = isSearching == true,
+                                        query = query!!,
+                                        onExpandChange = { MainModel.isSearching.value = it },
+                                        onQueryChange = { MainModel.query.value = it },
                                         modifier = Modifier.weight(1f)
                                     )
 
-                                    AnimatedVisibility(visible = MainModel.progress == null) {
+                                    AnimatedVisibility(visible = progress == null) {
                                         IconButton(
                                             onClick = {
-                                                FilterDialog(
-                                                    this@MainActivity,
-                                                    MainModel.enabledFilterMode,
-                                                    MainModel.exportedFilterMode,
-                                                    MainModel.permissionFilterMode
-                                                ) { enabledMode, exportedMode, permissionMode ->
-                                                    MainModel.enabledFilterMode = enabledMode
-                                                    MainModel.exportedFilterMode = exportedMode
-                                                    MainModel.permissionFilterMode = permissionMode
-                                                }.show()
+                                                showingFilterDialog = true
                                             }
                                         ) {
                                             Icon(
@@ -390,8 +408,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                                     }
 
                                     AnimatedVisibility(
-                                        visible = MainModel.progress == null &&
-                                                firstIndex > 0
+                                        visible = progress == null && firstIndex > 0
                                     ) {
                                         IconButton(
                                             onClick = {
@@ -412,16 +429,15 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                                     }
 
                                     AnimatedVisibility(
-                                        visible = MainModel.progress == null &&
-                                                lastIndex < MainModel.apps.size - 1
+                                        visible = progress == null && lastIndex < apps!!.size - 1
                                     ) {
                                         IconButton(
                                             onClick = {
                                                 scope.launch {
-                                                    if (MainModel.apps.size - 1 - lastIndex > 20) {
-                                                        appListState.scrollToItem(MainModel.apps.size - 1)
+                                                    if (apps!!.size - 1 - lastIndex > 20) {
+                                                        appListState.scrollToItem(apps!!.size - 1)
                                                     } else {
-                                                        appListState.animateScrollToItem(MainModel.apps.size - 1)
+                                                        appListState.animateScrollToItem(apps!!.size - 1)
                                                     }
                                                 }
                                             }
@@ -432,12 +448,14 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                                             )
                                         }
                                     }
+
+                                    Menu()
                                 }
                             }
                         }
 
                         AnimatedVisibility(
-                            visible = MainModel.progress != null,
+                            visible = progress != null,
                             modifier = Modifier.fillMaxSize(),
                             enter = fadeIn(),
                             exit = fadeOut()
@@ -454,17 +472,6 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                                     ) {},
                                 contentAlignment = Alignment.Center
                             ) {
-//                                CircularProgressIndicator(
-//                                    progress = (MainModel.progress ?: 0f),
-//                                    modifier = Modifier.size(128.dp)
-//                                )
-//
-//                                if (MainModel.progress != null) {
-//                                    Text(
-//                                        text = "${((MainModel.progress ?: 0f) * 100).toInt()}%"
-//                                    )
-//                                }
-
                                 val accentColor = MaterialTheme.colorScheme.primary
                                 val textColor = Color.White
                                 val rimWidth = with(LocalDensity.current) {
@@ -484,13 +491,26 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                                     },
                                     modifier = Modifier.size(200.dp),
                                     update = {
-                                        it.progress = ((MainModel.progress ?: 0f) * 100).roundToInt()
+                                        it.progress = ((progress ?: 0f) * 100).roundToInt()
                                     }
                                 )
                             }
                         }
                     }
                 }
+
+                FilterDialog(
+                    showing = showingFilterDialog,
+                    initialEnabledMode = MainModel.enabledFilterMode.value!!,
+                    initialExportedMode = MainModel.exportedFilterMode.value!!,
+                    initialPermissionMode = MainModel.permissionFilterMode.value!!,
+                    onDismissRequest = { enabled, exported, permission ->
+                        MainModel.enabledFilterMode.value = enabled
+                        MainModel.exportedFilterMode.value = exported
+                        MainModel.permissionFilterMode.value = permission
+                        showingFilterDialog = false
+                    }
+                )
             }
         }
 
@@ -516,7 +536,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
     private fun loadDataAsync(silent: Boolean = false): Deferred<*> {
         return async(Dispatchers.Main) {
             if (!silent) {
-                MainModel.progress = 0f
+                MainModel.progress.postValue(0f)
             }
 
             //This mess is because of a bug in Marshmallow and possibly earlier that
@@ -617,18 +637,14 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                         if (Float.fromBits(previousProgress.get()) < p) {
                             previousProgress.set(p.toBits())
 
-                            launch(Dispatchers.Main) {
-                                MainModel.progress = p
-                            }
+                            MainModel.progress.postValue(p)
                         }
                     }
                 }
             }
 
-            MainModel.apps.clear()
-            MainModel.apps.addAll(loaded)
-
-            MainModel.progress = null
+            MainModel.apps.postValue(loaded.toList())
+            MainModel.progress.postValue(null)
         }
     }
 
