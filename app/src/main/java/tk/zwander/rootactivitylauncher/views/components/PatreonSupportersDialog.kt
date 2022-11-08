@@ -1,5 +1,6 @@
 package tk.zwander.rootactivitylauncher.views.components
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
@@ -18,16 +20,18 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import tk.zwander.patreonsupportersretrieval.data.SupporterInfo
 import tk.zwander.patreonsupportersretrieval.util.DataParser
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.util.launchUrl
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun PatreonSupportersDialog(
     showing: Boolean,
@@ -55,31 +59,49 @@ fun PatreonSupportersDialog(
                 }
             },
             text = {
-                Column {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text(text = stringResource(id = R.string.supporters_desc))
 
                     Spacer(modifier = Modifier.size(8.dp))
 
-                    LazyColumn {
-                        items(items = supporters, key = { it }) {
-                            OutlinedCard(
-                                onClick = {
-                                    context.launchUrl(it.link)
-                                },
+                    Crossfade(targetState = supporters.isEmpty()) { empty ->
+                        if (empty) {
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .heightIn(min = 48.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(text = it.name)
+                                CircularProgressIndicator()
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                items(items = supporters, key = { it }) {
+                                    OutlinedCard(
+                                        onClick = {
+                                            context.launchUrl(it.link)
+                                        },
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .heightIn(min = 48.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(text = it.name)
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
+            },
+            modifier = Modifier.fillMaxWidth(0.85f),
+            properties = DialogProperties(usePlatformDefaultWidth = false)
         )
     }
 }

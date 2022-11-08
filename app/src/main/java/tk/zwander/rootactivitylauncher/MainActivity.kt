@@ -4,84 +4,30 @@ import android.annotation.SuppressLint
 import android.content.*
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.documentfile.provider.DocumentFile
-import com.hmomeni.progresscircula.ProgressCircula
 import kotlinx.coroutines.*
 import rikka.shizuku.Shizuku
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.MainModel
 import tk.zwander.rootactivitylauncher.data.component.*
 import tk.zwander.rootactivitylauncher.util.*
-import tk.zwander.rootactivitylauncher.views.components.AppItem
-import tk.zwander.rootactivitylauncher.views.components.FilterDialog
-import tk.zwander.rootactivitylauncher.views.components.Menu
-import tk.zwander.rootactivitylauncher.views.components.SearchComponent
-import tk.zwander.rootactivitylauncher.views.components.SelectableCard
-import tk.zwander.rootactivitylauncher.views.components.Theme
-import java.io.File
+import tk.zwander.rootactivitylauncher.views.components.MainView
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
-import kotlin.math.roundToInt
 
 @SuppressLint("RestrictedApi")
 open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), PermissionResultListener {
     protected open val isForTasker = false
     protected open var selectedItem: Pair<ComponentType, ComponentName>? = null
-
-    @Volatile
-    private var extractInfo: AppInfo? = null
 
     private val packageUpdateReceiver = object : BroadcastReceiver() {
         val filter = IntentFilter().apply {
@@ -140,80 +86,6 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
         }
     }
 
-    private val extractLauncher = registerForActivityResult(
-        object : ActivityResultContracts.OpenDocumentTree() {
-            override fun createIntent(context: Context, input: Uri?): Intent {
-                return super.createIntent(context, input).also {
-                    it.putExtra(Intent.EXTRA_TITLE, getString(R.string.choose_extract_folder_msg))
-                }
-            }
-        }
-    ) { result ->
-        if (extractInfo != null) {
-            val dirUri = result ?: return@registerForActivityResult
-            val dir = DocumentFile.fromTreeUri(this, dirUri) ?: return@registerForActivityResult
-
-            val extractInfo = extractInfo!!
-            this.extractInfo = null
-
-            val baseDir = File(extractInfo.info.sourceDir)
-
-            val splits = extractInfo.info.splitSourceDirs?.mapIndexed { index, s ->
-                val splitApk = File(s)
-                val splitName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    extractInfo.info.splitNames[index]
-                } else splitApk.nameWithoutExtension
-
-                splitName to s
-            }
-
-            val baseFile = dir.createFile(
-                "application/vnd.android.package-archive",
-                extractInfo.info.packageName
-            ) ?: return@registerForActivityResult
-            contentResolver.openOutputStream(baseFile.uri).use { writer ->
-                Log.e("RootActivityLauncher", "$baseDir")
-                try {
-                    baseDir.inputStream().use { reader ->
-                        reader.copyTo(writer!!)
-                    }
-                } catch (e: Exception) {
-                    Log.e("RootActivityLauncher", "Extraction failed", e)
-                    Toast.makeText(
-                        this,
-                        resources.getString(R.string.extraction_failed, e.message),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-
-            splits?.forEach { split ->
-                val name = split.first
-                val path = File(split.second)
-
-                val file = dir.createFile(
-                    "application/vnd.android.package-archive",
-                    "${extractInfo.info.packageName}_$name"
-                )
-                    ?: return@registerForActivityResult
-                contentResolver.openOutputStream(file.uri).use { writer ->
-                    try {
-                        path.inputStream().use { reader ->
-                            reader.copyTo(writer!!)
-                        }
-                    } catch (e: Exception) {
-                        Log.e("RootActivityLauncher", "Extraction failed", e)
-                        Toast.makeText(
-                            this,
-                            resources.getString(R.string.extraction_failed, e.message),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
-            }
-        }
-    }
-
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission(), ::onPermissionResult)
 
@@ -243,275 +115,13 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
         }
 
         setContent {
-            val scope = rememberCoroutineScope()
-            val appListState = remember {
-                LazyListState()
-            }
-
-            var showingFilterDialog by remember {
-                mutableStateOf(false)
-            }
-
-            val enabledFilterMode by MainModel.enabledFilterMode.observeAsState()
-            val exportedFilterMode by MainModel.exportedFilterMode.observeAsState()
-            val permissionFilterMode by MainModel.permissionFilterMode.observeAsState()
-            val query by MainModel.query.observeAsState()
-            val apps by MainModel.apps.observeAsState()
-            val filteredApps by MainModel.filteredApps.observeAsState()
-            val progress by MainModel.progress.observeAsState()
-            val isSearching by MainModel.isSearching.observeAsState()
-            val useRegex by MainModel.useRegex.observeAsState()
-            val includeComponents by MainModel.includeComponents.observeAsState()
-
-            LaunchedEffect(
-                isSearching,
-                useRegex,
-                includeComponents
-            ) {
-                if (isSearching == true) {
-                    MainModel.update()
-                }
-            }
-
-            LaunchedEffect(
-                apps,
-                enabledFilterMode,
-                exportedFilterMode,
-                permissionFilterMode,
-                query
-            ) {
-                MainModel.update()
-            }
-
-            Theme {
-                Surface(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .systemBarsPadding()
-                        ) {
-                            LazyColumn(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f),
-                                contentPadding = PaddingValues(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                state = appListState
-                            ) {
-                                items(items = filteredApps ?: listOf(), key = { it.info.packageName }) {
-                                    AppItem(
-                                        info = it,
-                                        isForTasker = isForTasker,
-                                        selectionCallback = {
-                                            selectedItem = it.type() to it.component
-                                        },
-                                        progressCallback = {
-                                            MainModel.progress.postValue(it)
-                                        },
-                                        extractCallback = {
-                                            extractInfo = it
-                                            extractLauncher.launch(null)
-                                        },
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                }
-                            }
-
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                            ) {
-                                AnimatedVisibility(
-                                    visible = isSearching == true,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(8.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        SelectableCard(
-                                            modifier = Modifier.weight(1f),
-                                            selected = useRegex == true,
-                                            onClick = { MainModel.useRegex.value = !useRegex!! },
-                                            unselectedColor = Color.Transparent
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .heightIn(min = 32.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Text(text = stringResource(id = R.string.regex))
-                                            }
-                                        }
-
-                                        SelectableCard(
-                                            modifier = Modifier.weight(1f),
-                                            selected = includeComponents == true,
-                                            onClick = { MainModel.includeComponents.value = !includeComponents!! },
-                                            unselectedColor = Color.Transparent
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .heightIn(min = 32.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Text(text = stringResource(id = R.string.include_components))
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .heightIn(min = 56.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    SearchComponent(
-                                        expanded = isSearching == true,
-                                        query = query!!,
-                                        onExpandChange = { MainModel.isSearching.value = it },
-                                        onQueryChange = { MainModel.query.value = it },
-                                        modifier = Modifier.weight(1f)
-                                    )
-
-                                    AnimatedVisibility(visible = progress == null) {
-                                        IconButton(
-                                            onClick = {
-                                                showingFilterDialog = true
-                                            }
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(id = R.drawable.ic_baseline_filter_list_24),
-                                                contentDescription = stringResource(id = R.string.filter)
-                                            )
-                                        }
-                                    }
-
-                                    val firstIndex by remember {
-                                        derivedStateOf { appListState.firstVisibleItemIndex }
-                                    }
-                                    val lastIndex by remember {
-                                        derivedStateOf {
-                                            firstIndex + appListState.layoutInfo.visibleItemsInfo.size - 1
-                                        }
-                                    }
-
-                                    AnimatedVisibility(
-                                        visible = progress == null && firstIndex > 0
-                                    ) {
-                                        IconButton(
-                                            onClick = {
-                                                scope.launch {
-                                                    if (firstIndex > 20) {
-                                                        appListState.scrollToItem(0)
-                                                    } else {
-                                                        appListState.animateScrollToItem(0)
-                                                    }
-                                                }
-                                            }
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(id = R.drawable.scroll_to_top),
-                                                contentDescription = stringResource(id = R.string.scroll_top)
-                                            )
-                                        }
-                                    }
-
-                                    AnimatedVisibility(
-                                        visible = progress == null && lastIndex < apps!!.size - 1
-                                    ) {
-                                        IconButton(
-                                            onClick = {
-                                                scope.launch {
-                                                    if (apps!!.size - 1 - lastIndex > 20) {
-                                                        appListState.scrollToItem(apps!!.size - 1)
-                                                    } else {
-                                                        appListState.animateScrollToItem(apps!!.size - 1)
-                                                    }
-                                                }
-                                            }
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(id = R.drawable.scroll_to_bottom),
-                                                contentDescription = stringResource(id = R.string.scroll_bottom)
-                                            )
-                                        }
-                                    }
-
-                                    Menu()
-                                }
-                            }
-                        }
-
-                        AnimatedVisibility(
-                            visible = progress != null,
-                            modifier = Modifier.fillMaxSize(),
-                            enter = fadeIn(),
-                            exit = fadeOut()
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(Color.Black.copy(alpha = 0.5f))
-                                    .clickable(
-                                        interactionSource = remember {
-                                            MutableInteractionSource()
-                                        },
-                                        indication = null,
-                                    ) {},
-                                contentAlignment = Alignment.Center
-                            ) {
-                                val accentColor = MaterialTheme.colorScheme.primary
-                                val textColor = Color.White
-                                val rimWidth = with(LocalDensity.current) {
-                                    8.dp.toPx()
-                                }
-
-                                AndroidView(
-                                    factory = {
-                                        ProgressCircula(context = it).apply {
-                                            indeterminate = false
-                                            rimColor = accentColor.toArgb()
-                                            showProgress = true
-                                            speed = 0.5f
-                                            this.rimWidth = rimWidth
-                                            this.textColor = textColor.toArgb()
-                                        }
-                                    },
-                                    modifier = Modifier.size(200.dp),
-                                    update = {
-                                        it.progress = ((progress ?: 0f) * 100).roundToInt()
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                FilterDialog(
-                    showing = showingFilterDialog,
-                    initialEnabledMode = MainModel.enabledFilterMode.value!!,
-                    initialExportedMode = MainModel.exportedFilterMode.value!!,
-                    initialPermissionMode = MainModel.permissionFilterMode.value!!,
-                    onDismissRequest = { enabled, exported, permission ->
-                        MainModel.enabledFilterMode.value = enabled
-                        MainModel.exportedFilterMode.value = exported
-                        MainModel.permissionFilterMode.value = permission
-                        showingFilterDialog = false
-                    }
-                )
-            }
+            MainView(
+                modifier = Modifier.fillMaxSize(),
+                onItemSelected = {
+                    selectedItem = it.type() to it.component
+                },
+                isForTasker = isForTasker
+            )
         }
 
         currentDataJob = loadDataAsync()
@@ -520,11 +130,6 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
     override fun onPermissionResult(granted: Boolean) {
         // Currently no-op
     }
-
-//    override fun onRefresh() {
-//        if (currentDataJob?.isActive == true) currentDataJob?.cancel()
-//        currentDataJob = loadDataAsync()
-//    }
 
     override fun onDestroy() {
         super.onDestroy()

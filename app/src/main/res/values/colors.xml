@@ -8,9 +8,6 @@
     <color name="colorNeedsPermission">#ffff00</color>
     <color name="colorUnexported">#ff0000</color>
 
-    <color name="colorFadingEdge">#FF191919</color>
-    <color name="colorFadingEdgeLight">#FF323232</color>
-
     <color name="iconForeground">#FFFFFF</color>
     <color name="iconBackgroundStart">@color/colorPrimaryDark</color>
     <color name="iconBackgroundEnd">@color/colorAccent</color>

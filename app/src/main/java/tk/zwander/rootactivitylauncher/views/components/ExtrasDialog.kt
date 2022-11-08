@@ -13,11 +13,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.AlertDialog
@@ -118,19 +116,19 @@ fun ExtrasDialog(
                 Text(text = stringResource(id = android.R.string.cancel))
             }
         },
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(0.85f),
         title = {
             Text(text = stringResource(id = R.string.intent))
         },
         text = {
             ExtrasDialogContents(
                 model = model,
-                modifier = Modifier.fillMaxWidth(0.75f)
+                modifier = Modifier.fillMaxWidth()
             )
         },
         properties = DialogProperties(
             usePlatformDefaultWidth = false,
-        )
+        ),
     )
 }
 
@@ -389,7 +387,7 @@ private fun ExtraItem(
                         onUpdate(null, it, null)
                         showingTypeDialog = false
                     },
-                    modifier = Modifier.fillMaxWidth(0.75f)
+                    modifier = Modifier.fillMaxWidth()
                 )
             },
             confirmButton = {
@@ -397,7 +395,8 @@ private fun ExtraItem(
                     Text(text = stringResource(id = android.R.string.cancel))
                 }
             },
-            properties = DialogProperties(usePlatformDefaultWidth = false)
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+            modifier = Modifier.fillMaxWidth(0.85f)
         )
     }
 }

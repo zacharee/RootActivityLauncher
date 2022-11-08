@@ -11,11 +11,13 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import tk.zwander.rootactivitylauncher.R
 
 private val items = listOf(
@@ -25,6 +27,7 @@ private val items = listOf(
     R.string.usage_advanced_search_requires_feature to R.string.usage_advanced_search_requires_feature_desc
 )
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun AdvancedUsageDialog(
     showing: Boolean,
@@ -65,7 +68,9 @@ fun AdvancedUsageDialog(
                 TextButton(onClick = onDismissRequest) {
                     Text(text = stringResource(id = android.R.string.ok))
                 }
-            }
+            },
+            modifier = Modifier.fillMaxWidth(0.85f),
+            properties = DialogProperties(usePlatformDefaultWidth = false)
         )
     }
 }

@@ -15,13 +15,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
-import tk.zwander.rootactivitylauncher.views.ComponentInfoDialog
 
 @Composable
 fun AppItem(
@@ -32,9 +30,10 @@ fun AppItem(
     extractCallback: (AppInfo) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    
     var showingIntentDialog by remember {
+        mutableStateOf(false)
+    }
+    var showingComponentInfo by remember {
         mutableStateOf(false)
     }
 
@@ -102,7 +101,7 @@ fun AppItem(
                 whichButtons = remember {
                     listOf(
                         Button.ComponentInfoButton(info.pInfo) {
-                            ComponentInfoDialog(context, it).show()
+                            showingComponentInfo = true
                         },
                         Button.IntentDialogButton(info.info.packageName) {
                             showingIntentDialog = true
@@ -160,6 +159,12 @@ fun AppItem(
             onDismissRequest = { showingIntentDialog = false }
         )
     }
+
+    ComponentInfoDialog(
+        info = info.pInfo,
+        showing = showingComponentInfo,
+        onDismissRequest = { showingComponentInfo = false }
+    )
 }
 
 private fun getCoilData(info: ApplicationInfo): Any? {

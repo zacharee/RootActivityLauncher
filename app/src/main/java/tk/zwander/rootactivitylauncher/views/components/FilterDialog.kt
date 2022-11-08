@@ -3,6 +3,7 @@ package tk.zwander.rootactivitylauncher.views.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.AlertDialog
@@ -14,13 +15,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.FilterMode
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun FilterDialog(
     showing: Boolean,
@@ -62,7 +66,8 @@ fun FilterDialog(
             },
             text = {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     FilterGroup(
                         name = stringResource(id = R.string.enabled_filter),
@@ -103,7 +108,9 @@ fun FilterDialog(
                         selectedMode = permissionMode
                     )
                 }
-            }
+            },
+            modifier = Modifier.fillMaxWidth(0.85f),
+            properties = DialogProperties(usePlatformDefaultWidth = false)
         )
     }
 }
