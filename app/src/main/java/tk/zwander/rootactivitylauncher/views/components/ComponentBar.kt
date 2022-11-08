@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -156,7 +158,7 @@ fun AppBar(
 ) {
     val context = LocalContext.current
 
-    var enabled by remember {
+    var enabled by rememberSaveable {
         mutableStateOf(app.info.isActuallyEnabled(context))
     }
 
@@ -188,7 +190,7 @@ fun ComponentBar(
 ) {
     val context = LocalContext.current
 
-    var enabled by remember {
+    var enabled by rememberSaveable {
         mutableStateOf(component.info.isActuallyEnabled(context))
     }
 
@@ -231,7 +233,9 @@ private fun BarGuts(
     modifier: Modifier = Modifier,
     showActions: Boolean = true,
 ) {
-    val actualButtons = whichButtons.filter { enabled || it !is Button.LaunchButton }
+    val actualButtons = remember {
+        whichButtons.filter { enabled || it !is Button.LaunchButton }
+    }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -277,7 +281,9 @@ private fun BarGuts(
 
                 Text(
                     text = subLabel,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                    lineHeight = 12.sp
                 )
             }
 
@@ -297,7 +303,7 @@ private fun BarGuts(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 actualButtons.forEach { button ->
                     var showingTooltip by remember {
@@ -321,7 +327,7 @@ private fun BarGuts(
                         )
                     ) {
                         Icon(
-                            painter = rememberAsyncImagePainter(model = button.iconRes),
+                            painter = painterResource(id = button.iconRes),
                             contentDescription = stringResource(id = button.labelRes)
                         )
 

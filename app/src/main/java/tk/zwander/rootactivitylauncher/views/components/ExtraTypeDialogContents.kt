@@ -43,16 +43,9 @@ fun ExtrasTypeDialogContents(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(items = sortedTypes, key = { it.value }) { type ->
-            OutlinedCard(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                colors = if (initial == type) {
-                    CardDefaults.outlinedCardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                } else {
-                    CardDefaults.outlinedCardColors()
-                },
+            SelectableCard(
+                modifier = Modifier.fillMaxWidth(),
+                selected = initial == type,
                 onClick = {
                     onTypeSelected(type)
                 }

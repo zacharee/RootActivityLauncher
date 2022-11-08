@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.AppInfo
+import tk.zwander.rootactivitylauncher.data.MainModel
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.views.ComponentInfoDialog
 
@@ -28,7 +29,7 @@ fun AppItem(
     info: AppInfo,
     isForTasker: Boolean,
     selectionCallback: (BaseComponentInfo) -> Unit,
-    progressCallback: (Int) -> Unit,
+    progressCallback: (Float?) -> Unit,
     extractCallback: (AppInfo) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -41,29 +42,35 @@ fun AppItem(
     LaunchedEffect(key1 = info.activitiesExpanded) {
         if (info.activitiesExpanded) {
             info.loadActivities { current, total ->
-                progressCallback((current / total.toFloat() * 100f).toInt())
+                progressCallback(current / total.toFloat())
             }
+            info.onFilterChange()
+            progressCallback(null)
         }
     }
 
     LaunchedEffect(key1 = info.servicesExpanded) {
-        if (info.receiversExpanded) {
+        if (info.servicesExpanded) {
             info.loadServices { current, total ->
-                progressCallback((current / total.toFloat() * 100f).toInt())
+                progressCallback(current / total.toFloat())
             }
+            info.onFilterChange()
+            progressCallback(null)
         }
     }
 
     LaunchedEffect(key1 = info.receiversExpanded) {
         if (info.receiversExpanded) {
-            info.loadActivities { current, total ->
-                progressCallback((current / total.toFloat() * 100f).toInt())
+            info.loadReceivers { current, total ->
+                progressCallback(current / total.toFloat())
             }
+            info.onFilterChange()
+            progressCallback(null)
         }
     }
     
     ElevatedCard(
-        modifier = modifier.padding(8.dp)
+        modifier = modifier
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -73,24 +80,39 @@ fun AppItem(
                 icon = rememberAsyncImagePainter(model = context.getCoilData(info.info)),
                 name = info.label.toString(),
                 showActions = !isForTasker,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(start = 8.dp, top = 8.dp, end = 8.dp),
                 app = info,
-                whichButtons = listOf(
-                    Button.ComponentInfoButton(info.pInfo) {
-                        ComponentInfoDialog(context, it).show()
-                    },
-                    Button.IntentDialogButton(info.info.packageName) {
-                        showingIntentDialog = true
-                    },
-                    Button.AppInfoButton(info.info.packageName),
-                    Button.SaveApkButton(info, extractCallback)
-                )
+                whichButtons = remember {
+                    listOf(
+                        Button.ComponentInfoButton(info.pInfo) {
+                            ComponentInfoDialog(context, it).show()
+                        },
+                        Button.IntentDialogButton(info.info.packageName) {
+                            showingIntentDialog = true
+                        },
+                        Button.AppInfoButton(info.info.packageName),
+                        Button.SaveApkButton(info, extractCallback)
+                    )
+                }
             )
+
+            val activityCount = remember(MainModel.isSearching, info.hasLoadedActivities) {
+                if (MainModel.isSearching && info.hasLoadedActivities) info._loadedActivities.size else info._activitiesSize
+            }
+
+            val servicesCount = remember(MainModel.isSearching, info.hasLoadedServices) {
+                if (MainModel.isSearching && info.hasLoadedServices) info._loadedServices.size else info._servicesSize
+            }
+
+            val receiversCount = remember(MainModel.isSearching, info.hasLoadedReceivers) {
+                if (MainModel.isSearching && info.hasLoadedReceivers) info._loadedReceivers.size else info._receiversSize
+            }
 
             ComponentGroup(
                 titleRes = R.string.activities,
-                items = info.filteredActivities,
+                items = info.safeFilteredActivities,
                 expanded = info.activitiesExpanded,
                 onExpandChange = {
                     info.activitiesExpanded = it
@@ -98,12 +120,12 @@ fun AppItem(
                 modifier = Modifier.fillMaxWidth(),
                 forTasker = isForTasker,
                 onItemSelected = selectionCallback,
-                count = info.activitiesSize
+                count = activityCount
             )
 
             ComponentGroup(
                 titleRes = R.string.services,
-                items = info.filteredServices,
+                items = info.safeFilteredServices,
                 expanded = info.servicesExpanded,
                 onExpandChange = {
                     info.servicesExpanded = it
@@ -111,12 +133,12 @@ fun AppItem(
                 modifier = Modifier.fillMaxWidth(),
                 forTasker = isForTasker,
                 onItemSelected = selectionCallback,
-                count = info.servicesSize
+                count = servicesCount
             )
 
             ComponentGroup(
                 titleRes = R.string.receivers,
-                items = info.filteredReceivers,
+                items = info.safeFilteredReceivers,
                 expanded = info.receiversExpanded,
                 onExpandChange = {
                     info.receiversExpanded = it
@@ -124,7 +146,7 @@ fun AppItem(
                 modifier = Modifier.fillMaxWidth(),
                 forTasker = isForTasker,
                 onItemSelected = selectionCallback,
-                count = info.receiversSize
+                count = receiversCount
             )
         }
     }
@@ -146,6 +168,6 @@ private fun Context.getCoilData(info: ApplicationInfo): Any? {
     return if (res != 0) {
         Uri.parse("android.resource://${info.packageName}/$res")
     } else {
-        info.loadIcon(packageManager)
+        Uri.parse("android.resource://android/${com.android.internal.R.drawable.sym_def_app_icon}")
     }
 }

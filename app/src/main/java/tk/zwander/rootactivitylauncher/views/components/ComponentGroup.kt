@@ -81,15 +81,15 @@ fun ComponentGroup(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 500.dp),
-                    contentPadding = PaddingValues(start = 32.dp)
+                        .heightIn(max = 500.dp)
                 ) {
-                    items(items = items, key = { it.component }) {
+                    items(items = items, key = { it.hashCode() }) {
                         ComponentItem(
                             forTasker = forTasker,
                             component = it,
                             onClick = { onItemSelected(it) },
                             modifier = Modifier.fillMaxWidth()
+                                .padding(start = 32.dp, end = 8.dp)
                         )
                     }
                 }

@@ -13,6 +13,7 @@ import android.content.pm.PackageItemInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.os.CpuUsageProto.Load
 import android.provider.Settings
 import android.util.SparseArray
 import android.util.TypedValue
@@ -30,7 +31,9 @@ import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.activities.ShortcutLaunchActivity
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.PrefManager
+import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
+import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.regex.PatternSyntaxException
 import kotlin.coroutines.CoroutineContext
 import kotlin.random.Random
@@ -193,6 +196,34 @@ fun <T> Collection<T>.forEachParallelBlocking(context: CoroutineContext = Dispat
     forEachParallel(context, block)
 }
 
+suspend fun <T> Array<T>.forEachParallelIndexed(context: CoroutineContext = Dispatchers.IO, block: suspend CoroutineScope.(Int, T) -> Unit) = coroutineScope {
+    val jobs = ArrayList<Deferred<*>>(size)
+
+    forEachIndexed { index, t ->
+        jobs.add(
+            async(context) {
+                block(index, t)
+            }
+        )
+    }
+
+    jobs.awaitAll()
+}
+
+suspend fun <T> Collection<T>.forEachParallelIndexed(context: CoroutineContext = Dispatchers.IO, block: suspend CoroutineScope.(Int, T) -> Unit) = coroutineScope {
+    val jobs = ArrayList<Deferred<*>>(size)
+
+    forEachIndexed { index, t ->
+        jobs.add(
+            async(context) {
+                block(index, t)
+            }
+        )
+    }
+
+    jobs.awaitAll()
+}
+
 suspend fun <T> Collection<T>.forEachParallel(context: CoroutineContext = Dispatchers.IO, block: suspend CoroutineScope.(T) -> Unit) = coroutineScope {
     val jobs = ArrayList<Deferred<*>>(size)
     forEach {
@@ -321,4 +352,22 @@ private fun checkEnabledSetting(setting: Int, default: Boolean): Boolean {
         PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER -> false
         else -> false
     }
+}
+
+inline fun <reified Loaded : BaseComponentInfo, reified Input : PackageItemInfo> Array<Input>?.loadItems(
+    pm: PackageManager,
+    appLabel: CharSequence,
+    progress: (Int, Int) -> Unit,
+    constructor: (Input, CharSequence) -> Loaded
+): Collection<Loaded> {
+    val infos = ConcurrentLinkedDeque<Loaded>()
+
+    this?.forEachIndexed { index, input ->
+        val label = input.loadLabel(pm).ifBlank { appLabel }
+
+        infos.add(constructor(input, label))
+        progress(index, size)
+    }
+
+    return infos
 }

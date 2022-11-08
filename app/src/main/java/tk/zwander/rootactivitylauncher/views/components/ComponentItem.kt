@@ -76,6 +76,6 @@ private fun Context.getCoilData(data: BaseComponentInfo): Any? {
     return if (res != 0) {
         Uri.parse("android.resource://${data.info.packageName}/$res")
     } else {
-        data.info.applicationInfo.loadIcon(packageManager)
+        Uri.parse("android.resource://android/${com.android.internal.R.drawable.sym_def_app_icon}")
     }
 }

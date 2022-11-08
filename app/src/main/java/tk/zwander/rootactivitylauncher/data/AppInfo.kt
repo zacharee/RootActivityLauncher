@@ -5,13 +5,15 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.google.android.gms.common.internal.Objects
-import tk.zwander.rootactivitylauncher.adapters.component.ActivityAdapter
-import tk.zwander.rootactivitylauncher.adapters.component.ReceiverAdapter
-import tk.zwander.rootactivitylauncher.adapters.component.ServiceAdapter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ReceiverInfo
@@ -19,46 +21,48 @@ import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.util.AdvancedSearcher
 import tk.zwander.rootactivitylauncher.util.isActuallyEnabled
 import tk.zwander.rootactivitylauncher.util.isValidRegex
+import java.util.concurrent.ConcurrentLinkedDeque
+import java.util.concurrent.atomic.AtomicInteger
 
 data class AppInfo(
     val pInfo: PackageInfo,
     val info: ApplicationInfo = pInfo.applicationInfo,
     val label: CharSequence,
-    private val activitiesLoader: ((Int, Int) -> Unit) -> Collection<ActivityInfo>,
-    private val servicesLoader: ((Int, Int) -> Unit) -> Collection<ServiceInfo>,
-    private val receiversLoader: ((Int, Int) -> Unit) -> Collection<ReceiverInfo>,
-    private val _activitiesSize: Int,
-    private val _servicesSize: Int,
-    private val _receiversSize: Int,
+    private val activitiesLoader: suspend (progress: (Int, Int) -> Unit) -> Collection<ActivityInfo>,
+    private val servicesLoader: suspend (progress: (Int, Int) -> Unit) -> Collection<ServiceInfo>,
+    private val receiversLoader: suspend (progress: (Int, Int) -> Unit) -> Collection<ReceiverInfo>,
+    val _activitiesSize: Int,
+    val _servicesSize: Int,
+    val _receiversSize: Int,
     private val isForTasker: Boolean,
-    private val context: Context,
-    private val selectionCallback: (BaseComponentInfo) -> Unit
+    private val context: Context
 ) {
-    val activityAdapter = ActivityAdapter(isForTasker, selectionCallback)
-    val serviceAdapter = ServiceAdapter(isForTasker, selectionCallback)
-    val receiverAdapter = ReceiverAdapter(isForTasker, selectionCallback)
+    var filteredActivities by mutableStateOf<List<ActivityInfo>>(listOf())
+    var filteredServices by mutableStateOf<List<ServiceInfo>>(listOf())
+    var filteredReceivers by mutableStateOf<List<ReceiverInfo>>(listOf())
 
-    val filteredActivities = mutableStateListOf<ActivityInfo>()
-    val filteredServices = mutableStateListOf<ServiceInfo>()
-    val filteredReceivers = mutableStateListOf<ReceiverInfo>()
-
-    val activitiesSize: Int by derivedStateOf {
-        if (!hasLoadedActivities) _activitiesSize else filteredActivities.size
+    val safeFilteredActivities by derivedStateOf {
+        if (activitiesExpanded) filteredActivities else listOf()
     }
-    val servicesSize: Int by derivedStateOf {
-        if (!hasLoadedServices) _servicesSize else filteredServices.size
+    val safeFilteredServices by derivedStateOf {
+        if (servicesExpanded) filteredServices else listOf()
     }
-    val receiversSize: Int by derivedStateOf {
-        if (!hasLoadedReceivers) _receiversSize else filteredReceivers.size
+    val safeFilteredReceivers by derivedStateOf {
+        if (receiversExpanded) filteredReceivers else listOf()
     }
 
-    val totalUnfilteredSize: Int by derivedStateOf {
-        _activitiesSize + _servicesSize + _receiversSize
-    }
+    val activitiesSize: Int
+        get() = if (!MainModel.hasFilters || !hasLoadedActivities) _activitiesSize else filteredActivities.size
+    val servicesSize: Int
+        get() = if (!MainModel.hasFilters || !hasLoadedServices) _servicesSize else filteredServices.size
+    val receiversSize: Int
+        get() = if (!MainModel.hasFilters || !hasLoadedReceivers) _receiversSize else filteredReceivers.size
 
-    private val _loadedActivities = mutableStateListOf<ActivityInfo>()
-    private val _loadedServices = mutableStateListOf<ServiceInfo>()
-    private val _loadedReceivers = mutableStateListOf<ReceiverInfo>()
+    val totalUnfilteredSize: Int = _activitiesSize + _servicesSize + _receiversSize
+
+    val _loadedActivities = ConcurrentLinkedDeque<ActivityInfo>()
+    val _loadedServices = ConcurrentLinkedDeque<ServiceInfo>()
+    val _loadedReceivers = ConcurrentLinkedDeque<ReceiverInfo>()
 
     var activitiesExpanded: Boolean by mutableStateOf(false)
     var servicesExpanded: Boolean by mutableStateOf(false)
@@ -96,97 +100,83 @@ data class AppInfo(
                 )
     }
 
-    fun onFilterChange() {
-        val total = _activitiesSize + _servicesSize + _receiversSize
-        var current = 0
+    suspend fun loadEverything(progressCallback: (Int, Int) -> Unit) = coroutineScope {
+        val total = totalUnfilteredSize
+        val current = AtomicInteger(0)
 
-        val activities = getLoadedActivities { _, _ ->
-            MainModel.progress = (current++ / total.toFloat() * 100).toInt()
-        }
-        val services = getLoadedServices { _, _ ->
-            MainModel.progress = (current++ / total.toFloat() * 100).toInt()
-        }
-        val receivers = getLoadedReceivers { _, _ ->
-            MainModel.progress = (current++ / total.toFloat() * 100).toInt()
+        val act = async {
+            loadActivities { _, _ ->
+                progressCallback(current.incrementAndGet(), total)
+            }
         }
 
-        filteredActivities.clear()
-        filteredActivities.addAll(
-            activities.filter { matches(it, context) }
-                .sortedBy { it.label.toString().lowercase() }
-        )
+        val ser = async {
+            loadServices { _, _ ->
+                progressCallback(current.incrementAndGet(), total)
+            }
+        }
 
-        filteredServices.clear()
-        filteredServices.addAll(
-            services.filter { matches(it, context) }
-                .sortedBy { it.label.toString().lowercase() }
-        )
+        val rec = async {
+            loadReceivers { _, _ ->
+                progressCallback(current.incrementAndGet(), total)
+            }
+        }
 
-        filteredReceivers.clear()
-        filteredReceivers.addAll(
-            receivers.filter { matches(it, context) }
-                .sortedBy { it.label.toString().lowercase() }
-        )
+        act.await()
+        ser.await()
+        rec.await()
     }
 
-//    suspend fun onFilterChange(
-//        override: Boolean = false,
-//        progress: (Int, Int) -> Unit,
-//    ) {
-//        if (override
-//            || currentQuery != query
-//            || enabledFilterMode != enabledMode
-//            || exportedFilterMode != exportedMode
-//            || permissionFilterMode != permissionMode
-//            || this.useRegex != useRegex
-//            || this.includeComponents != includeComponents
-//        ) {
-//            currentQuery = query
-//            enabledFilterMode = enabledMode
-//            exportedFilterMode = exportedMode
-//            permissionFilterMode = permissionMode
-//            this.useRegex = useRegex
-//            this.includeComponents = includeComponents
-//        }
-//    }
+    private val filterChangeMutex = Mutex()
 
-    fun loadActivities(progress: (Int, Int) -> Unit) {
-        if (activitiesSize > 0 && _loadedActivities.isEmpty()) {
-            _loadedActivities.addAll(activitiesLoader(progress))
-            hasLoadedActivities = true
+    suspend fun onFilterChange() {
+        filterChangeMutex.withLock {
+            val _filteredActivities = _loadedActivities.filter { matches(it, context) }
+            val _filteredServices = _loadedServices.filter { matches(it, context) }
+            val _filteredReceivers = _loadedReceivers.filter { matches(it, context) }
+
+            withContext(Dispatchers.Main) {
+                filteredActivities = _filteredActivities
+                filteredServices = _filteredServices
+                filteredReceivers = _filteredReceivers
+            }
         }
     }
 
-    fun loadServices(progress: (Int, Int) -> Unit) {
-        if (servicesSize > 0 && _loadedServices.isEmpty()) {
-            _loadedServices.addAll(servicesLoader(progress))
-            hasLoadedServices = true
+    private val loadActivitiesMutex = Mutex()
+
+    suspend fun loadActivities(progress: (Int, Int) -> Unit) {
+        loadActivitiesMutex.withLock {
+            if (!hasLoadedActivities && activitiesSize > 0 && _loadedActivities.isEmpty()) {
+                _loadedActivities.clear()
+                _loadedActivities.addAll(activitiesLoader(progress).toSortedSet())
+                hasLoadedActivities = true
+            }
         }
     }
 
-    fun loadReceivers(progress: (Int, Int) -> Unit) {
-        if (receiversSize > 0 && _loadedReceivers.isEmpty()) {
-            _loadedReceivers.addAll(receiversLoader(progress))
-            hasLoadedReceivers = true
+    private val loadServicesMutex = Mutex()
+
+    suspend fun loadServices(progress: (Int, Int) -> Unit) {
+        loadServicesMutex.withLock {
+            if (!hasLoadedServices && servicesSize > 0 && _loadedServices.isEmpty()) {
+                _loadedServices.clear()
+                _loadedServices.addAll(servicesLoader(progress).toSortedSet())
+                hasLoadedServices = true
+            }
         }
     }
 
-    private fun getLoadedActivities(progress: (Int, Int) -> Unit): Collection<ActivityInfo> {
-        loadActivities(progress)
+    private val loadReceiversMutex = Mutex()
 
-        return _loadedActivities
-    }
-
-    private fun getLoadedServices(progress: (Int, Int) -> Unit): Collection<ServiceInfo> {
-        loadServices(progress)
-
-        return _loadedServices
-    }
-
-    private fun getLoadedReceivers(progress: (Int, Int) -> Unit): Collection<ReceiverInfo> {
-        loadReceivers(progress)
-
-        return _loadedReceivers
+    suspend fun loadReceivers(progress: (Int, Int) -> Unit) {
+        loadReceiversMutex.withLock {
+            if (!hasLoadedReceivers && receiversSize > 0 && _loadedReceivers.isEmpty()) {
+                _loadedReceivers.clear()
+                _loadedReceivers.addAll(receiversLoader(progress).toSortedSet())
+                hasLoadedReceivers = true
+            }
+        }
     }
 
     fun matches(data: BaseComponentInfo, context: Context): Boolean {

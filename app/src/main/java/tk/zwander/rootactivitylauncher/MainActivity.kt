@@ -1,104 +1,84 @@
 package tk.zwander.rootactivitylauncher
 
-import android.animation.LayoutTransition
 import android.annotation.SuppressLint
 import android.content.*
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.MenuItem
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.view.menu.MenuBuilder
-import androidx.appcompat.widget.SearchView
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsAnimationCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.isVisible
-import androidx.core.view.updateLayoutParams
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.documentfile.provider.DocumentFile
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.hmomeni.progresscircula.ProgressCircula
-import jp.wasabeef.recyclerview.animators.FadeInAnimator
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.FlowCollector
 import rikka.shizuku.Shizuku
-import tk.zwander.patreonsupportersretrieval.view.SupporterView
-import tk.zwander.rootactivitylauncher.adapters.AppAdapter
-import tk.zwander.rootactivitylauncher.adapters.CustomAnimationAdapter
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.MainModel
 import tk.zwander.rootactivitylauncher.data.component.*
-import tk.zwander.rootactivitylauncher.databinding.ActivityMainBinding
 import tk.zwander.rootactivitylauncher.util.*
-import tk.zwander.rootactivitylauncher.views.AdvancedUsageDialog
 import tk.zwander.rootactivitylauncher.views.FilterDialog
 import tk.zwander.rootactivitylauncher.views.components.AppItem
+import tk.zwander.rootactivitylauncher.views.components.SearchComponent
+import tk.zwander.rootactivitylauncher.views.components.SelectableCard
+import tk.zwander.rootactivitylauncher.views.components.Theme
 import java.io.File
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
-import kotlin.collections.ArrayList
+import kotlin.math.roundToInt
 
 @SuppressLint("RestrictedApi")
-open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
-    SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener, PermissionResultListener {
+open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), PermissionResultListener {
     protected open val isForTasker = false
     protected open var selectedItem: Pair<ComponentType, ComponentName>? = null
-    protected val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
-
-    private val appListState = LazyListState()
-    private val model = MainModel
 
     @Volatile
     private var extractInfo: AppInfo? = null
-
-    //    private val appAdapter by lazy {
-//        fun onExtract(d: AppInfo) {
-//            extractInfo = d
-//            extractLauncher.launch(null)
-//        }
-//
-//        AppAdapter(this, this, isForTasker, ::updateProgress, ::onExtract) {
-//            selectedItem = it.type() to it.component
-//        }
-//    }
-//    private val appListLayoutManager: RecyclerView.LayoutManager
-//        get() = binding.appList.layoutManager as RecyclerView.LayoutManager
-    private val menu by lazy { binding.actionMenuView.menu as MenuBuilder }
-
-    private val progress by lazy { menu.findItem(R.id.progress) }
-    private val progressView: ProgressCircula?
-        get() = (progress?.actionView as ProgressCircula?)
-
-    //    private val search by lazy { menu.findItem(R.id.action_search) }
-    private val searchView: SearchView by lazy { binding.searchView }
-
-    private val filter by lazy { menu.findItem(R.id.action_filter) }
-    private val scrollToTop by lazy { menu.findItem(R.id.scroll_top) }
-    private val scrollToBottom by lazy { menu.findItem(R.id.scroll_bottom) }
 
     private val packageUpdateReceiver = object : BroadcastReceiver() {
         val filter = IntentFilter().apply {
@@ -122,25 +102,28 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
                 when (intent?.action) {
                     Intent.ACTION_PACKAGE_ADDED -> {
                         if (host != null) {
-                            val loaded = loadApp(getPackageInfo(host))
+                            val loaded = loadApp(getPackageInfo(host), packageManager)
 
-//                            appAdapter.addItem(loaded, ::updateProgress)
-                            model.apps.add(loaded)
+                            launch(Dispatchers.Main) {
+                                MainModel.apps.add(loaded)
+                            }
                         }
                     }
 
                     Intent.ACTION_PACKAGE_REMOVED -> {
                         if (host != null) {
-//                            appAdapter.removeItem(host, ::updateProgress)
-                            model.apps.removeAll { it.info.packageName == host }
+                            launch(Dispatchers.Main) {
+                                MainModel.apps.removeAll { it.info.packageName == host }
+                            }
                         }
                     }
 
                     Intent.ACTION_PACKAGE_REPLACED -> {
                         if (host != null) {
-                            model.apps[model.apps.indexOfFirst { it.info.packageName == host }] =
-                                loadApp(getPackageInfo(host))
-//                            appAdapter.updateItem(loadApp(getPackageInfo(host)))
+                            launch(Dispatchers.Main) {
+                                MainModel.apps[MainModel.apps.indexOfFirst { it.info.packageName == host }] =
+                                    loadApp(getPackageInfo(host), packageManager)
+                            }
                         }
                     }
                 }
@@ -229,7 +212,6 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(binding.root)
 
         //Maybe if we ever get a KNOX license key...
 //        val cInfoClass = Class.forName("com.samsung.android.knox.ContextInfo")
@@ -245,371 +227,296 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
 
         packageUpdateReceiver.register()
 
-        actionBar?.setDisplayShowHomeEnabled(false)
-
-        binding.useRegex.setOnCheckedChangeListener { _, isChecked ->
-            model.useRegex = isChecked
-//            onFilterChangeWithLoader({ it.copy(useRegex = isChecked) })
-            launch {
-                appListState.scrollToItem(0)
-            }
-//            binding.appList.scrollToPosition(0)
-        }
-        binding.includeComponents.setOnCheckedChangeListener { _, isChecked ->
-            model.includeComponents = isChecked
-//            onFilterChangeWithLoader({ it.copy(includeComponents = isChecked) })
-//            binding.appList.scrollToPosition(0)
-
-            launch {
-                appListState.scrollToItem(0)
-            }
-        }
-        binding.root.apply {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-                layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
-            } else {
-                layoutTransition = null
-
-                WindowCompat.setDecorFitsSystemWindows(window, false)
-
-                ViewCompat.setOnApplyWindowInsetsListener(this) { v, insets ->
-                    val i = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-
-                    v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                        leftMargin = i.left
-                        rightMargin = i.right
-                        topMargin = i.top
-                        bottomMargin = i.bottom
-                    }
-                    insets
-                }
-
-                ViewCompat.setWindowInsetsAnimationCallback(
-                    this,
-                    object : WindowInsetsAnimationCompat.Callback(DISPATCH_MODE_STOP) {
-                        override fun onProgress(
-                            insets: WindowInsetsCompat,
-                            runningAnimations: MutableList<WindowInsetsAnimationCompat>
-                        ): WindowInsetsCompat {
-                            val i =
-                                insets.getInsets(WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.systemBars())
-
-                            updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                                leftMargin = i.left
-                                rightMargin = i.right
-                                topMargin = i.top
-                                bottomMargin = i.bottom
-                            }
-
-                            return insets
-                        }
-                    }
-                )
-            }
-        }
-
         if (Shizuku.pingBinder()) {
             if (!hasShizukuPermission) {
                 requestShizukuPermission(::onPermissionResult, permissionLauncher)
             }
         }
 
-        menuInflater.inflate(R.menu.search, menu)
-        menu.setCallback(object : MenuBuilder.Callback {
-            override fun onMenuItemSelected(menu: MenuBuilder, item: MenuItem): Boolean {
-                return when (item.itemId) {
-                    R.id.action_filter -> {
-                        FilterDialog(
-                            this@MainActivity,
-                            model.enabledFilterMode,
-                            model.exportedFilterMode,
-                            model.permissionFilterMode
-                        ) { enabledMode, exportedMode, permissionMode ->
-                            model.enabledFilterMode = enabledMode
-                            model.exportedFilterMode = exportedMode
-                            model.permissionFilterMode = permissionMode
-
-//                            onFilterChangeWithLoader({
-//                                it.copy(
-//                                    enabledFilterMode = enabledMode,
-//                                    exportedFilterMode = exportedMode,
-//                                    permissionFilterMode = permissionMode
-//                                )
-//                            })
-                        }.show()
-                        true
-                    }
-
-                    R.id.scroll_top -> {
-                        val vis = appListState.firstVisibleItemIndex
-                        launch {
-                            if (vis > 20) {
-                                appListState.scrollToItem(0)
-                            } else {
-                                appListState.animateScrollToItem(0)
-                            }
-                        }
-                        true
-                    }
-
-                    R.id.scroll_bottom -> {
-                        val vis =
-                            appListState.firstVisibleItemIndex + appListState.layoutInfo.visibleItemsInfo.size
-                        launch {
-                            if (model.apps.size - vis > 20) {
-                                appListState.scrollToItem(model.apps.size - 1)
-                            } else {
-                                appListState.animateScrollToItem(model.apps.size - 1)
-                            }
-                        }
-                        true
-                    }
-
-                    R.id.action_twitter -> {
-                        launchUrl("https://twitter.com/Wander1236")
-                        true
-                    }
-
-                    R.id.action_web -> {
-                        launchUrl("https://zwander.dev")
-                        true
-                    }
-
-                    R.id.action_github -> {
-                        launchUrl("https://github.com/zacharee")
-                        true
-                    }
-
-                    R.id.action_email -> {
-                        launchEmail("zachary@zwander.dev", resources.getString(R.string.app_name))
-                        true
-                    }
-
-                    R.id.action_telegram -> {
-                        launchUrl("https://bit.ly/ZachareeTG")
-                        true
-                    }
-
-                    R.id.action_discord -> {
-                        launchUrl("https://bit.ly/zwanderDiscord")
-                        true
-                    }
-
-                    R.id.action_patreon -> {
-                        launchUrl("https://bit.ly/zwanderPatreon")
-                        true
-                    }
-
-                    R.id.action_supporters -> {
-                        MaterialAlertDialogBuilder(this@MainActivity)
-                            .setTitle(R.string.supporters)
-                            .setMessage(R.string.supporters_desc)
-                            .setView(SupporterView(this@MainActivity))
-                            .setPositiveButton(android.R.string.ok, null)
-                            .show()
-                        true
-                    }
-
-                    R.id.action_advanced_search -> {
-                        AdvancedUsageDialog(this@MainActivity)
-                            .show()
-                        true
-                    }
-
-                    else -> false
-                }
-            }
-
-            override fun onMenuModeChange(menu: MenuBuilder) {}
-        })
-
-        updateScrollButtonState(appListState.firstVisibleItemIndex)
-
-        searchView.setOnQueryTextListener(this)
-        searchView.setOnSearchClickListener {
-            it.postDelayed({
-                setSearchWrapperState(true)
-            }, 100)
-//            onFilterChangeWithLoader(override = !model.hasLoadedItems)
-            hideActionsForSearch(true)
-        }
-        searchView.setOnCloseListener {
-            setSearchWrapperState(false)
-            hideActionsForSearch(false)
-            false
-        }
-
-//        binding.appList.adapter = CustomAnimationAdapter(appAdapter)
-//        binding.appList.itemAnimator = FadeInAnimator()
-//        binding.appList.layoutManager = getAppropriateLayoutManager(resources.configuration.screenWidthDp)
-//        binding.appList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-//            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-//                updateScrollButtonState()
-//            }
-//        })
-
-        launch {
-            snapshotFlow { appListState.firstVisibleItemIndex }.collect {
-                updateScrollButtonState(it)
-            }
-        }
-
-        binding.appList.setContent {
-            LaunchedEffect(MainModel.progress) {
-                val progressing = MainModel.progress != null
-
-                binding.scrim.isVisible = progressing
-                progress.isVisible = progressing
-                searchView.isVisible = !progressing
-                filter.isVisible = !progressing
-                scrollToTop.isVisible = !progressing
-                scrollToBottom.isVisible = !progressing
+        setContent {
+            val scope = rememberCoroutineScope()
+            val appListState = remember {
+                LazyListState()
             }
 
             LaunchedEffect(
-                MainModel.enabledFilterMode,
-                MainModel.exportedFilterMode,
-                MainModel.permissionFilterMode,
-                MainModel.query,
+                MainModel.isSearching,
                 MainModel.useRegex,
-                MainModel.includeComponents,
-                MainModel.apps.toList()
+                MainModel.includeComponents
             ) {
-                launch(Dispatchers.IO) {
-                    val filteredApps = MainModel.apps.filter { app ->
-                        MainModel.matches(app).also {
-                            if (it) {
-                                app.onFilterChange()
-                            }
-                        }
-                    }
-
-                    MainModel.filteredApps.clear()
-                    MainModel.filteredApps.addAll(
-                        filteredApps.sortedBy { it.label.toString().lowercase() }
-                    )
-
-                    MainModel.progress = null
+                if (MainModel.isSearching) {
+                    MainModel.update()
                 }
             }
 
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(8.dp)
+            LaunchedEffect(
+                MainModel.apps.toList(),
+                MainModel.hasFilters,
+                MainModel.query
             ) {
-                items(items = MainModel.filteredApps, key = { it.info.packageName }) {
-                    AppItem(
-                        info = it,
-                        isForTasker = isForTasker,
-                        selectionCallback = {
-                            selectedItem = it.type() to it.component
-                        },
-                        progressCallback = {
-                            MainModel.progress = it
-                        },
-                        extractCallback = {
-                            extractInfo = it
-                            extractLauncher.launch(null)
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                MainModel.update()
+            }
+
+            Theme {
+                Surface(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .systemBarsPadding()
+                        ) {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f),
+                                contentPadding = PaddingValues(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                state = appListState
+                            ) {
+                                items(items = MainModel.filteredApps, key = { it.info.packageName }) {
+                                    AppItem(
+                                        info = it,
+                                        isForTasker = isForTasker,
+                                        selectionCallback = {
+                                            selectedItem = it.type() to it.component
+                                        },
+                                        progressCallback = {
+                                            scope.launch {
+                                                MainModel.progress = it
+                                            }
+                                        },
+                                        extractCallback = {
+                                            extractInfo = it
+                                            extractLauncher.launch(null)
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.surface)
+                                    .heightIn(min = 52.dp),
+                            ) {
+                                AnimatedVisibility(
+                                    visible = MainModel.isSearching,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(8.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        SelectableCard(
+                                            modifier = Modifier.weight(1f),
+                                            selected = MainModel.useRegex,
+                                            onClick = { MainModel.useRegex = !MainModel.useRegex }
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .heightIn(min = 32.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(text = stringResource(id = R.string.regex))
+                                            }
+                                        }
+
+                                        SelectableCard(
+                                            modifier = Modifier.weight(1f),
+                                            selected = MainModel.includeComponents,
+                                            onClick = { MainModel.includeComponents = !MainModel.includeComponents }
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .heightIn(min = 32.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(text = stringResource(id = R.string.include_components))
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    SearchComponent(
+                                        expanded = MainModel.isSearching,
+                                        query = MainModel.query,
+                                        onExpandChange = { MainModel.isSearching = it },
+                                        onQueryChange = { MainModel.query = it },
+                                        modifier = Modifier.weight(1f)
+                                    )
+
+                                    AnimatedVisibility(visible = MainModel.progress == null) {
+                                        IconButton(
+                                            onClick = {
+                                                FilterDialog(
+                                                    this@MainActivity,
+                                                    MainModel.enabledFilterMode,
+                                                    MainModel.exportedFilterMode,
+                                                    MainModel.permissionFilterMode
+                                                ) { enabledMode, exportedMode, permissionMode ->
+                                                    MainModel.enabledFilterMode = enabledMode
+                                                    MainModel.exportedFilterMode = exportedMode
+                                                    MainModel.permissionFilterMode = permissionMode
+                                                }.show()
+                                            }
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.ic_baseline_filter_list_24),
+                                                contentDescription = stringResource(id = R.string.filter)
+                                            )
+                                        }
+                                    }
+
+                                    val firstIndex by remember {
+                                        derivedStateOf { appListState.firstVisibleItemIndex }
+                                    }
+                                    val lastIndex by remember {
+                                        derivedStateOf {
+                                            firstIndex + appListState.layoutInfo.visibleItemsInfo.size - 1
+                                        }
+                                    }
+
+                                    AnimatedVisibility(
+                                        visible = MainModel.progress == null &&
+                                                firstIndex > 0
+                                    ) {
+                                        IconButton(
+                                            onClick = {
+                                                scope.launch {
+                                                    if (firstIndex > 20) {
+                                                        appListState.scrollToItem(0)
+                                                    } else {
+                                                        appListState.animateScrollToItem(0)
+                                                    }
+                                                }
+                                            }
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.scroll_to_top),
+                                                contentDescription = stringResource(id = R.string.scroll_top)
+                                            )
+                                        }
+                                    }
+
+                                    AnimatedVisibility(
+                                        visible = MainModel.progress == null &&
+                                                lastIndex < MainModel.apps.size - 1
+                                    ) {
+                                        IconButton(
+                                            onClick = {
+                                                scope.launch {
+                                                    if (MainModel.apps.size - 1 - lastIndex > 20) {
+                                                        appListState.scrollToItem(MainModel.apps.size - 1)
+                                                    } else {
+                                                        appListState.animateScrollToItem(MainModel.apps.size - 1)
+                                                    }
+                                                }
+                                            }
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.scroll_to_bottom),
+                                                contentDescription = stringResource(id = R.string.scroll_bottom)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        AnimatedVisibility(
+                            visible = MainModel.progress != null,
+                            modifier = Modifier.fillMaxSize(),
+                            enter = fadeIn(),
+                            exit = fadeOut()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color.Black.copy(alpha = 0.5f))
+                                    .clickable(
+                                        interactionSource = remember {
+                                            MutableInteractionSource()
+                                        },
+                                        indication = null,
+                                    ) {},
+                                contentAlignment = Alignment.Center
+                            ) {
+//                                CircularProgressIndicator(
+//                                    progress = (MainModel.progress ?: 0f),
+//                                    modifier = Modifier.size(128.dp)
+//                                )
+//
+//                                if (MainModel.progress != null) {
+//                                    Text(
+//                                        text = "${((MainModel.progress ?: 0f) * 100).toInt()}%"
+//                                    )
+//                                }
+
+                                val accentColor = MaterialTheme.colorScheme.primary
+                                val textColor = Color.White
+                                val rimWidth = with(LocalDensity.current) {
+                                    8.dp.toPx()
+                                }
+
+                                AndroidView(
+                                    factory = {
+                                        ProgressCircula(context = it).apply {
+                                            indeterminate = false
+                                            rimColor = accentColor.toArgb()
+                                            showProgress = true
+                                            speed = 0.5f
+                                            this.rimWidth = rimWidth
+                                            this.textColor = textColor.toArgb()
+                                        }
+                                    },
+                                    modifier = Modifier.size(200.dp),
+                                    update = {
+                                        it.progress = ((MainModel.progress ?: 0f) * 100).roundToInt()
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
 
-//        binding.refresh.setOnRefreshListener(this)
         currentDataJob = loadDataAsync()
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-
-//        binding.appList.layoutManager = getAppropriateLayoutManager(newConfig.screenWidthDp)
-    }
-
-    override fun onQueryTextChange(newText: String?): Boolean {
-        model.query = newText ?: ""
-//        onFilterChangeWithLoader({ it.copy(currentQuery = newText ?: "") })
-//        binding.appList.scrollToPosition(0)
-        return true
-    }
-
-    override fun onQueryTextSubmit(query: String?): Boolean {
-        return false
     }
 
     override fun onPermissionResult(granted: Boolean) {
         // Currently no-op
     }
 
-    override fun onRefresh() {
-//        binding.refresh.isRefreshing = true
-        if (currentDataJob?.isActive == true) currentDataJob?.cancel()
-        currentDataJob = loadDataAsync()
-//        binding.refresh.isRefreshing = false
-    }
+//    override fun onRefresh() {
+//        if (currentDataJob?.isActive == true) currentDataJob?.cancel()
+//        currentDataJob = loadDataAsync()
+//    }
 
     override fun onDestroy() {
         super.onDestroy()
 
-//        currentDataJob?.cancel()
-//        currentFilterJob?.cancel()
         packageUpdateReceiver.unregister()
         cancel()
-    }
-
-//    private fun updateProgress(progress: Int) {
-//        progressView?.progress = progress
-//        binding.scrimProgress.progress = progress
-//    }
-
-    private fun updateScrollButtonState(visIndex: Int) {
-        val isActive = currentDataJob?.isActive == true
-        val newTopVis = visIndex > 0 && !isActive
-        val newBotVis = run {
-//            val pos = when (val manager = appListLayoutManager) {
-//                is StaggeredGridLayoutManager -> {
-//                    IntArray(50).apply { manager.findLastCompletelyVisibleItemPositions(this) }
-//                        .maxOrNull() ?: 0
-//                }
-//                is LinearLayoutManager -> {
-//                    manager.findLastCompletelyVisibleItemPosition()
-//                }
-//                else -> {
-//                    throw IllegalStateException("Invalid layout manager $manager")
-//                }
-//            }
-
-            val pos =
-                appListState.firstVisibleItemIndex + appListState.layoutInfo.visibleItemsInfo.size
-            pos < model.apps.size - 1 && !isActive
-        }
-
-        if (scrollToTop?.isVisible != newTopVis) {
-            scrollToTop?.isVisible = newTopVis
-        }
-        if (scrollToBottom?.isVisible != newBotVis) {
-            scrollToBottom?.isVisible = newBotVis
-        }
-    }
-
-    private fun setSearchWrapperState(open: Boolean) {
-        binding.searchOptionsWrapper.isVisible = open
-//        binding.searchOptionsWrapper.apply {
-//            animate()
-//                .translationY(if (open) 0f else height.toFloat())
-//                .apply {
-//                    duration = resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
-//                    interpolator = if (open) DecelerateInterpolator() else AccelerateInterpolator()
-//                }
-//                .start()
-//        }
     }
 
     private fun loadDataAsync(silent: Boolean = false): Deferred<*> {
         return async(Dispatchers.Main) {
             if (!silent) {
-                model.progress = 0
+                MainModel.progress = 0f
             }
 
             //This mess is because of a bug in Marshmallow and possibly earlier that
@@ -694,54 +601,34 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
 
             val progressIndex = AtomicInteger(0)
             val lastUpdate = AtomicLong(0L)
-            val previousProgress = AtomicInteger(0)
+            val previousProgress = AtomicInteger(0f.toBits())
 
             apps.forEachParallel { app ->
-                loadApp(app).let {
+                loadApp(app, packageManager).let {
                     loaded.add(it)
                 }
 
                 if (!silent) {
-                    val p =
-                        (progressIndex.incrementAndGet().toFloat() / max.toFloat() * 100f).toInt()
+                    val p = progressIndex.incrementAndGet().toFloat() / max.toFloat()
                     val time = System.currentTimeMillis()
 
                     if (time - lastUpdate.get() >= 10) {
                         lastUpdate.set(time)
-                        if (previousProgress.get() < p) {
-                            previousProgress.set(p)
+                        if (Float.fromBits(previousProgress.get()) < p) {
+                            previousProgress.set(p.toBits())
 
                             launch(Dispatchers.Main) {
-                                model.progress = p
+                                MainModel.progress = p
                             }
                         }
                     }
                 }
             }
 
-            model.apps.clear()
-            model.apps.addAll(loaded)
+            MainModel.apps.clear()
+            MainModel.apps.addAll(loaded)
 
-            if (!silent) {
-                model.progress = null
-
-//                progress.isVisible = false
-//                binding.scrim.isVisible = false
-
-                binding.root.postDelayed({
-                    updateScrollButtonState(appListState.firstVisibleItemIndex)
-//                    searchView.isVisible = true
-//                    filter.isVisible = true
-                }, 10)
-            } else {
-                binding.root.postDelayed({
-                    updateScrollButtonState(appListState.firstVisibleItemIndex)
-                }, 10)
-            }
-
-//            if (appAdapter.state.hasFilters) {
-//                onFilterChangeWithLoader(override = true)
-//            }
+            MainModel.progress = null
         }
     }
 
@@ -759,137 +646,45 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
         )
     }
 
-//    private fun onFilterChangeWithLoader(
-//        newState: (AppAdapter.State) -> AppAdapter.State = { it },
-//        override: Boolean = false
-//    ) {
-//        async(Dispatchers.Main) {
-//            val initialLoad = !model.hasLoadedItems
-//
-//            if (initialLoad) {
-//                binding.scrim.isVisible = true
-//                progress.isVisible = true
-//                progressView?.indeterminate = true
-//
-//                searchView.clearFocus()
-//            }
-//
-//            withContext(Dispatchers.IO) {
-//                val previousUpdateTime = AtomicLong(0)
-//
-//                appAdapter.onFilterChange(
-//                    newState(appAdapter.state),
-//                    override
-//                ) { current, total ->
-//                    val currentTime = System.currentTimeMillis()
-//
-//                    // It's possible for updates to come through too quickly for the UI thread to handle.
-//                    // This makes sure we don't overload it by only allowing updates every 10ms.
-//                    if (currentTime - previousUpdateTime.get() > 10) {
-//                        previousUpdateTime.set(currentTime)
-//
-//                        launch(Dispatchers.Main) {
-//                            updateProgress((current / total.toFloat() * 100f).toInt())
-//                        }
-//                    }
-//                }
-//            }
-//
-//            binding.scrim.isVisible = false
-//            progress.isVisible = false
-//            progressView?.indeterminate = false
-//
-//            searchView.let {
-//                if (!it.isIconified) {
-//                    it.requestFocus()
-//                }
-//            }
-//        }
-//    }
-
-    private suspend fun loadApp(app: PackageInfo): AppInfo = coroutineScope {
+    private suspend fun loadApp(app: PackageInfo, pm: PackageManager): AppInfo = coroutineScope {
         val activities = app.activities
         val services = app.services
         val receivers = app.receivers
 
-        val appLabel = app.applicationInfo.loadLabel(packageManager)
-
-        val activitiesLoader: ((Int, Int) -> Unit) -> Collection<ActivityInfo> = {
-            val activityInfos = LinkedList<ActivityInfo>()
-
-            activities?.forEachIndexed { index, act ->
-                val label = act.loadLabel(packageManager).ifBlank { appLabel }
-                activityInfos.add(
-                    ActivityInfo(
-                        act,
-                        label
-                    )
-                )
-                it(index, activities.size)
-            }
-
-            activityInfos
-        }
-        val servicesLoader: ((Int, Int) -> Unit) -> Collection<ServiceInfo> = {
-            val serviceInfos = LinkedList<ServiceInfo>()
-
-            services?.forEachIndexed { index, srv ->
-                val label = srv.loadLabel(packageManager).ifBlank { appLabel }
-                serviceInfos.add(
-                    ServiceInfo(
-                        srv,
-                        label
-                    )
-                )
-                it(index, services.size)
-            }
-
-            serviceInfos
-        }
-        val receiversLoader: ((Int, Int) -> Unit) -> Collection<ReceiverInfo> = {
-            val receiverInfos = LinkedList<ReceiverInfo>()
-
-            receivers?.forEachIndexed { index, rec ->
-                val label = rec.loadLabel(packageManager).ifBlank { appLabel }
-                receiverInfos.add(
-                    ReceiverInfo(
-                        rec,
-                        label
-                    )
-                )
-                it(index, receivers.size)
-            }
-
-            receiverInfos
-        }
+        val appLabel = app.applicationInfo.loadLabel(pm)
 
         return@coroutineScope AppInfo(
             pInfo = app,
             label = appLabel,
-            activitiesLoader = activitiesLoader,
-            servicesLoader = servicesLoader,
-            receiversLoader = receiversLoader,
+            activitiesLoader = { progress ->
+                activities.loadItems(
+                    pm = pm,
+                    appLabel = appLabel,
+                    progress = progress,
+                    constructor = { input, label -> ActivityInfo(input, label) }
+                )
+            },
+            servicesLoader = { progress ->
+                services.loadItems(
+                    pm = pm,
+                    appLabel = appLabel,
+                    progress = progress,
+                    constructor = { input, label -> ServiceInfo(input, label) }
+                )
+            },
+            receiversLoader = { progress ->
+                receivers.loadItems(
+                    pm = pm,
+                    appLabel = appLabel,
+                    progress = progress,
+                    constructor = { input, label -> ReceiverInfo(input, label) }
+                )
+            },
             _activitiesSize = activities?.size ?: 0,
             _servicesSize = services?.size ?: 0,
             _receiversSize = receivers?.size ?: 0,
             isForTasker = isForTasker,
-            selectionCallback = { info ->
-                selectedItem = info.type() to info.component
-            },
             context = this@MainActivity
         )
-    }
-
-    private fun hideActionsForSearch(hide: Boolean) {
-        arrayOf(
-            R.id.action_filter,
-            R.id.scroll_top,
-            R.id.scroll_bottom
-        ).forEach {
-            menu.findItem(it).setShowAsAction(
-                if (hide) MenuItem.SHOW_AS_ACTION_IF_ROOM else
-                    MenuItem.SHOW_AS_ACTION_ALWAYS
-            )
-        }
     }
 }
