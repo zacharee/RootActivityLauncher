@@ -9,13 +9,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
@@ -36,49 +38,51 @@ fun AppItem(
         mutableStateOf(false)
     }
 
-    val filteredActivities by info.filteredActivities.observeAsState()
-    val filteredServices by info.filteredServices.observeAsState()
-    val filteredReceivers by info.filteredReceivers.observeAsState()
+    val filteredActivities by info.filteredActivities.collectAsState()
+    val filteredServices by info.filteredServices.collectAsState()
+    val filteredReceivers by info.filteredReceivers.collectAsState()
 
-    val hasLoadedActivities by info.hasLoadedActivities.observeAsState()
-    val hasLoadedServices by info.hasLoadedServices.observeAsState()
-    val hasLoadedReceivers by info.hasLoadedReceivers.observeAsState()
+    val activityCount by info.aSize.collectAsState(info.activitiesSize)
+    val servicesCount by info.sSize.collectAsState(info.servicesSize)
+    val receiversCount by info.rSize.collectAsState(info.receiversSize)
 
-    val activityCount = if (hasLoadedActivities!!) filteredActivities!!.size else info._activitiesSize
-    val servicesCount = if (hasLoadedServices!!) filteredServices!!.size else info._servicesSize
-    val receiversCount = if (hasLoadedReceivers!!) filteredReceivers!!.size else info._receiversSize
-
-    val activitiesExpanded by info.activitiesExpanded.observeAsState()
-    val servicesExpanded by info.servicesExpanded.observeAsState()
-    val receiversExpanded by info.receiversExpanded.observeAsState()
+    val activitiesExpanded by info.activitiesExpanded.collectAsState()
+    val servicesExpanded by info.servicesExpanded.collectAsState()
+    val receiversExpanded by info.receiversExpanded.collectAsState()
 
     LaunchedEffect(key1 = activitiesExpanded) {
-        if (activitiesExpanded == true) {
-            info.loadActivities(true) { current, total ->
-                progressCallback(current / total.toFloat())
+        if (activitiesExpanded) {
+            withContext(Dispatchers.IO) {
+                info.loadActivities(true) { current, total ->
+                    progressCallback(current / total.toFloat())
+                }
+                info.onFilterChange(true)
+                progressCallback(null)
             }
-            info.onFilterChange(true)
-            progressCallback(null)
         }
     }
 
     LaunchedEffect(key1 = servicesExpanded) {
-        if (servicesExpanded == true) {
-            info.loadServices(true) { current, total ->
-                progressCallback(current / total.toFloat())
+        if (servicesExpanded) {
+            withContext(Dispatchers.IO) {
+                info.loadServices(true) { current, total ->
+                    progressCallback(current / total.toFloat())
+                }
+                info.onFilterChange(true)
+                progressCallback(null)
             }
-            info.onFilterChange(true)
-            progressCallback(null)
         }
     }
 
     LaunchedEffect(key1 = receiversExpanded) {
-        if (receiversExpanded == true) {
-            info.loadReceivers(true) { current, total ->
-                progressCallback(current / total.toFloat())
+        if (receiversExpanded) {
+            withContext(Dispatchers.IO) {
+                info.loadReceivers(true) { current, total ->
+                    progressCallback(current / total.toFloat())
+                }
+                info.onFilterChange(true)
+                progressCallback(null)
             }
-            info.onFilterChange(true)
-            progressCallback(null)
         }
     }
     
@@ -115,8 +119,8 @@ fun AppItem(
 
             ComponentGroup(
                 titleRes = R.string.activities,
-                items = filteredActivities ?: listOf(),
-                expanded = activitiesExpanded == true,
+                items = filteredActivities,
+                expanded = activitiesExpanded,
                 onExpandChange = {
                     info.activitiesExpanded.value = it
                 },
@@ -128,8 +132,8 @@ fun AppItem(
 
             ComponentGroup(
                 titleRes = R.string.services,
-                items = filteredServices ?: listOf(),
-                expanded = servicesExpanded == true,
+                items = filteredServices,
+                expanded = servicesExpanded,
                 onExpandChange = {
                     info.servicesExpanded.value = it
                 },
@@ -141,8 +145,8 @@ fun AppItem(
 
             ComponentGroup(
                 titleRes = R.string.receivers,
-                items = filteredReceivers ?: listOf(),
-                expanded = receiversExpanded == true,
+                items = filteredReceivers,
+                expanded = receiversExpanded,
                 onExpandChange = {
                     info.receiversExpanded.value = it
                 },
@@ -168,7 +172,7 @@ fun AppItem(
     )
 }
 
-private fun getCoilData(info: ApplicationInfo): Any? {
+private fun getCoilData(info: ApplicationInfo): Any {
     val res = info.icon
 
     return if (res != 0) {

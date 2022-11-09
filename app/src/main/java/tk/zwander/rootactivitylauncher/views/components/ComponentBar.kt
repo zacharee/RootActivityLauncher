@@ -212,7 +212,7 @@ fun ComponentBar(
                 onEnabledChanged(it)
             }
         },
-        availability = run {
+        availability = rememberSaveable(component.component) {
             val requiresPermission = (component.info as? ActivityInfo)?.permission != null ||
                     (component.info as? ServiceInfo)?.permission != null
 

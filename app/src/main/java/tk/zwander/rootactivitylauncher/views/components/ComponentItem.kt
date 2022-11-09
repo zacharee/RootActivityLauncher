@@ -12,7 +12,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
@@ -27,10 +26,10 @@ fun ComponentItem(
 ) {
     val context = LocalContext.current
 
-    var showingIntentOptions by remember {
+    var showingIntentOptions by rememberSaveable {
         mutableStateOf(false)
     }
-    var showingComponentInfo by remember {
+    var showingComponentInfo by rememberSaveable {
         mutableStateOf(false)
     }
     var enabled by rememberSaveable {
@@ -52,7 +51,7 @@ fun ComponentItem(
             } else Modifier)
     ) {
         ComponentBar(
-            icon = remember {
+            icon = rememberSaveable {
                 getCoilData(component)
             },
             name = component.label.toString(),
@@ -93,7 +92,7 @@ fun ComponentItem(
     )
 }
 
-private fun getCoilData(data: BaseComponentInfo): Any? {
+private fun getCoilData(data: BaseComponentInfo): Any {
     val res = data.info.iconResource.run {
         if (this == 0) data.info.applicationInfo.iconRes.run {
             if (this == 0) data.info.applicationInfo.roundIconRes

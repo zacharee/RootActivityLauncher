@@ -3,12 +3,13 @@ package tk.zwander.rootactivitylauncher.data
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
-import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.common.internal.Objects
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -26,39 +27,55 @@ data class AppInfo(
     val pInfo: PackageInfo,
     val info: ApplicationInfo = pInfo.applicationInfo,
     val label: CharSequence,
+    val initialActivitiesSize: Int,
+    val initialServicesSize: Int,
+    val initialReceiversSize: Int,
+    private val isForTasker: Boolean,
+    private val context: Context,
     private val activitiesLoader: suspend (progress: (Int, Int) -> Unit) -> Collection<ActivityInfo>,
     private val servicesLoader: suspend (progress: (Int, Int) -> Unit) -> Collection<ServiceInfo>,
     private val receiversLoader: suspend (progress: (Int, Int) -> Unit) -> Collection<ReceiverInfo>,
-    val _activitiesSize: Int,
-    val _servicesSize: Int,
-    val _receiversSize: Int,
-    private val isForTasker: Boolean,
-    private val context: Context
 ) {
-    val filteredActivities = MutableLiveData<List<ActivityInfo>>(ArrayList(_activitiesSize))
-    val filteredServices = MutableLiveData<List<ServiceInfo>>(ArrayList(_servicesSize))
-    val filteredReceivers = MutableLiveData<List<ReceiverInfo>>(ArrayList(_receiversSize))
+    val filteredActivities = MutableStateFlow<List<ActivityInfo>>(ArrayList(initialActivitiesSize))
+    val filteredServices = MutableStateFlow<List<ServiceInfo>>(ArrayList(initialServicesSize))
+    val filteredReceivers = MutableStateFlow<List<ReceiverInfo>>(ArrayList(initialReceiversSize))
 
     val activitiesSize: Int
-        get() = if (!MainModel.hasFilters || !hasLoadedActivities.value!!) _activitiesSize else filteredActivities.value!!.size
+        get() = if (!hasLoadedActivities.value) initialActivitiesSize else filteredActivities.value.size
     val servicesSize: Int
-        get() = if (!MainModel.hasFilters || !hasLoadedServices.value!!) _servicesSize else filteredServices.value!!.size
+        get() = if (!hasLoadedServices.value) initialServicesSize else filteredServices.value.size
     val receiversSize: Int
-        get() = if (!MainModel.hasFilters || !hasLoadedReceivers.value!!) _receiversSize else filteredReceivers.value!!.size
+        get() = if (!hasLoadedReceivers.value) initialReceiversSize else filteredReceivers.value.size
 
-    val totalUnfilteredSize: Int = _activitiesSize + _servicesSize + _receiversSize
+    val aSize = flow {
+        hasLoadedActivities.collect {
+            emit(activitiesSize)
+        }
+    }
+    val sSize = flow {
+        hasLoadedServices.collect {
+            emit(servicesSize)
+        }
+    }
+    val rSize = flow {
+        hasLoadedReceivers.collect {
+            emit(receiversSize)
+        }
+    }
 
-    val _loadedActivities = ConcurrentLinkedDeque<ActivityInfo>()
-    val _loadedServices = ConcurrentLinkedDeque<ServiceInfo>()
-    val _loadedReceivers = ConcurrentLinkedDeque<ReceiverInfo>()
+    val totalUnfilteredSize: Int = initialActivitiesSize + initialServicesSize + initialReceiversSize
 
-    val activitiesExpanded = MutableLiveData(false)
-    val servicesExpanded = MutableLiveData(false)
-    val receiversExpanded = MutableLiveData(false)
+    private val _loadedActivities = ConcurrentLinkedDeque<ActivityInfo>()
+    private val _loadedServices = ConcurrentLinkedDeque<ServiceInfo>()
+    private val _loadedReceivers = ConcurrentLinkedDeque<ReceiverInfo>()
 
-    val hasLoadedActivities = MutableLiveData(false)
-    val hasLoadedServices = MutableLiveData(false)
-    val hasLoadedReceivers = MutableLiveData(false)
+    val activitiesExpanded = MutableStateFlow(false)
+    val servicesExpanded = MutableStateFlow(false)
+    val receiversExpanded = MutableStateFlow(false)
+
+    private val hasLoadedActivities = MutableStateFlow(false)
+    private val hasLoadedServices = MutableStateFlow(false)
+    private val hasLoadedReceivers = MutableStateFlow(false)
 
     private var _hasLoadedActivities = false
     private var _hasLoadedServices = false
@@ -70,7 +87,7 @@ data class AppInfo(
                 && super.equals(other)
                 && activitiesSize == other.activitiesSize
                 && servicesSize == other.servicesSize
-                && receiversSize == other._receiversSize
+                && receiversSize == other.initialReceiversSize
                 && filteredActivities == other.filteredActivities
                 && filteredServices == other.filteredServices
                 && filteredReceivers == other.filteredReceivers
@@ -133,24 +150,27 @@ data class AppInfo(
                 MainModel.permissionFilterMode.value!!
             }
 
-            val _filteredActivities = _loadedActivities.filter {
-                matches(it, query, enabledFilterMode, exportedFilterMode, permissionFilterMode)
-            }
-            val _filteredServices = _loadedServices.filter {
-                matches(it, query, enabledFilterMode, exportedFilterMode, permissionFilterMode)
-            }
-            val _filteredReceivers = _loadedReceivers.filter {
-                matches(it, query, enabledFilterMode, exportedFilterMode, permissionFilterMode)
-            }
+            filteredActivities.emit(
+                _loadedActivities.filter {
+                    matches(it, query, enabledFilterMode, exportedFilterMode, permissionFilterMode)
+                }
+            )
 
-            filteredActivities.postValue(_filteredActivities)
-            filteredServices.postValue(_filteredServices)
-            filteredReceivers.postValue(_filteredReceivers)
+            filteredServices.emit(
+                _loadedServices.filter {
+                    matches(it, query, enabledFilterMode, exportedFilterMode, permissionFilterMode)
+                }
+            )
+            filteredReceivers.emit(
+                _loadedReceivers.filter {
+                    matches(it, query, enabledFilterMode, exportedFilterMode, permissionFilterMode)
+                }
+            )
 
             if (afterLoading) {
-                hasLoadedActivities.postValue(_hasLoadedActivities)
-                hasLoadedServices.postValue(_hasLoadedServices)
-                hasLoadedReceivers.postValue(_hasLoadedReceivers)
+                hasLoadedActivities.emit(_hasLoadedActivities)
+                hasLoadedServices.emit(_hasLoadedServices)
+                hasLoadedReceivers.emit(_hasLoadedReceivers)
             }
         }
     }
@@ -166,7 +186,7 @@ data class AppInfo(
                 _hasLoadedActivities = true
 
                 if (!willBeFiltering) {
-                    hasLoadedActivities.postValue(true)
+                    hasLoadedActivities.emit(true)
                 }
             }
         }
@@ -183,7 +203,7 @@ data class AppInfo(
                 _hasLoadedServices = true
 
                 if (!willBeFiltering) {
-                    hasLoadedServices.postValue(true)
+                    hasLoadedServices.emit(true)
                 }
             }
         }
@@ -200,7 +220,7 @@ data class AppInfo(
                 _hasLoadedReceivers = true
 
                 if (!willBeFiltering) {
-                    hasLoadedReceivers.postValue(true)
+                    hasLoadedReceivers.emit(true)
                 }
             }
         }

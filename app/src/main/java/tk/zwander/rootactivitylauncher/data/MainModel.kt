@@ -88,9 +88,9 @@ object MainModel {
 
         if (query.isBlank()) return true
 
-        val activityFilterEmpty = data.filteredActivities.value!!.isEmpty()
-        val serviceFilterEmpty = data.filteredServices.value!!.isEmpty()
-        val receiverFilterEmpty = data.filteredReceivers.value!!.isEmpty()
+        val activityFilterEmpty = data.filteredActivities.value.isEmpty()
+        val serviceFilterEmpty = data.filteredServices.value.isEmpty()
+        val receiverFilterEmpty = data.filteredReceivers.value.isEmpty()
 
         if (includeComponents.value!! && (!activityFilterEmpty || !serviceFilterEmpty || !receiverFilterEmpty)) return true
 

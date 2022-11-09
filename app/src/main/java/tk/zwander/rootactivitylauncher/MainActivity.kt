@@ -20,9 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import com.google.android.material.elevation.SurfaceColors
 import kotlinx.coroutines.*
 import rikka.shizuku.Shizuku
 import tk.zwander.rootactivitylauncher.data.AppInfo
@@ -338,9 +336,9 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                     constructor = { input, label -> ReceiverInfo(input, label) }
                 )
             },
-            _activitiesSize = activities?.size ?: 0,
-            _servicesSize = services?.size ?: 0,
-            _receiversSize = receivers?.size ?: 0,
+            initialActivitiesSize = activities?.size ?: 0,
+            initialServicesSize = services?.size ?: 0,
+            initialReceiversSize = receivers?.size ?: 0,
             isForTasker = isForTasker,
             context = this@MainActivity
         )
