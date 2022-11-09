@@ -35,7 +35,9 @@ fun ComponentItem(
             } else Modifier)
     ) {
         ComponentBar(
-            icon = rememberAsyncImagePainter(model = getCoilData(component)),
+            icon = remember {
+                getCoilData(component)
+            },
             name = component.label.toString(),
             component = component,
             whichButtons = listOf(

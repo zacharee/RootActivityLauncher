@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.pm.ServiceInfo
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -22,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,7 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -41,11 +40,14 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.drawable.toBitmap
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
 import com.github.skgmn.composetooltip.AnchorEdge
 import com.github.skgmn.composetooltip.Tooltip
 import com.github.skgmn.composetooltip.rememberTooltipStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
@@ -73,7 +75,8 @@ sealed class Button<T>(protected val data: T) {
 
     abstract fun onClick(context: Context)
 
-    class ComponentInfoButton(data: Any, private val onClick: (info: Any) -> Unit) : Button<Any>(data) {
+    class ComponentInfoButton(data: Any, private val onClick: (info: Any) -> Unit) :
+        Button<Any>(data) {
         override val iconRes = R.drawable.ic_baseline_help_outline_24
         override val labelRes = R.string.component_info
 
@@ -100,7 +103,8 @@ sealed class Button<T>(protected val data: T) {
         }
     }
 
-    class SaveApkButton(data: AppInfo, private val onClick: (AppInfo) -> Unit) : Button<AppInfo>(data) {
+    class SaveApkButton(data: AppInfo, private val onClick: (AppInfo) -> Unit) :
+        Button<AppInfo>(data) {
         override val iconRes = R.drawable.save
         override val labelRes = R.string.extract_apk
 
@@ -149,7 +153,7 @@ sealed class Button<T>(protected val data: T) {
 
 @Composable
 fun AppBar(
-    icon: Painter,
+    icon: Any?,
     name: String,
     app: AppInfo,
     whichButtons: List<Button<*>>,
@@ -159,7 +163,13 @@ fun AppBar(
     val context = LocalContext.current
 
     var enabled by rememberSaveable {
-        mutableStateOf(app.info.isActuallyEnabled(context))
+        mutableStateOf(true)
+    }
+
+    LaunchedEffect(app.info.packageName) {
+        enabled = withContext(Dispatchers.IO) {
+            app.info.isActuallyEnabled(context)
+        }
     }
 
     BarGuts(
@@ -181,7 +191,7 @@ fun AppBar(
 
 @Composable
 fun ComponentBar(
-    icon: Painter,
+    icon: Any?,
     name: String,
     component: BaseComponentInfo,
     whichButtons: List<Button<*>>,
@@ -191,7 +201,13 @@ fun ComponentBar(
     val context = LocalContext.current
 
     var enabled by rememberSaveable {
-        mutableStateOf(component.info.isActuallyEnabled(context))
+        mutableStateOf(true)
+    }
+
+    LaunchedEffect(component.info.packageName) {
+        enabled = withContext(Dispatchers.IO) {
+            component.info.isActuallyEnabled(context)
+        }
     }
 
     BarGuts(
@@ -223,7 +239,7 @@ fun ComponentBar(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun BarGuts(
-    icon: Painter,
+    icon: Any?,
     name: String,
     subLabel: String,
     enabled: Boolean,
@@ -233,9 +249,16 @@ private fun BarGuts(
     modifier: Modifier = Modifier,
     showActions: Boolean = true,
 ) {
-    val actualButtons = remember {
-        whichButtons.filter { enabled || it !is Button.LaunchButton }
+    var actualButtons by remember {
+        mutableStateOf(whichButtons)
     }
+
+    LaunchedEffect(enabled, whichButtons) {
+        actualButtons = withContext(Dispatchers.IO) {
+            whichButtons.filter { it !is Button.LaunchButton }
+        }
+    }
+
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -249,14 +272,20 @@ private fun BarGuts(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Box(
-                modifier = Modifier.size(if (availability == Availability.NA) 48.dp else 36.dp)
+                modifier = Modifier.size(
+                    if (availability == Availability.NA) 48.dp else 36.dp
+                )
             ) {
                 var showingTooltip by remember {
                     mutableStateOf(false)
                 }
 
-                Image(
-                    painter = icon,
+                SubcomposeAsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .crossfade(true)
+                        .data(icon)
+                        .memoryCacheKey(subLabel)
+                        .build(),
                     contentDescription = name,
                     modifier = Modifier
                         .size(if (availability == Availability.NA) 48.dp else 32.dp)

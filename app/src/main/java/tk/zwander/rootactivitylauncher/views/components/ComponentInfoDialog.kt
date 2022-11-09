@@ -66,38 +66,38 @@ fun <T : Any> ComponentInfoDialog(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val clipboardManager = LocalClipboardManager.current
-    val highlightColor = MaterialTheme.colorScheme.primary
+    if (showing) {
+        val clipboardManager = LocalClipboardManager.current
+        val highlightColor = MaterialTheme.colorScheme.primary
 
-    var query by remember {
-        mutableStateOf("")
-    }
-
-    val dump = remember {
-        mutableStateListOf<AnnotatedString>()
-    }
-
-    LaunchedEffect(query) {
-        val d = if (dump.isEmpty()) {
-            withContext(Dispatchers.IO) {
-                when (info) {
-                    is ActivityInfo -> processActivityInfo(info)
-                    is ServiceInfo -> processServiceInfo(info)
-                    is PackageInfo -> processPackageInfo(info)
-                    else -> listOf()
-                }
-            }
-        } else dump
-
-        val q = withContext(Dispatchers.IO) {
-            applyQuery(highlightColor, d, query, dump.isEmpty())
+        var query by remember {
+            mutableStateOf("")
         }
 
-        dump.clear()
-        dump.addAll(q)
-    }
+        val dump = remember {
+            mutableStateListOf<AnnotatedString>()
+        }
 
-    if (showing) {
+        LaunchedEffect(query) {
+            val d = if (dump.isEmpty()) {
+                withContext(Dispatchers.IO) {
+                    when (info) {
+                        is ActivityInfo -> processActivityInfo(info)
+                        is ServiceInfo -> processServiceInfo(info)
+                        is PackageInfo -> processPackageInfo(info)
+                        else -> listOf()
+                    }
+                }
+            } else dump
+
+            val q = withContext(Dispatchers.IO) {
+                applyQuery(highlightColor, d, query, dump.isEmpty())
+            }
+
+            dump.clear()
+            dump.addAll(q)
+        }
+
         AlertDialog(
             title = {
                 Text(text = stringResource(id = R.string.component_info))

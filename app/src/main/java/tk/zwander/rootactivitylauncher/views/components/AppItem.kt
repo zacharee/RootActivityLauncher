@@ -91,7 +91,9 @@ fun AppItem(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             AppBar(
-                icon = rememberAsyncImagePainter(model = getCoilData(info.info)),
+                icon = remember {
+                    getCoilData(info.info)
+                },
                 name = info.label.toString(),
                 showActions = !isForTasker,
                 modifier = Modifier

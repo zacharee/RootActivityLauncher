@@ -1,6 +1,7 @@
 package tk.zwander.rootactivitylauncher.views.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,7 +9,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -28,6 +30,7 @@ import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.MainModel
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BottomBar(
     isSearching: Boolean?,
@@ -36,7 +39,7 @@ fun BottomBar(
     query: String?,
     progress: Float?,
     apps: List<AppInfo>?,
-    appListState: LazyListState,
+    appListState: LazyStaggeredGridState,
     onShowFilterDialog: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -49,41 +52,50 @@ fun BottomBar(
             visible = isSearching == true,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
-                SelectableCard(
-                    modifier = Modifier.weight(1f),
-                    selected = useRegex == true,
-                    onClick = { MainModel.useRegex.value = !useRegex!! },
-                    unselectedColor = Color.Transparent
+                Box(
+                    modifier = Modifier.widthIn(max = 600.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
+                    Row(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 32.dp),
-                        contentAlignment = Alignment.Center
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(text = stringResource(id = R.string.regex))
-                    }
-                }
+                        SelectableCard(
+                            modifier = Modifier.weight(1f),
+                            selected = useRegex == true,
+                            onClick = { MainModel.useRegex.value = !useRegex!! },
+                            unselectedColor = Color.Transparent
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = stringResource(id = R.string.regex))
+                            }
+                        }
 
-                SelectableCard(
-                    modifier = Modifier.weight(1f),
-                    selected = includeComponents == true,
-                    onClick = { MainModel.includeComponents.value = !includeComponents!! },
-                    unselectedColor = Color.Transparent
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = stringResource(id = R.string.include_components))
+                        SelectableCard(
+                            modifier = Modifier.weight(1f),
+                            selected = includeComponents == true,
+                            onClick = { MainModel.includeComponents.value = !includeComponents!! },
+                            unselectedColor = Color.Transparent
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = stringResource(id = R.string.include_components))
+                            }
+                        }
                     }
                 }
             }
