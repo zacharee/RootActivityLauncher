@@ -141,6 +141,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                 LaunchedEffect(darkTheme) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         window.decorView.apply {
+                            @Suppress("DEPRECATION")
                             systemUiVisibility = if (darkTheme) {
                                 systemUiVisibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
                             } else {
