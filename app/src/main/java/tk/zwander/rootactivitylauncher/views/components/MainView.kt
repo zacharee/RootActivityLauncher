@@ -15,12 +15,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,15 +62,18 @@ fun MainView(
         object : ActivityResultContracts.OpenDocumentTree() {
             override fun createIntent(context: Context, input: Uri?): Intent {
                 return super.createIntent(context, input).also {
-                    it.putExtra(Intent.EXTRA_TITLE,
-                        context.resources.getString(R.string.choose_extract_folder_msg))
+                    it.putExtra(
+                        Intent.EXTRA_TITLE,
+                        context.resources.getString(R.string.choose_extract_folder_msg)
+                    )
                 }
             }
         }
     ) { result ->
         if (extractInfo != null) {
             val dirUri = result ?: return@rememberLauncherForActivityResult
-            val dir = DocumentFile.fromTreeUri(context, dirUri) ?: return@rememberLauncherForActivityResult
+            val dir = DocumentFile.fromTreeUri(context, dirUri)
+                ?: return@rememberLauncherForActivityResult
 
             val actualInfo = extractInfo!!
 
@@ -166,80 +171,81 @@ fun MainView(
         MainModel.update()
     }
 
-    Theme {
-        Surface(
-            modifier = modifier
+    Surface(
+        modifier = modifier
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .systemBarsPadding()
+                    .imePadding()
             ) {
-                Column(
+                LazyColumn(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .systemBarsPadding()
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentPadding = PaddingValues(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    state = appListState
                 ) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        contentPadding = PaddingValues(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        state = appListState
-                    ) {
-                        items(items = filteredApps ?: listOf(), key = { it.info.packageName }) { app ->
-                            AppItem(
-                                info = app,
-                                isForTasker = isForTasker,
-                                selectionCallback = {
-                                    onItemSelected(it)
+                    items(items = filteredApps ?: listOf(), key = { it.info.packageName }) { app ->
+                        AppItem(
+                            info = app,
+                            isForTasker = isForTasker,
+                            selectionCallback = {
+                                onItemSelected(it)
 
-                                },
-                                progressCallback = {
-                                    MainModel.progress.postValue(it)
-                                },
-                                extractCallback = {
-                                    extractInfo = it
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
+                            },
+                            progressCallback = {
+                                MainModel.progress.postValue(it)
+                            },
+                            extractCallback = {
+                                extractInfo = it
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
-
-                    BottomBar(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                        isSearching = isSearching,
-                        useRegex = useRegex,
-                        includeComponents = includeComponents,
-                        query = query,
-                        progress = progress,
-                        apps = apps,
-                        appListState = appListState,
-                        onShowFilterDialog = {
-                            showingFilterDialog = true
-                        }
-                    )
                 }
 
-                ScrimView(
-                    modifier = Modifier.fillMaxSize(),
-                    progress = progress
+                BottomBar(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.0.dp)
+                        ),
+                    isSearching = isSearching,
+                    useRegex = useRegex,
+                    includeComponents = includeComponents,
+                    query = query,
+                    progress = progress,
+                    apps = apps,
+                    appListState = appListState,
+                    onShowFilterDialog = {
+                        showingFilterDialog = true
+                    }
                 )
             }
-        }
 
-        FilterDialog(
-            showing = showingFilterDialog,
-            initialEnabledMode = MainModel.enabledFilterMode.value!!,
-            initialExportedMode = MainModel.exportedFilterMode.value!!,
-            initialPermissionMode = MainModel.permissionFilterMode.value!!,
-            onDismissRequest = { enabled, exported, permission ->
-                MainModel.enabledFilterMode.value = enabled
-                MainModel.exportedFilterMode.value = exported
-                MainModel.permissionFilterMode.value = permission
-                showingFilterDialog = false
-            }
-        )
+            ScrimView(
+                modifier = Modifier.fillMaxSize(),
+                progress = progress
+            )
+        }
     }
+
+    FilterDialog(
+        showing = showingFilterDialog,
+        initialEnabledMode = MainModel.enabledFilterMode.value!!,
+        initialExportedMode = MainModel.exportedFilterMode.value!!,
+        initialPermissionMode = MainModel.permissionFilterMode.value!!,
+        onDismissRequest = { enabled, exported, permission ->
+            MainModel.enabledFilterMode.value = enabled
+            MainModel.exportedFilterMode.value = exported
+            MainModel.permissionFilterMode.value = permission
+            showingFilterDialog = false
+        }
+    )
 }

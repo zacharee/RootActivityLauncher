@@ -168,10 +168,7 @@ fun AppItem(
 }
 
 private fun getCoilData(info: ApplicationInfo): Any? {
-    val res = info.iconRes.run {
-        if (this == 0) info.roundIconRes
-        else this
-    }
+    val res = info.icon
 
     return if (res != 0) {
         Uri.parse("android.resource://${info.packageName}/$res")

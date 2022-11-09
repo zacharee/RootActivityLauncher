@@ -7,11 +7,22 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.surfaceColorAtElevation
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.dp
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import com.google.android.material.elevation.SurfaceColors
 import kotlinx.coroutines.*
 import rikka.shizuku.Shizuku
 import tk.zwander.rootactivitylauncher.data.AppInfo
@@ -19,6 +30,7 @@ import tk.zwander.rootactivitylauncher.data.MainModel
 import tk.zwander.rootactivitylauncher.data.component.*
 import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.components.MainView
+import tk.zwander.rootactivitylauncher.views.components.Theme
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
@@ -114,14 +126,38 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
             }
         }
 
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         setContent {
-            MainView(
-                modifier = Modifier.fillMaxSize(),
-                onItemSelected = {
-                    selectedItem = it.type() to it.component
-                },
-                isForTasker = isForTasker
-            )
+            Theme {
+                val darkTheme = isSystemInDarkTheme()
+                val variant = MaterialTheme.colorScheme.surfaceColorAtElevation(3.0.dp)
+
+                LaunchedEffect(variant) {
+                    window.navigationBarColor = variant.toArgb()
+                }
+
+                LaunchedEffect(darkTheme) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        window.decorView.apply {
+                            systemUiVisibility = if (darkTheme) {
+                                systemUiVisibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
+                            } else {
+                                systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                            }
+                        }
+                    }
+                }
+
+                MainView(
+                    modifier = Modifier.fillMaxSize(),
+                    onItemSelected = {
+                        selectedItem = it.type() to it.component
+                    },
+                    isForTasker = isForTasker
+                )
+            }
         }
 
         currentDataJob = loadDataAsync()

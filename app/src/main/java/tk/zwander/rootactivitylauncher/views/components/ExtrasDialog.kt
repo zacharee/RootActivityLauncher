@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
@@ -147,7 +148,8 @@ fun ExtrasDialogContents(
             onValueChange = { model.action = it },
             label = {
                 Text(text = stringResource(id = R.string.action))
-            }
+            },
+            modifier = Modifier.fillMaxWidth()
         )
 
         OutlinedTextField(
@@ -157,7 +159,8 @@ fun ExtrasDialogContents(
             },
             label = {
                 Text(text = stringResource(id = R.string.data))
-            }
+            },
+            modifier = Modifier.fillMaxWidth()
         )
 
         fun handleCategoryUpdate(id: UUID, index: Int, newValue: String?) {
@@ -277,7 +280,8 @@ private fun CategoryField(
         onValueChange = onValueChange,
         label = {
             Text(text = stringResource(id = R.string.category))
-        }
+        },
+        modifier = Modifier.fillMaxWidth()
     )
 }
 
@@ -293,6 +297,7 @@ private fun ExtraItem(
 
     OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
+        shape = TextFieldDefaults.outlinedShape
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
