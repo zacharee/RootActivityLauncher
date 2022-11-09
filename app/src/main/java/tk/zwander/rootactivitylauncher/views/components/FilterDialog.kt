@@ -3,7 +3,6 @@ package tk.zwander.rootactivitylauncher.views.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
@@ -39,17 +38,17 @@ fun FilterDialog(
         FilterMode.PermissionFilterMode
     ) -> Unit,
 ) {
-    var enabledMode by remember {
-        mutableStateOf(initialEnabledMode)
-    }
-    var exportedMode by remember {
-        mutableStateOf(initialExportedMode)
-    }
-    var permissionMode by remember {
-        mutableStateOf(initialPermissionMode)
-    }
-
     if (showing) {
+        var enabledMode by remember {
+            mutableStateOf(initialEnabledMode)
+        }
+        var exportedMode by remember {
+            mutableStateOf(initialExportedMode)
+        }
+        var permissionMode by remember {
+            mutableStateOf(initialPermissionMode)
+        }
+
         AlertDialog(
             onDismissRequest = {
                 onDismissRequest(enabledMode, exportedMode, permissionMode)
@@ -64,6 +63,19 @@ fun FilterDialog(
                     }
                 ) {
                     Text(text = stringResource(id = android.R.string.ok))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        onDismissRequest(
+                            initialEnabledMode,
+                            initialExportedMode,
+                            initialPermissionMode
+                        )
+                    }
+                ) {
+                    Text(text = stringResource(id = android.R.string.cancel))
                 }
             },
             text = {

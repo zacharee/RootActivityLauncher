@@ -2,11 +2,14 @@ package tk.zwander.rootactivitylauncher.views.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.material.ripple.LocalRippleTheme
+import androidx.compose.material.ripple.RippleTheme
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,12 +32,24 @@ fun SelectableCard(
         }
     )
 
-    OutlinedCard(
-        modifier = modifier,
-        colors = CardDefaults.outlinedCardColors(
-            containerColor = color
-        ),
-        onClick = onClick,
-        content = content,
-    )
+    val ripple = LocalRippleTheme.current
+
+    CompositionLocalProvider(
+        LocalRippleTheme provides object : RippleTheme {
+            @Composable
+            override fun defaultColor() = selectedColor
+
+            @Composable
+            override fun rippleAlpha() = ripple.rippleAlpha()
+        }
+    ) {
+        OutlinedCard(
+            modifier = modifier,
+            colors = CardDefaults.outlinedCardColors(
+                containerColor = color,
+            ),
+            onClick = onClick,
+            content = content
+        )
+    }
 }

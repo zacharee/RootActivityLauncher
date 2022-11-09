@@ -9,22 +9,26 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.captionBarPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
 import tk.zwander.rootactivitylauncher.R
@@ -177,13 +182,18 @@ fun MainView(
     Surface(
         modifier = modifier
     ) {
+
+
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
+            val layoutDirection = LocalLayoutDirection.current
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .systemBarsPadding()
+                    .navigationBarsPadding()
+                    .captionBarPadding()
                     .imePadding()
             ) {
                 LazyVerticalStaggeredGrid(
@@ -191,7 +201,14 @@ fun MainView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    contentPadding = PaddingValues(8.dp),
+                    contentPadding = WindowInsets.statusBars.asPaddingValues().run {
+                        PaddingValues(
+                            start = 8.dp + this.calculateStartPadding(layoutDirection),
+                            top = 8.dp + this.calculateTopPadding(),
+                            end = 8.dp + this.calculateEndPadding(layoutDirection),
+                            bottom = 8.dp + this.calculateBottomPadding()
+                        )
+                    },
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     state = appListState
@@ -215,23 +232,27 @@ fun MainView(
                     }
                 }
 
-                BottomBar(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.0.dp)
-                        ),
-                    isSearching = isSearching,
-                    useRegex = useRegex,
-                    includeComponents = includeComponents,
-                    query = query,
-                    progress = progress,
-                    apps = apps,
-                    appListState = appListState,
-                    onShowFilterDialog = {
-                        showingFilterDialog = true
-                    }
-                )
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.surface,
+                    shadowElevation = 3.0.dp,
+                    tonalElevation = 3.0.dp
+                ) {
+                    BottomBar(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        isSearching = isSearching,
+                        useRegex = useRegex,
+                        includeComponents = includeComponents,
+                        query = query,
+                        progress = progress,
+                        apps = apps,
+                        appListState = appListState,
+                        onShowFilterDialog = {
+                            showingFilterDialog = true
+                        }
+                    )
+                }
             }
 
             ScrimView(
