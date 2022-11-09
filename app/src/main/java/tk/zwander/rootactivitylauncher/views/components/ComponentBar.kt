@@ -249,13 +249,15 @@ private fun BarGuts(
     modifier: Modifier = Modifier,
     showActions: Boolean = true,
 ) {
-    var actualButtons by remember {
+    var actualButtons by remember(enabled, whichButtons) {
         mutableStateOf(whichButtons)
     }
 
     LaunchedEffect(enabled, whichButtons) {
-        actualButtons = withContext(Dispatchers.IO) {
-            whichButtons.filter { it !is Button.LaunchButton }
+        if (!enabled) {
+            actualButtons = withContext(Dispatchers.IO) {
+                whichButtons.filter { it !is Button.LaunchButton }
+            }
         }
     }
 
