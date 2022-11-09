@@ -45,7 +45,7 @@ object MainModel {
                 val lastUpdateTime = AtomicLong(0L)
 
                 apps.forEachParallel {
-                    it.loadEverything { _, _ ->
+                    it.loadEverything(true) { _, _ ->
                         val oldCurrent = current.get()
                         val newCurrent = current.incrementAndGet()
 
@@ -60,11 +60,11 @@ object MainModel {
                             progress.postValue(newProgress)
                         }
                     }
-                    it.onFilterChange()
+                    it.onFilterChange(true)
                 }
             } else {
                 apps.forEachParallel {
-                    it.onFilterChange()
+                    it.onFilterChange(false)
                 }
             }
 

@@ -4,13 +4,19 @@ import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import coil.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
+import tk.zwander.rootactivitylauncher.util.isActuallyEnabled
 
 @Composable
 fun ComponentItem(
@@ -19,11 +25,22 @@ fun ComponentItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
     var showingIntentOptions by remember {
         mutableStateOf(false)
     }
     var showingComponentInfo by remember {
         mutableStateOf(false)
+    }
+    var enabled by rememberSaveable {
+        mutableStateOf(true)
+    }
+
+    LaunchedEffect(component.info.packageName) {
+        enabled = withContext(Dispatchers.IO) {
+            component.info.isActuallyEnabled(context)
+        }
     }
 
     Box(
@@ -40,16 +57,25 @@ fun ComponentItem(
             },
             name = component.label.toString(),
             component = component,
-            whichButtons = listOf(
-                Button.ComponentInfoButton(component.info) {
-                    showingComponentInfo = true
-                },
-                Button.IntentDialogButton(component.component.flattenToString()) {
-                    showingIntentOptions = true
-                },
-                Button.CreateShortcutButton(component),
-                Button.LaunchButton(component)
-            )
+            whichButtons = remember(enabled, component.info.packageName) {
+                arrayListOf(
+                    Button.ComponentInfoButton(component.info) {
+                        showingComponentInfo = true
+                    },
+                    Button.IntentDialogButton(component.component.flattenToString()) {
+                        showingIntentOptions = true
+                    },
+                    Button.CreateShortcutButton(component)
+                ).apply {
+                    if (enabled) {
+                        add(Button.LaunchButton(component))
+                    }
+                }
+            },
+            enabled = enabled,
+            onEnabledChanged = {
+                enabled = it
+            }
         )
     }
 

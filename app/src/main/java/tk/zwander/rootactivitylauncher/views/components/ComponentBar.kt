@@ -195,20 +195,12 @@ fun ComponentBar(
     name: String,
     component: BaseComponentInfo,
     whichButtons: List<Button<*>>,
+    enabled: Boolean,
+    onEnabledChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     showActions: Boolean = true,
 ) {
     val context = LocalContext.current
-
-    var enabled by rememberSaveable {
-        mutableStateOf(true)
-    }
-
-    LaunchedEffect(component.info.packageName) {
-        enabled = withContext(Dispatchers.IO) {
-            component.info.isActuallyEnabled(context)
-        }
-    }
 
     BarGuts(
         icon = icon,
@@ -217,7 +209,7 @@ fun ComponentBar(
         enabled = enabled,
         onEnabledChanged = {
             if (context.setComponentEnabled(component, it)) {
-                enabled = it
+                onEnabledChanged(it)
             }
         },
         availability = run {

@@ -16,7 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import coil.compose.rememberAsyncImagePainter
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
@@ -55,30 +54,30 @@ fun AppItem(
 
     LaunchedEffect(key1 = activitiesExpanded) {
         if (activitiesExpanded == true) {
-            info.loadActivities { current, total ->
+            info.loadActivities(true) { current, total ->
                 progressCallback(current / total.toFloat())
             }
-            info.onFilterChange()
+            info.onFilterChange(true)
             progressCallback(null)
         }
     }
 
     LaunchedEffect(key1 = servicesExpanded) {
         if (servicesExpanded == true) {
-            info.loadServices { current, total ->
+            info.loadServices(true) { current, total ->
                 progressCallback(current / total.toFloat())
             }
-            info.onFilterChange()
+            info.onFilterChange(true)
             progressCallback(null)
         }
     }
 
     LaunchedEffect(key1 = receiversExpanded) {
         if (receiversExpanded == true) {
-            info.loadReceivers { current, total ->
+            info.loadReceivers(true) { current, total ->
                 progressCallback(current / total.toFloat())
             }
-            info.onFilterChange()
+            info.onFilterChange(true)
             progressCallback(null)
         }
     }

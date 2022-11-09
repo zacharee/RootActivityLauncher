@@ -60,6 +60,10 @@ data class AppInfo(
     val hasLoadedServices = MutableLiveData(false)
     val hasLoadedReceivers = MutableLiveData(false)
 
+    private var _hasLoadedActivities = false
+    private var _hasLoadedServices = false
+    private var _hasLoadedReceivers = false
+
     override fun equals(other: Any?): Boolean {
         return other is AppInfo
                 && info.packageName == other.info.packageName
@@ -85,24 +89,24 @@ data class AppInfo(
                 )
     }
 
-    suspend fun loadEverything(progressCallback: (Int, Int) -> Unit) = coroutineScope {
+    suspend fun loadEverything(willBeFiltering: Boolean, progressCallback: (Int, Int) -> Unit) = coroutineScope {
         val total = totalUnfilteredSize
         val current = AtomicInteger(0)
 
         val act = async {
-            loadActivities { _, _ ->
+            loadActivities(willBeFiltering) { _, _ ->
                 progressCallback(current.incrementAndGet(), total)
             }
         }
 
         val ser = async {
-            loadServices { _, _ ->
+            loadServices(willBeFiltering) { _, _ ->
                 progressCallback(current.incrementAndGet(), total)
             }
         }
 
         val rec = async {
-            loadReceivers { _, _ ->
+            loadReceivers(willBeFiltering) { _, _ ->
                 progressCallback(current.incrementAndGet(), total)
             }
         }
@@ -114,7 +118,7 @@ data class AppInfo(
 
     private val filterChangeMutex = Mutex()
 
-    suspend fun onFilterChange() {
+    suspend fun onFilterChange(afterLoading: Boolean) {
         filterChangeMutex.withLock {
             val query = withContext(Dispatchers.Main) {
                 MainModel.query.value!!
@@ -142,19 +146,27 @@ data class AppInfo(
             filteredActivities.postValue(_filteredActivities)
             filteredServices.postValue(_filteredServices)
             filteredReceivers.postValue(_filteredReceivers)
+
+            if (afterLoading) {
+                hasLoadedActivities.postValue(_hasLoadedActivities)
+                hasLoadedServices.postValue(_hasLoadedServices)
+                hasLoadedReceivers.postValue(_hasLoadedReceivers)
+            }
         }
     }
 
     private val loadActivitiesMutex = Mutex()
 
-    suspend fun loadActivities(progress: (Int, Int) -> Unit) = coroutineScope {
+    suspend fun loadActivities(willBeFiltering: Boolean, progress: (Int, Int) -> Unit) = coroutineScope {
         loadActivitiesMutex.withLock {
-            if (!hasLoadedActivities.value!! && activitiesSize > 0 && _loadedActivities.isEmpty()) {
+            if (!_hasLoadedActivities && activitiesSize > 0 && _loadedActivities.isEmpty()) {
                 _loadedActivities.clear()
                 _loadedActivities.addAll(activitiesLoader(progress).toSortedSet())
 
-                launch(Dispatchers.Main) {
-                    hasLoadedActivities.value = true
+                _hasLoadedActivities = true
+
+                if (!willBeFiltering) {
+                    hasLoadedActivities.postValue(true)
                 }
             }
         }
@@ -162,14 +174,16 @@ data class AppInfo(
 
     private val loadServicesMutex = Mutex()
 
-    suspend fun loadServices(progress: (Int, Int) -> Unit) = coroutineScope {
+    suspend fun loadServices(willBeFiltering: Boolean, progress: (Int, Int) -> Unit) = coroutineScope {
         loadServicesMutex.withLock {
-            if (!hasLoadedServices.value!! && servicesSize > 0 && _loadedServices.isEmpty()) {
+            if (!_hasLoadedServices && servicesSize > 0 && _loadedServices.isEmpty()) {
                 _loadedServices.clear()
                 _loadedServices.addAll(servicesLoader(progress).toSortedSet())
 
-                launch(Dispatchers.Main) {
-                    hasLoadedServices.value = true
+                _hasLoadedServices = true
+
+                if (!willBeFiltering) {
+                    hasLoadedServices.postValue(true)
                 }
             }
         }
@@ -177,14 +191,16 @@ data class AppInfo(
 
     private val loadReceiversMutex = Mutex()
 
-    suspend fun loadReceivers(progress: (Int, Int) -> Unit) = coroutineScope {
+    suspend fun loadReceivers(willBeFiltering: Boolean, progress: (Int, Int) -> Unit) = coroutineScope {
         loadReceiversMutex.withLock {
-            if (!hasLoadedReceivers.value!! && receiversSize > 0 && _loadedReceivers.isEmpty()) {
+            if (!_hasLoadedReceivers && receiversSize > 0 && _loadedReceivers.isEmpty()) {
                 _loadedReceivers.clear()
                 _loadedReceivers.addAll(receiversLoader(progress).toSortedSet())
 
-                launch(Dispatchers.Main) {
-                    hasLoadedReceivers.value = true
+                _hasLoadedReceivers = true
+
+                if (!willBeFiltering) {
+                    hasLoadedReceivers.postValue(true)
                 }
             }
         }
