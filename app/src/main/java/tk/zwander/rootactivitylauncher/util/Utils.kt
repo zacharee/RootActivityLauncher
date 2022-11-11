@@ -322,7 +322,7 @@ val ComponentInfo.safeComponentName: ComponentName
     get() = ComponentName(packageName, name)
 
 fun ComponentInfo.isActuallyEnabled(context: Context): Boolean {
-    return try {
+    return applicationInfo.isActuallyEnabled(context) && try {
         checkEnabledSetting(
             context.packageManager.getComponentEnabledSetting(safeComponentName),
             enabled

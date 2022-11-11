@@ -3,6 +3,7 @@ package tk.zwander.rootactivitylauncher.views.components
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.pm.ServiceInfo
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -17,11 +18,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,14 +48,12 @@ import com.github.skgmn.composetooltip.Tooltip
 import com.github.skgmn.composetooltip.rememberTooltipStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.util.createShortcut
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
-import tk.zwander.rootactivitylauncher.util.isActuallyEnabled
 import tk.zwander.rootactivitylauncher.util.launch.launchActivity
 import tk.zwander.rootactivitylauncher.util.launch.launchReceiver
 import tk.zwander.rootactivitylauncher.util.launch.launchService
@@ -74,6 +73,17 @@ sealed class Button<T>(protected val data: T) {
     abstract val labelRes: Int
 
     abstract fun onClick(context: Context)
+
+    override fun equals(other: Any?): Boolean {
+        return other != null &&
+                other::class == this::class &&
+                data == (other as Button<*>).data
+    }
+
+    override fun hashCode(): Int {
+        return this::class.qualifiedName!!.hashCode() * 31 +
+                data.hashCode()
+    }
 
     class ComponentInfoButton(data: Any, private val onClick: (info: Any) -> Unit) :
         Button<Any>(data) {
@@ -156,21 +166,13 @@ fun AppBar(
     icon: Any?,
     name: String,
     app: AppInfo,
+    enabled: Boolean,
+    onEnabledChanged: (Boolean) -> Unit,
     whichButtons: List<Button<*>>,
     modifier: Modifier = Modifier,
     showActions: Boolean = true,
 ) {
     val context = LocalContext.current
-
-    var enabled by rememberSaveable {
-        mutableStateOf(true)
-    }
-
-    LaunchedEffect(app.info.packageName) {
-        enabled = withContext(Dispatchers.IO) {
-            app.info.isActuallyEnabled(context)
-        }
-    }
 
     BarGuts(
         icon = icon,
@@ -179,8 +181,8 @@ fun AppBar(
         enabled = enabled,
         availability = Availability.NA,
         onEnabledChanged = {
-            if (context.setPackageEnabled(app.info.packageName, it)) {
-                enabled = it
+            if (context.setPackageEnabled(app.info, it)) {
+                onEnabledChanged(it)
             }
         },
         whichButtons = whichButtons,
@@ -241,18 +243,6 @@ private fun BarGuts(
     modifier: Modifier = Modifier,
     showActions: Boolean = true,
 ) {
-    var actualButtons by remember(enabled, whichButtons) {
-        mutableStateOf(whichButtons)
-    }
-
-    LaunchedEffect(enabled, whichButtons) {
-        if (!enabled) {
-            actualButtons = withContext(Dispatchers.IO) {
-                whichButtons.filter { it !is Button.LaunchButton }
-            }
-        }
-    }
-
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -362,51 +352,82 @@ private fun BarGuts(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                actualButtons.forEach { button ->
+                whichButtons.forEach { button ->
                     var showingTooltip by remember {
                         mutableStateOf(false)
                     }
+                    val buttonEnabled = button !is Button.LaunchButton || enabled
 
-                    Box(
-                        modifier = Modifier.clip(CircleShape)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .combinedClickable(
-                                    interactionSource = remember {
-                                        MutableInteractionSource()
-                                    },
-                                    indication = rememberRipple(bounded = false),
-                                    enabled = true,
-                                    onLongClick = {
-                                        showingTooltip = true
-                                    },
-                                    onClick = {
-                                        button.onClick(context)
-                                    }
-                                )
-                        ) {
-                            Icon(
-                                painter = painterResource(id = button.iconRes),
-                                contentDescription = stringResource(id = button.labelRes)
-                            )
+                    ComponentButton(
+                        button = button,
+                        showingTooltip = showingTooltip,
+                        onShowingTooltipChanged = { showingTooltip = it },
+                        enabled = buttonEnabled,
+                    )
+                }
+            }
+        }
+    }
+}
 
-                            if (showingTooltip) {
-                                Tooltip(
-                                    anchorEdge = AnchorEdge.Top,
-                                    onDismissRequest = { showingTooltip = false },
-                                    tooltipStyle = rememberTooltipStyle(
-                                        color = MaterialTheme.colorScheme.surface,
-                                        tipHeight = 0.dp,
-                                        tipWidth = 0.dp
-                                    )
-                                ) {
-                                    Text(text = stringResource(id = button.labelRes))
-                                }
-                            }
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ComponentButton(
+    button: Button<*>,
+    showingTooltip: Boolean,
+    onShowingTooltipChanged: (Boolean) -> Unit,
+    enabled: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val animatedAlpha by animateFloatAsState(
+        if (!enabled) 0.5f
+        else 1.0f
+    )
+
+    Box(
+        modifier = modifier.clip(CircleShape)
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(16.dp)
+                .combinedClickable(
+                    interactionSource = remember {
+                        MutableInteractionSource()
+                    },
+                    indication = if (enabled) {
+                        rememberRipple(bounded = false)
+                    } else {
+                        null
+                    },
+                    enabled = true,
+                    onLongClick = {
+                        onShowingTooltipChanged(true)
+                    },
+                    onClick = {
+                        if (enabled) {
+                            button.onClick(context)
                         }
                     }
+                )
+        ) {
+            Icon(
+                painter = painterResource(id = button.iconRes),
+                contentDescription = stringResource(id = button.labelRes),
+                tint = LocalContentColor.current.copy(alpha = animatedAlpha)
+            )
+
+            if (showingTooltip) {
+                Tooltip(
+                    anchorEdge = AnchorEdge.Top,
+                    onDismissRequest = { onShowingTooltipChanged(false) },
+                    tooltipStyle = rememberTooltipStyle(
+                        color = MaterialTheme.colorScheme.surface,
+                        tipHeight = 0.dp,
+                        tipWidth = 0.dp
+                    )
+                ) {
+                    Text(text = stringResource(id = button.labelRes))
                 }
             }
         }

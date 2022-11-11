@@ -1,6 +1,7 @@
 package tk.zwander.rootactivitylauncher.util
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.content.pm.IPackageManager
 import android.content.pm.PackageManager
 import android.os.UserHandle
@@ -43,7 +44,8 @@ private fun tryRootEnable(pkg: String, enabled: Boolean): Boolean {
     return Shell.Pool.SU.run("pm ${if (enabled) "enable" else "disable"} $pkg") == 0
 }
 
-fun Context.setPackageEnabled(pkg: String, enabled: Boolean): Boolean {
+fun Context.setPackageEnabled(info: ApplicationInfo, enabled: Boolean): Boolean {
+    val pkg = info.packageName
     if (pkg == packageName) return false
 
     try {
@@ -55,16 +57,14 @@ fun Context.setPackageEnabled(pkg: String, enabled: Boolean): Boolean {
             0
         )
 
-        assert(packageManager.getApplicationEnabledSetting(pkg) == newState)
-
-        return true
+        return info.isActuallyEnabled(this) == enabled
     } catch (e: Exception) {
         if (tryShizukuEnable(pkg, enabled)) {
-            return true
+            return info.isActuallyEnabled(this) == enabled
         }
 
         if (tryRootEnable(pkg, enabled)) {
-            return true
+            return info.isActuallyEnabled(this) == enabled
         }
     }
 
@@ -82,6 +82,7 @@ suspend fun Context.setComponentEnabled(info: BaseComponentInfo, enabled: Boolea
             if (hasRoot) {
                 try {
                     Shell.Pool.SU.run("pm ${if (enabled) "enable" else "disable"} ${info.component.flattenToString()}") == 0
+                            && info.info.isActuallyEnabled(this@setComponentEnabled) == enabled
                 } catch (e: Exception) {
                     false
                 }
@@ -101,7 +102,7 @@ suspend fun Context.setComponentEnabled(info: BaseComponentInfo, enabled: Boolea
                         UserHandle.USER_SYSTEM
                     )
 
-                    true
+                    info.info.isActuallyEnabled(this@setComponentEnabled) == enabled
                 } catch (e: Exception) {
                     launch(Dispatchers.Main) {
                         Toast.makeText(

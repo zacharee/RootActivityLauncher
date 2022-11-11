@@ -39,6 +39,7 @@ fun ComponentGroup(
     items: List<BaseComponentInfo>,
     forTasker: Boolean,
     expanded: Boolean,
+    appEnabled: Boolean,
     onExpandChange: (Boolean) -> Unit,
     onItemSelected: (BaseComponentInfo) -> Unit,
     modifier: Modifier = Modifier,
@@ -99,8 +100,10 @@ fun ComponentGroup(
                             forTasker = forTasker,
                             component = it,
                             onClick = { onItemSelected(it) },
-                            modifier = Modifier.fillMaxWidth()
-                                .padding(start = 32.dp, end = 8.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 32.dp, end = 8.dp),
+                            appEnabled = appEnabled
                         )
                     }
                 }

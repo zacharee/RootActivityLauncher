@@ -13,14 +13,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
+import tk.zwander.rootactivitylauncher.util.isActuallyEnabled
 
 @Composable
 fun AppItem(
@@ -37,6 +40,11 @@ fun AppItem(
     var showingComponentInfo by remember {
         mutableStateOf(false)
     }
+    var enabled by rememberSaveable(info.info.packageName) {
+        mutableStateOf(true)
+    }
+
+    val context = LocalContext.current
 
     val filteredActivities by info.filteredActivities.collectAsState()
     val filteredServices by info.filteredServices.collectAsState()
@@ -85,6 +93,12 @@ fun AppItem(
             }
         }
     }
+
+    LaunchedEffect(info.info.packageName) {
+        enabled = withContext(Dispatchers.IO) {
+            info.info.isActuallyEnabled(context)
+        }
+    }
     
     ElevatedCard(
         modifier = modifier
@@ -114,6 +128,10 @@ fun AppItem(
                         Button.AppInfoButton(info.info.packageName),
                         Button.SaveApkButton(info, extractCallback)
                     )
+                },
+                enabled = enabled,
+                onEnabledChanged = {
+                    enabled = it
                 }
             )
 
@@ -127,7 +145,8 @@ fun AppItem(
                 modifier = Modifier.fillMaxWidth(),
                 forTasker = isForTasker,
                 onItemSelected = selectionCallback,
-                count = activityCount
+                count = activityCount,
+                appEnabled = enabled
             )
 
             ComponentGroup(
@@ -140,7 +159,8 @@ fun AppItem(
                 modifier = Modifier.fillMaxWidth(),
                 forTasker = isForTasker,
                 onItemSelected = selectionCallback,
-                count = servicesCount
+                count = servicesCount,
+                appEnabled = enabled
             )
 
             ComponentGroup(
@@ -153,7 +173,8 @@ fun AppItem(
                 modifier = Modifier.fillMaxWidth(),
                 forTasker = isForTasker,
                 onItemSelected = selectionCallback,
-                count = receiversCount
+                count = receiversCount,
+                appEnabled = enabled
             )
         }
     }

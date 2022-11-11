@@ -67,7 +67,7 @@ private fun LaunchArgs.addToCommand(command: StringBuilder) {
         }
     }
 
-    if (intent.categories.isNotEmpty()) {
+    if (intent.categories?.isNotEmpty() == true) {
         intent.categories.forEach {
             command.append(" -c \"${it}\"")
         }

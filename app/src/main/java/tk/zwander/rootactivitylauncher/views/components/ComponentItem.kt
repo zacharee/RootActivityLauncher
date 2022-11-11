@@ -22,6 +22,7 @@ fun ComponentItem(
     forTasker: Boolean,
     component: BaseComponentInfo,
     onClick: () -> Unit,
+    appEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -32,11 +33,11 @@ fun ComponentItem(
     var showingComponentInfo by rememberSaveable {
         mutableStateOf(false)
     }
-    var enabled by rememberSaveable {
+    var enabled by rememberSaveable(appEnabled) {
         mutableStateOf(true)
     }
 
-    LaunchedEffect(component.info.packageName) {
+    LaunchedEffect(component.info.packageName, appEnabled) {
         enabled = withContext(Dispatchers.IO) {
             component.info.isActuallyEnabled(context)
         }
@@ -56,7 +57,7 @@ fun ComponentItem(
             },
             name = component.label.toString(),
             component = component,
-            whichButtons = remember(enabled, component.info.packageName) {
+            whichButtons = remember(component.info.packageName) {
                 arrayListOf(
                     Button.ComponentInfoButton(component.info) {
                         showingComponentInfo = true
@@ -64,12 +65,9 @@ fun ComponentItem(
                     Button.IntentDialogButton(component.component.flattenToString()) {
                         showingIntentOptions = true
                     },
-                    Button.CreateShortcutButton(component)
-                ).apply {
-                    if (enabled) {
-                        add(Button.LaunchButton(component))
-                    }
-                }
+                    Button.CreateShortcutButton(component),
+                    Button.LaunchButton(component)
+                )
             },
             enabled = enabled,
             onEnabledChanged = {
