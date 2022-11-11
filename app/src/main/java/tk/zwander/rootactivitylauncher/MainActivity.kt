@@ -150,7 +150,11 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                     onItemSelected = {
                         selectedItem = it.type() to it.component
                     },
-                    isForTasker = isForTasker
+                    isForTasker = isForTasker,
+                    onRefresh = {
+                        currentDataJob?.cancel()
+                        currentDataJob = loadDataAsync()
+                    }
                 )
             }
         }

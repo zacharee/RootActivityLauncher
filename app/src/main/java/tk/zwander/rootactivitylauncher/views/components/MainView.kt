@@ -41,6 +41,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.AppInfo
 import tk.zwander.rootactivitylauncher.data.MainModel
@@ -52,6 +55,7 @@ import java.io.File
 fun MainView(
     isForTasker: Boolean,
     onItemSelected: (BaseComponentInfo) -> Unit,
+    onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val appListState = remember {
@@ -182,83 +186,97 @@ fun MainView(
     Surface(
         modifier = modifier
     ) {
-
-
-        Box(
-            modifier = Modifier.fillMaxSize()
+        SwipeRefresh(
+            state = rememberSwipeRefreshState(false),
+            onRefresh = onRefresh,
+            indicator = { state, trigger ->
+                SwipeRefreshIndicator(
+                    // Pass the SwipeRefreshState + trigger through
+                    state = state,
+                    refreshTriggerDistance = trigger,
+                    // Enable the scale animation
+                    scale = true,
+                    // Change the color and shape
+                    backgroundColor = MaterialTheme.colorScheme.primary,
+                )
+            }
         ) {
-            val layoutDirection = LocalLayoutDirection.current
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .navigationBarsPadding()
-                    .captionBarPadding()
-                    .imePadding()
+            Box(
+                modifier = Modifier.fillMaxSize()
             ) {
-                LazyVerticalStaggeredGrid(
-                    columns = StaggeredGridCells.Adaptive(400.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentPadding = WindowInsets.statusBars.asPaddingValues().run {
-                        PaddingValues(
-                            start = 8.dp + this.calculateStartPadding(layoutDirection),
-                            top = 8.dp + this.calculateTopPadding(),
-                            end = 8.dp + this.calculateEndPadding(layoutDirection),
-                            bottom = 8.dp + this.calculateBottomPadding()
-                        )
-                    },
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    state = appListState
-                ) {
-                    items(items = filteredApps, key = { it.info.packageName }) { app ->
-                        AppItem(
-                            info = app,
-                            isForTasker = isForTasker,
-                            selectionCallback = {
-                                onItemSelected(it)
+                val layoutDirection = LocalLayoutDirection.current
 
-                            },
-                            progressCallback = {
-                                MainModel.progress.emit(it)
-                            },
-                            extractCallback = {
-                                extractInfo = it
-                            },
-                            modifier = Modifier.fillMaxWidth()
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .navigationBarsPadding()
+                        .captionBarPadding()
+                        .imePadding()
+                ) {
+                    LazyVerticalStaggeredGrid(
+                        columns = StaggeredGridCells.Adaptive(400.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentPadding = WindowInsets.statusBars.asPaddingValues().run {
+                            PaddingValues(
+                                start = 8.dp + this.calculateStartPadding(layoutDirection),
+                                top = 8.dp + this.calculateTopPadding(),
+                                end = 8.dp + this.calculateEndPadding(layoutDirection),
+                                bottom = 8.dp + this.calculateBottomPadding()
+                            )
+                        },
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        state = appListState
+                    ) {
+                        items(items = filteredApps, key = { it.info.packageName }) { app ->
+                            AppItem(
+                                info = app,
+                                isForTasker = isForTasker,
+                                selectionCallback = {
+                                    onItemSelected(it)
+
+                                },
+                                progressCallback = {
+                                    MainModel.progress.emit(it)
+                                },
+                                extractCallback = {
+                                    extractInfo = it
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.surface,
+                        shadowElevation = 3.0.dp,
+                        tonalElevation = 3.0.dp
+                    ) {
+                        BottomBar(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            isSearching = isSearching,
+                            useRegex = useRegex,
+                            includeComponents = includeComponents,
+                            query = query,
+                            progress = progress,
+                            apps = apps,
+                            appListState = appListState,
+                            onShowFilterDialog = {
+                                showingFilterDialog = true
+                            }
                         )
                     }
                 }
 
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.surface,
-                    shadowElevation = 3.0.dp,
-                    tonalElevation = 3.0.dp
-                ) {
-                    BottomBar(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        isSearching = isSearching,
-                        useRegex = useRegex,
-                        includeComponents = includeComponents,
-                        query = query,
-                        progress = progress,
-                        apps = apps,
-                        appListState = appListState,
-                        onShowFilterDialog = {
-                            showingFilterDialog = true
-                        }
-                    )
-                }
+                ScrimView(
+                    modifier = Modifier.fillMaxSize(),
+                    progress = progress
+                )
             }
-
-            ScrimView(
-                modifier = Modifier.fillMaxSize(),
-                progress = progress
-            )
         }
     }
 

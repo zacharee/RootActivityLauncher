@@ -199,10 +199,14 @@ val Context.hasShizukuPermission: Boolean
             return true
         }
 
-        return if (Shizuku.isPreV11() || Shizuku.getVersion() < 11) {
-            checkCallingOrSelfPermission(ShizukuProvider.PERMISSION) == PackageManager.PERMISSION_GRANTED
-        } else {
-            Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+        return try {
+            if (Shizuku.isPreV11() || Shizuku.getVersion() < 11) {
+                checkCallingOrSelfPermission(ShizukuProvider.PERMISSION) == PackageManager.PERMISSION_GRANTED
+            } else {
+                Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+            }
+        } catch (e: IllegalStateException) {
+            false
         }
     }
 
@@ -225,10 +229,14 @@ fun requestShizukuPermission(resultListener: (Boolean) -> Unit): Boolean {
                 Shizuku.removeRequestPermissionResultListener(this)
             }
         }
-        Shizuku.addRequestPermissionResultListener(listener)
-        Shizuku.requestPermission(code)
 
-        true
+        try {
+            Shizuku.addRequestPermissionResultListener(listener)
+            Shizuku.requestPermission(code)
+            true
+        } catch (e: IllegalStateException) {
+            false
+        }
     }
 }
 
