@@ -29,10 +29,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -41,6 +42,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.ExtraType
@@ -55,25 +58,28 @@ import tk.zwander.rootactivitylauncher.util.updateExtrasForComponent
 import java.util.UUID
 
 class ExtrasDialogModel(private val context: Context, private val componentKey: String) {
-    val extras = mutableStateListOf<Pair<UUID, ExtraInfo>>().apply {
-        addAll(context.findExtrasForComponent(componentKey).map {
-            UUID.randomUUID() to it
-        })
+    val extras = MutableStateFlow<List<Pair<UUID, ExtraInfo>>>(
+        ArrayList<Pair<UUID, ExtraInfo>>().apply {
+            addAll(context.findExtrasForComponent(componentKey).map {
+                UUID.randomUUID() to it
+            })
 
-        add(UUID.randomUUID() to ExtraInfo("", ""))
-    }
+            add(UUID.randomUUID() to ExtraInfo("", ""))
+        }
+    )
 
-    var action by mutableStateOf(context.findActionForComponent(componentKey))
+    val categories = MutableStateFlow<List<Pair<UUID, String?>>>(
+        ArrayList<Pair<UUID, String?>>().apply {
+            addAll(context.findCategoriesForComponent(componentKey).map {
+                UUID.randomUUID() to it
+            })
 
-    var data by mutableStateOf(context.findDataForComponent(componentKey))
+            add(UUID.randomUUID() to "")
+        }
+    )
 
-    val categories = mutableStateListOf<Pair<UUID, String?>>().apply {
-        addAll(context.findCategoriesForComponent(componentKey).map {
-            UUID.randomUUID() to it
-        })
-
-        add(UUID.randomUUID() to "")
-    }
+    val action = MutableStateFlow(context.findActionForComponent(componentKey))
+    val data = MutableStateFlow(context.findDataForComponent(componentKey))
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -96,13 +102,13 @@ fun ExtrasDialog(
                 onClick = {
                     context.updateExtrasForComponent(
                         componentKey,
-                        model.extras.mapNotNull { if (it.second.key.isBlank()) null else it.second }
+                        model.extras.value.mapNotNull { if (it.second.key.isBlank()) null else it.second }
                     )
-                    context.updateActionForComponent(componentKey, model.action)
-                    context.updateDataForComponent(componentKey, model.data)
+                    context.updateActionForComponent(componentKey, model.action.value)
+                    context.updateDataForComponent(componentKey, model.data.value)
                     context.updateCategoriesForComponent(
                         componentKey,
-                        model.categories.mapNotNull { if (it.second.isNullOrBlank()) null else it.second }
+                        model.categories.value.mapNotNull { if (it.second.isNullOrBlank()) null else it.second }
                     )
 
                     onDismissRequest()
@@ -138,13 +144,24 @@ fun ExtrasDialogContents(
     model: ExtrasDialogModel,
     modifier: Modifier = Modifier
 ) {
+    val scope = rememberCoroutineScope()
+
+    val action by model.action.collectAsState()
+    val data by model.data.collectAsState()
+    val categories by model.categories.collectAsState()
+    val extras by model.extras.collectAsState()
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         OutlinedTextField(
-            value = model.action,
-            onValueChange = { model.action = it },
+            value = action,
+            onValueChange = {
+                scope.launch {
+                    model.action.emit(it)
+                }
+            },
             label = {
                 Text(text = stringResource(id = R.string.action))
             },
@@ -152,9 +169,11 @@ fun ExtrasDialogContents(
         )
 
         OutlinedTextField(
-            value = model.data ?: "",
+            value = data ?: "",
             onValueChange = {
-                model.data = it.ifBlank { null }
+                scope.launch {
+                    model.data.emit(it.ifBlank { null })
+                }
             },
             label = {
                 Text(text = stringResource(id = R.string.data))
@@ -163,36 +182,42 @@ fun ExtrasDialogContents(
         )
 
         fun handleCategoryUpdate(id: UUID, index: Int, newValue: String?) {
-            val isLast = model.categories.lastIndex == index
+            val isLast = categories.lastIndex == index
+
+            val copy = ArrayList(categories)
 
             when {
                 newValue.isNullOrBlank() -> {
                     if (!isLast) {
-                        val next = model.categories[index + 1]
+                        val next = categories[index + 1]
 
                         if (next.second.isNullOrBlank()) {
-                            model.categories[index] = id to newValue
-                            model.categories.removeAll { it.first == next.first }
+                            copy[index] = id to newValue
+                            copy.removeAll { it.first == next.first }
                         }
                     } else {
-                        model.categories[index] = id to newValue
+                        copy[index] = id to newValue
                     }
                 }
 
                 else -> {
-                    model.categories[index] = id to newValue
+                    copy[index] = id to newValue
 
                     if (isLast) {
-                        model.categories.add(UUID.randomUUID() to "")
+                        copy.add(UUID.randomUUID() to "")
                     }
                 }
+            }
+
+            scope.launch {
+                model.categories.emit(copy)
             }
         }
 
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            itemsIndexed(items = model.categories, key = { _, item -> item.first }) { index, cat ->
+            itemsIndexed(items = categories, key = { _, item -> item.first }) { index, cat ->
                 CategoryField(
                     value = cat.second ?: "",
                     onValueChange = {
@@ -212,25 +237,26 @@ fun ExtrasDialogContents(
             newType: ExtraType?,
             newValue: String?
         ) {
-            val isLast = model.extras.lastIndex == index
+            val isLast = extras.lastIndex == index
+            val copy = ArrayList(extras)
 
             when {
                 (newKey.isNullOrBlank() && newValue.isNullOrBlank() && newType == null) -> {
                     if (!isLast) {
-                        val next = model.extras[index + 1]
+                        val next = copy[index + 1]
 
                         if (next.second.run { key.isBlank() && value.isBlank() }) {
-                            val old = model.extras[index]
-                            model.extras[index] = id to ExtraInfo(
+                            val old = copy[index]
+                            copy[index] = id to ExtraInfo(
                                 key = newKey ?: old.second.key,
                                 value = newValue ?: old.second.value,
                                 type = newType ?: old.second.type
                             )
-                            model.extras.removeAll { it.first == next.first }
+                            copy.removeAll { it.first == next.first }
                         }
                     } else {
-                        val old = model.extras[index]
-                        model.extras[index] = id to ExtraInfo(
+                        val old = copy[index]
+                        copy[index] = id to ExtraInfo(
                             key = newKey ?: old.second.key,
                             value = newValue ?: old.second.value,
                             type = newType ?: old.second.type
@@ -239,17 +265,21 @@ fun ExtrasDialogContents(
                 }
 
                 else -> {
-                    val old = model.extras[index]
-                    model.extras[index] = id to ExtraInfo(
+                    val old = copy[index]
+                    copy[index] = id to ExtraInfo(
                         key = newKey ?: old.second.key,
                         value = newValue ?: old.second.value,
                         type = newType ?: old.second.type
                     )
 
                     if (isLast && !newKey.isNullOrBlank()) {
-                        model.extras.add(UUID.randomUUID() to ExtraInfo("", ""))
+                        copy.add(UUID.randomUUID() to ExtraInfo("", ""))
                     }
                 }
+            }
+
+            scope.launch {
+                model.extras.emit(copy)
             }
         }
 
@@ -257,7 +287,7 @@ fun ExtrasDialogContents(
             modifier = Modifier,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            itemsIndexed(items = model.extras, key = { _, item -> item.first }) { index, item ->
+            itemsIndexed(items = extras, key = { _, item -> item.first }) { index, item ->
                 ExtraItem(
                     extraInfo = item.second
                 ) { key, type, value ->
