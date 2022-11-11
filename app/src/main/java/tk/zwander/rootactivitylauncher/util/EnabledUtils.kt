@@ -16,8 +16,12 @@ import rikka.shizuku.SystemServiceHelper
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 
-private fun Context.tryShizukuEnable(pkg: String, enabled: Boolean): Boolean {
-    if (!hasShizukuPermission || !Shizuku.pingBinder()) return false
+private suspend fun Context.tryShizukuEnable(pkg: String, enabled: Boolean): Boolean {
+    if (!Shizuku.pingBinder()) return false
+
+    if (!hasShizukuPermission && !requestShizukuPermission()) {
+        return false
+    }
 
     return try {
         val ipm = IPackageManager.Stub.asInterface(ShizukuBinderWrapper(
@@ -44,7 +48,7 @@ private fun tryRootEnable(pkg: String, enabled: Boolean): Boolean {
     return Shell.Pool.SU.run("pm ${if (enabled) "enable" else "disable"} $pkg") == 0
 }
 
-fun Context.setPackageEnabled(info: ApplicationInfo, enabled: Boolean): Boolean {
+suspend fun Context.setPackageEnabled(info: ApplicationInfo, enabled: Boolean): Boolean {
     val pkg = info.packageName
     if (pkg == packageName) return false
 
@@ -75,6 +79,10 @@ fun Context.setPackageEnabled(info: ApplicationInfo, enabled: Boolean): Boolean 
 suspend fun Context.setComponentEnabled(info: BaseComponentInfo, enabled: Boolean): Boolean {
     val hasRoot = withContext(Dispatchers.IO) {
         Shell.SU.available()
+    }
+
+    if (!hasRoot && Shizuku.pingBinder() && !hasShizukuPermission) {
+        requestShizukuPermission()
     }
 
     return if (hasRoot || (Shizuku.pingBinder() && hasShizukuPermission)) {

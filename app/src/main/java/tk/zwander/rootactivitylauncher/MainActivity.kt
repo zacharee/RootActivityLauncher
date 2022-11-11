@@ -120,7 +120,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
 
         if (Shizuku.pingBinder()) {
             if (!hasShizukuPermission) {
-                requestShizukuPermission(::onPermissionResult, permissionLauncher)
+                requestShizukuPermission(::onPermissionResult)
             }
         }
 

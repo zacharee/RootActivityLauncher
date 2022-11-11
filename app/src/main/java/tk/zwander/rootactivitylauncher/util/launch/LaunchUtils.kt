@@ -25,7 +25,7 @@ private fun Context.createLaunchArgs(extras: List<ExtraInfo>, componentKey: Stri
     return LaunchArgs(intent, extras)
 }
 
-private inline fun <reified T : LaunchStrategy> Context.performLaunch(args: LaunchArgs): Boolean {
+private suspend inline fun <reified T : LaunchStrategy> Context.performLaunch(args: LaunchArgs): Boolean {
     T::class.sealedSubclasses.forEach {
         with (it.objectInstance!!) {
             if (canRun() && tryLaunch(args)) {
@@ -38,20 +38,20 @@ private inline fun <reified T : LaunchStrategy> Context.performLaunch(args: Laun
     return false
 }
 
-private inline fun <reified T : LaunchStrategy> Context.launch(extras: List<ExtraInfo>, componentKey: String): Boolean {
+private suspend inline fun <reified T : LaunchStrategy> Context.launch(extras: List<ExtraInfo>, componentKey: String): Boolean {
     val args = createLaunchArgs(extras, componentKey)
 
     return performLaunch<T>(args)
 }
 
-fun Context.launchService(extras: List<ExtraInfo>, componentKey: String): Boolean {
+suspend fun Context.launchService(extras: List<ExtraInfo>, componentKey: String): Boolean {
     return launch<ServiceLaunchStrategy>(extras, componentKey)
 }
 
-fun Context.launchActivity(extras: List<ExtraInfo>, componentKey: String): Boolean {
+suspend fun Context.launchActivity(extras: List<ExtraInfo>, componentKey: String): Boolean {
     return launch<ActivityLaunchStrategy>(extras, componentKey)
 }
 
-fun Context.launchReceiver(extras: List<ExtraInfo>, componentKey: String): Boolean {
+suspend fun Context.launchReceiver(extras: List<ExtraInfo>, componentKey: String): Boolean {
     return launch<ReceiverLaunchStrategy>(extras, componentKey)
 }

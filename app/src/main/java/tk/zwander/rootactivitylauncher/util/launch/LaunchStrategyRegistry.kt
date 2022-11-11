@@ -22,7 +22,7 @@ import tk.zwander.rootactivitylauncher.util.isTouchWiz
 
 sealed interface ActivityLaunchStrategy : LaunchStrategy {
     object Normal : ActivityLaunchStrategy {
-        override fun Context.tryLaunch(args: LaunchArgs): Boolean {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
             return try {
                 startActivity(args.intent)
                 true
@@ -36,11 +36,11 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
         }
     }
     object SamsungExploit : ActivityLaunchStrategy {
-        override fun Context.canRun(): Boolean {
+        override suspend fun Context.canRun(): Boolean {
             return Build.VERSION.SDK_INT > Build.VERSION_CODES.P && isTouchWiz
         }
 
-        override fun Context.tryLaunch(args: LaunchArgs): Boolean {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
             return try {
                 val wrapperIntent = Intent("com.samsung.server.telecom.USER_SELECT_WIFI_SERVICE_CALL")
                 wrapperIntent.putExtra("extra_call_intent", args.intent)
@@ -54,7 +54,7 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
         }
     }
     object ShizukuJava : ActivityLaunchStrategy, ShizukuLaunchStrategy {
-        override fun Context.tryLaunch(args: LaunchArgs): Boolean {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
             return try {
                 val iam = IActivityManager.Stub.asInterface(
                     ShizukuBinderWrapper(
@@ -79,13 +79,13 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
         }
     }
     object KNOX : ActivityLaunchStrategy {
-        override fun Context.canRun(): Boolean {
+        override suspend fun Context.canRun(): Boolean {
             val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
 
             return dpm.isAdminActive(ComponentName(this, AdminReceiver::class.java))
         }
 
-        override fun Context.tryLaunch(args: LaunchArgs): Boolean {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
             return try {
                 val cInfoClass = Class.forName("com.samsung.android.knox.ContextInfo")
                 val cInfo = cInfoClass.getDeclaredConstructor(Int::class.java)
@@ -116,7 +116,7 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
 
 sealed interface ServiceLaunchStrategy : LaunchStrategy {
     object Normal : ServiceLaunchStrategy {
-        override fun Context.tryLaunch(args: LaunchArgs): Boolean {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
             return try {
                 ContextCompat.startForegroundService(this, args.intent)
                 true
@@ -127,7 +127,7 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
         }
     }
     object ShizukuJava : ServiceLaunchStrategy, ShizukuLaunchStrategy {
-        override fun Context.tryLaunch(args: LaunchArgs): Boolean {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
             return try {
                 val iam = IActivityManager.Stub.asInterface(ShizukuBinderWrapper(
                     SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)))
@@ -157,7 +157,7 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
 
 sealed interface ReceiverLaunchStrategy : LaunchStrategy {
     object Normal : ReceiverLaunchStrategy {
-        override fun Context.tryLaunch(args: LaunchArgs): Boolean {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
             return try {
                 sendBroadcast(args.intent)
                 true
@@ -168,7 +168,7 @@ sealed interface ReceiverLaunchStrategy : LaunchStrategy {
         }
     }
     object ShizukuJava : ReceiverLaunchStrategy, ShizukuLaunchStrategy {
-        override fun Context.tryLaunch(args: LaunchArgs): Boolean {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
             return try {
                 val iam = IActivityManager.Stub.asInterface(ShizukuBinderWrapper(
                     SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)))

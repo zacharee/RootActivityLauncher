@@ -72,7 +72,7 @@ sealed class Button<T>(protected val data: T) {
     abstract val iconRes: Int
     abstract val labelRes: Int
 
-    abstract fun onClick(context: Context)
+    abstract suspend fun onClick(context: Context)
 
     override fun equals(other: Any?): Boolean {
         return other != null &&
@@ -90,7 +90,7 @@ sealed class Button<T>(protected val data: T) {
         override val iconRes = R.drawable.ic_baseline_help_outline_24
         override val labelRes = R.string.component_info
 
-        override fun onClick(context: Context) {
+        override suspend fun onClick(context: Context) {
             onClick(data)
         }
     }
@@ -99,7 +99,7 @@ sealed class Button<T>(protected val data: T) {
         override val iconRes = R.drawable.tune
         override val labelRes = R.string.intent
 
-        override fun onClick(context: Context) {
+        override suspend fun onClick(context: Context) {
             onClick()
         }
     }
@@ -108,7 +108,7 @@ sealed class Button<T>(protected val data: T) {
         override val iconRes = R.drawable.about_outline
         override val labelRes = R.string.app_info
 
-        override fun onClick(context: Context) {
+        override suspend fun onClick(context: Context) {
             context.openAppInfo(data)
         }
     }
@@ -118,7 +118,7 @@ sealed class Button<T>(protected val data: T) {
         override val iconRes = R.drawable.save
         override val labelRes = R.string.extract_apk
 
-        override fun onClick(context: Context) {
+        override suspend fun onClick(context: Context) {
             onClick(data)
         }
     }
@@ -127,7 +127,7 @@ sealed class Button<T>(protected val data: T) {
         override val iconRes = R.drawable.ic_baseline_link_24
         override val labelRes = R.string.create_shortcut
 
-        override fun onClick(context: Context) {
+        override suspend fun onClick(context: Context) {
             context.createShortcut(
                 label = data.label,
                 icon = IconCompat.createWithBitmap(
@@ -146,7 +146,7 @@ sealed class Button<T>(protected val data: T) {
         override val iconRes = R.drawable.ic_baseline_open_in_new_24
         override val labelRes = R.string.launch
 
-        override fun onClick(context: Context) {
+        override suspend fun onClick(context: Context) {
             val componentKey = data.component.flattenToString()
 
             val extras = context.findExtrasForComponent(data.component.packageName) +
@@ -385,6 +385,7 @@ private fun ComponentButton(
         if (!enabled) 0.5f
         else 1.0f
     )
+    val scope = rememberCoroutineScope()
 
     Box(
         modifier = modifier.clip(CircleShape)
@@ -407,7 +408,9 @@ private fun ComponentButton(
                     },
                     onClick = {
                         if (enabled) {
-                            button.onClick(context)
+                            scope.launch {
+                                button.onClick(context)
+                            }
                         }
                     }
                 )

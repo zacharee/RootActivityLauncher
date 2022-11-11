@@ -7,6 +7,8 @@ import com.joaomgcd.taskerpluginlibrary.input.TaskerInput
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResult
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultError
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultSucess
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.data.tasker.TaskerLaunchComponentInfo
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
@@ -36,20 +38,22 @@ class TaskerLaunchComponentRunner : TaskerPluginRunnerActionNoOutput<TaskerLaunc
 
         var result: TaskerPluginResult<Unit> = TaskerPluginResultError(-1, "Unable to launch component: $type, $component. You may need root or Shizuku.")
 
-        when(type) {
-            ComponentType.ACTIVITY.toString() -> {
-                if (context.launchActivity(extras, component))
-                    result = TaskerPluginResultSucess()
+        runBlocking(Dispatchers.IO) {
+            when(type) {
+                ComponentType.ACTIVITY.toString() -> {
+                    if (context.launchActivity(extras, component))
+                        result = TaskerPluginResultSucess()
+                }
+                ComponentType.RECEIVER.toString() -> {
+                    if (context.launchReceiver(extras, component))
+                        result = TaskerPluginResultSucess()
+                }
+                ComponentType.SERVICE.toString() -> {
+                    if (context.launchService(extras, component))
+                        result = TaskerPluginResultSucess()
+                }
+                else -> result = TaskerPluginResultError(1, "Incorrect type $type.")
             }
-            ComponentType.RECEIVER.toString() -> {
-                if (context.launchReceiver(extras, component))
-                    result = TaskerPluginResultSucess()
-            }
-            ComponentType.SERVICE.toString() -> {
-                if (context.launchService(extras, component))
-                    result = TaskerPluginResultSucess()
-            }
-            else -> result = TaskerPluginResultError(1, "Incorrect type $type.")
         }
 
         return result

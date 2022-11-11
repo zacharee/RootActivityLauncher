@@ -2,13 +2,18 @@ package tk.zwander.rootactivitylauncher.activities
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.util.launch.launchActivity
 import tk.zwander.rootactivitylauncher.util.launch.launchReceiver
 import tk.zwander.rootactivitylauncher.util.launch.launchService
 
-class ShortcutLaunchActivity : AppCompatActivity() {
+class ShortcutLaunchActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     companion object {
         const val EXTRA_COMPONENT_KEY = "component_key"
         const val EXTRA_COMPONENT_TYPE = "component_type"
@@ -34,21 +39,28 @@ class ShortcutLaunchActivity : AppCompatActivity() {
         val extras = findExtrasForComponent(componentKey!!)
         val globalExtras = findExtrasForComponent(determineComponentNamePackage(componentKey!!))
 
-        when (componentType) {
-            ComponentType.ACTIVITY -> {
-                launchActivity(globalExtras + extras, componentKey!!)
-            }
+        launch(Dispatchers.IO) {
+            when (componentType) {
+                ComponentType.ACTIVITY -> {
+                    launchActivity(globalExtras + extras, componentKey!!)
+                }
 
-            ComponentType.SERVICE -> {
-                launchService(globalExtras + extras, componentKey!!)
-            }
+                ComponentType.SERVICE -> {
+                    launchService(globalExtras + extras, componentKey!!)
+                }
 
-            ComponentType.RECEIVER -> {
-                launchReceiver(globalExtras + extras, componentKey!!)
+                ComponentType.RECEIVER -> {
+                    launchReceiver(globalExtras + extras, componentKey!!)
+                }
+                else -> {}
             }
-            else -> {}
         }
 
         finish()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        cancel()
     }
 }

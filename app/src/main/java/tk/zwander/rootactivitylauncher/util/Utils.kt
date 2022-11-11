@@ -1,10 +1,8 @@
 package tk.zwander.rootactivitylauncher.util
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
-import android.content.ContextWrapper
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.ApplicationInfo
@@ -13,17 +11,14 @@ import android.content.pm.PackageItemInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.os.CpuUsageProto.Load
 import android.provider.Settings
 import android.util.SparseArray
 import android.util.TypedValue
 import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.util.forEach
-import com.squareup.picasso.Picasso
 import kotlinx.coroutines.*
 import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuProvider
@@ -36,6 +31,8 @@ import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.regex.PatternSyntaxException
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 import kotlin.random.Random
 
 inline fun <T, R> SparseArray<out T>.map(transform: (T) -> R): List<R> {
@@ -55,9 +52,6 @@ val Int.hexString: String
 
 val Context.prefs: PrefManager
     get() = PrefManager.getInstance(this)
-
-val picasso: Picasso
-    get() = Picasso.get()
 
 fun determineComponentNamePackage(componentName: String): String {
     val component = ComponentName.unflattenFromString(componentName)
@@ -262,9 +256,17 @@ val Context.hasShizukuPermission: Boolean
         }
     }
 
-fun requestShizukuPermission(resultListener: (Boolean) -> Unit, permissionLauncher: ActivityResultLauncher<String>) {
-    if (Shizuku.isPreV11() || Shizuku.getVersion() < 11) {
-        permissionLauncher.launch(ShizukuProvider.PERMISSION)
+suspend fun requestShizukuPermission(): Boolean {
+    return suspendCoroutine { coroutine ->
+        requestShizukuPermission { granted ->
+            coroutine.resume(granted)
+        }
+    }
+}
+
+fun requestShizukuPermission(resultListener: (Boolean) -> Unit): Boolean {
+    return if (Shizuku.isPreV11() || Shizuku.getVersion() < 11) {
+        false
     } else {
         val code = Random(System.currentTimeMillis()).nextInt()
         val listener = object : Shizuku.OnRequestPermissionResultListener {
@@ -275,6 +277,8 @@ fun requestShizukuPermission(resultListener: (Boolean) -> Unit, permissionLaunch
         }
         Shizuku.addRequestPermissionResultListener(listener)
         Shizuku.requestPermission(code)
+
+        true
     }
 }
 

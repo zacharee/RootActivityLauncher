@@ -5,11 +5,12 @@ import android.util.Log
 import eu.chainfire.libsuperuser.Shell
 import rikka.shizuku.Shizuku
 import tk.zwander.rootactivitylauncher.util.hasShizukuPermission
+import tk.zwander.rootactivitylauncher.util.requestShizukuPermission
 import java.util.concurrent.TimeUnit
 
 interface LaunchStrategy {
-    fun Context.canRun(): Boolean = true
-    fun Context.tryLaunch(args: LaunchArgs): Boolean
+    suspend fun Context.canRun(): Boolean = true
+    suspend fun Context.tryLaunch(args: LaunchArgs): Boolean
 }
 
 interface CommandLaunchStrategy : LaunchStrategy {
@@ -17,13 +18,14 @@ interface CommandLaunchStrategy : LaunchStrategy {
 }
 
 interface ShizukuLaunchStrategy : LaunchStrategy {
-    override fun Context.canRun(): Boolean {
-        return Shizuku.pingBinder() && hasShizukuPermission
+    override suspend fun Context.canRun(): Boolean {
+        return Shizuku.pingBinder() &&
+                (hasShizukuPermission || requestShizukuPermission())
     }
 }
 
 interface ShizukuShellLaunchStrategy : ShizukuLaunchStrategy, CommandLaunchStrategy {
-    override fun Context.tryLaunch(args: LaunchArgs): Boolean {
+    override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
         return try {
             val command = StringBuilder(makeCommand(args))
 
@@ -45,11 +47,11 @@ interface ShizukuShellLaunchStrategy : ShizukuLaunchStrategy, CommandLaunchStrat
 }
 
 interface RootLaunchStrategy : CommandLaunchStrategy {
-    override fun Context.canRun(): Boolean {
+    override suspend fun Context.canRun(): Boolean {
         return Shell.SU.available()
     }
 
-    override fun Context.tryLaunch(args: LaunchArgs): Boolean {
+    override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
         val command = StringBuilder(makeCommand(args))
 
         args.addToCommand(command)
