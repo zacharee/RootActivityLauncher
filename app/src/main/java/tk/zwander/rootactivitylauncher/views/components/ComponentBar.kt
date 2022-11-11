@@ -323,7 +323,8 @@ private fun BarGuts(
                 Text(
                     text = name,
                     fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    lineHeight = 16.sp
                 )
 
                 Text(
