@@ -34,7 +34,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -44,7 +43,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.ExtraType
@@ -146,8 +144,6 @@ fun ExtrasDialogContents(
     model: ExtrasDialogModel,
     modifier: Modifier = Modifier
 ) {
-    val scope = rememberCoroutineScope()
-
     val action by model.action.collectAsState()
     val data by model.data.collectAsState()
     val categories by model.categories.collectAsState()
@@ -160,9 +156,7 @@ fun ExtrasDialogContents(
         OutlinedTextField(
             value = action,
             onValueChange = {
-                scope.launch {
-                    model.action.emit(it)
-                }
+                model.action.value = it
             },
             label = {
                 Text(text = stringResource(id = R.string.action))
@@ -173,9 +167,7 @@ fun ExtrasDialogContents(
         OutlinedTextField(
             value = data ?: "",
             onValueChange = {
-                scope.launch {
-                    model.data.emit(it.ifBlank { null })
-                }
+                model.data.value = it.ifBlank { null }
             },
             label = {
                 Text(text = stringResource(id = R.string.data))
@@ -220,9 +212,7 @@ fun ExtrasDialogContents(
                             }
                         }
 
-                        scope.launch {
-                            model.categories.emit(copy)
-                        }
+                        model.categories.value = copy
                     }
                 )
             }
@@ -277,9 +267,7 @@ fun ExtrasDialogContents(
                         }
                     }
 
-                    scope.launch {
-                        model.extras.emit(copy)
-                    }
+                    model.extras.value = copy
                 }
             }
         }

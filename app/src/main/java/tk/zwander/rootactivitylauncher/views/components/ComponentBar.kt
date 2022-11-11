@@ -339,7 +339,7 @@ private fun BarGuts(
                 Switch(
                     checked = enabled,
                     onCheckedChange = {
-                        scope.launch(Dispatchers.Main) {
+                        scope.launch(Dispatchers.IO) {
                             onEnabledChanged(it)
                         }
                     }
@@ -408,7 +408,7 @@ private fun ComponentButton(
                     },
                     onClick = {
                         if (enabled) {
-                            scope.launch {
+                            scope.launch(Dispatchers.IO) {
                                 button.onClick(context)
                             }
                         }

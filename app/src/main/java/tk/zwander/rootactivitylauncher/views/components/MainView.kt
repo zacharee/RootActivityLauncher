@@ -235,9 +235,6 @@ fun MainView(
                                     onItemSelected(it)
 
                                 },
-                                progressCallback = {
-                                    MainModel.progress.emit(it)
-                                },
                                 extractCallback = {
                                     extractInfo = it
                                 },

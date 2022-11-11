@@ -57,7 +57,7 @@ object MainModel {
                         if (newProgress > oldProgress && newUpdateTime - 10 > lastUpdateTime.get()) {
                             lastUpdateTime.set(newUpdateTime)
 
-                            progress.emit(newProgress)
+                            progress.value = newProgress
                         }
                     }
                     it.onFilterChange(true)
@@ -78,8 +78,8 @@ object MainModel {
 
             val sorted = filtered.sortedBy { it.label.toString().lowercase() }
 
-            filteredApps.emit(sorted)
-            progress.emit(null)
+            filteredApps.value = sorted
+            progress.value = null
         }
     }
 

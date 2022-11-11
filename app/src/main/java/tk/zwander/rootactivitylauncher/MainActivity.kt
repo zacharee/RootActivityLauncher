@@ -63,34 +63,28 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                         if (pkg != null) {
                             val loaded = loadApp(getPackageInfo(pkg), packageManager)
 
-                            launch(Dispatchers.Main) {
-                                MainModel.apps.emit(MainModel.apps.value + loaded)
-                            }
+                            MainModel.apps.value = MainModel.apps.value + loaded
                         }
                     }
 
                     Intent.ACTION_PACKAGE_REMOVED -> {
                         if (pkg != null) {
-                            launch(Dispatchers.Main) {
-                                MainModel.apps.emit(
-                                    MainModel.apps.value.toMutableList().apply {
-                                        removeAll { it.info.packageName == pkg }
-                                    }
-                                )
+                            val new = MainModel.apps.value.toMutableList().apply {
+                                removeAll { it.info.packageName == pkg }
                             }
+
+                            MainModel.apps.value = new
                         }
                     }
 
                     Intent.ACTION_PACKAGE_REPLACED -> {
                         if (pkg != null) {
-                            launch(Dispatchers.Main) {
-                                val old = ArrayList(MainModel.apps.value)
+                            val old = ArrayList(MainModel.apps.value)
 
-                                old[old.indexOfFirst { it.info.packageName == pkg }] =
-                                    loadApp(getPackageInfo(pkg), packageManager)
+                            old[old.indexOfFirst { it.info.packageName == pkg }] =
+                                loadApp(getPackageInfo(pkg), packageManager)
 
-                                MainModel.apps.emit(old)
-                            }
+                            MainModel.apps.value = old
                         }
                     }
                 }
@@ -179,7 +173,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
     private fun loadDataAsync(silent: Boolean = false): Deferred<*> {
         return async(Dispatchers.Main) {
             if (!silent) {
-                MainModel.progress.emit(0f)
+                MainModel.progress.value = 0f
             }
 
             //This mess is because of a bug in Marshmallow and possibly earlier that
@@ -280,14 +274,14 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                         if (Float.fromBits(previousProgress.get()) < p) {
                             previousProgress.set(p.toBits())
 
-                            MainModel.progress.emit(p)
+                            MainModel.progress.value = p
                         }
                     }
                 }
             }
 
-            MainModel.apps.emit(loaded.toList())
-            MainModel.progress.emit(null)
+            MainModel.apps.value = loaded.toList()
+            MainModel.progress.value = null
         }
     }
 

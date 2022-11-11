@@ -30,7 +30,6 @@ fun AppItem(
     info: AppInfo,
     isForTasker: Boolean,
     selectionCallback: (BaseComponentInfo) -> Unit,
-    progressCallback: suspend (Float?) -> Unit,
     extractCallback: (AppInfo) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -58,39 +57,46 @@ fun AppItem(
     val servicesExpanded by info.servicesExpanded.collectAsState()
     val receiversExpanded by info.receiversExpanded.collectAsState()
 
+    var activitiesLoading by remember {
+        mutableStateOf(false)
+    }
+    var servicesLoading by remember {
+        mutableStateOf(false)
+    }
+    var receiversLoading by remember {
+        mutableStateOf(false)
+    }
+
     LaunchedEffect(key1 = activitiesExpanded) {
         if (activitiesExpanded) {
+            activitiesLoading = !info.hasLoadedActivities.value
             withContext(Dispatchers.IO) {
-                info.loadActivities(true) { current, total ->
-                    progressCallback(current / total.toFloat())
-                }
+                info.loadActivities(true)
                 info.onFilterChange(true)
-                progressCallback(null)
             }
+            activitiesLoading = false
         }
     }
 
     LaunchedEffect(key1 = servicesExpanded) {
         if (servicesExpanded) {
+            servicesLoading = !info.hasLoadedServices.value
             withContext(Dispatchers.IO) {
-                info.loadServices(true) { current, total ->
-                    progressCallback(current / total.toFloat())
-                }
+                info.loadServices(true)
                 info.onFilterChange(true)
-                progressCallback(null)
             }
+            servicesLoading = false
         }
     }
 
     LaunchedEffect(key1 = receiversExpanded) {
         if (receiversExpanded) {
+            receiversLoading = !info.hasLoadedReceivers.value
             withContext(Dispatchers.IO) {
-                info.loadReceivers(true) { current, total ->
-                    progressCallback(current / total.toFloat())
-                }
+                info.loadReceivers(true)
                 info.onFilterChange(true)
-                progressCallback(null)
             }
+            receiversLoading = false
         }
     }
 
@@ -146,7 +152,8 @@ fun AppItem(
                 forTasker = isForTasker,
                 onItemSelected = selectionCallback,
                 count = activityCount,
-                appEnabled = enabled
+                appEnabled = enabled,
+                loading = activitiesLoading
             )
 
             ComponentGroup(
@@ -160,7 +167,8 @@ fun AppItem(
                 forTasker = isForTasker,
                 onItemSelected = selectionCallback,
                 count = servicesCount,
-                appEnabled = enabled
+                appEnabled = enabled,
+                loading = servicesLoading
             )
 
             ComponentGroup(
@@ -174,7 +182,8 @@ fun AppItem(
                 forTasker = isForTasker,
                 onItemSelected = selectionCallback,
                 count = receiversCount,
-                appEnabled = enabled
+                appEnabled = enabled,
+                loading = receiversLoading
             )
         }
     }
