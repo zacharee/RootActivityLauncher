@@ -30,7 +30,7 @@ fun AppItem(
     info: AppInfo,
     isForTasker: Boolean,
     selectionCallback: (BaseComponentInfo) -> Unit,
-    progressCallback: (Float?) -> Unit,
+    progressCallback: suspend (Float?) -> Unit,
     extractCallback: (AppInfo) -> Unit,
     modifier: Modifier = Modifier
 ) {

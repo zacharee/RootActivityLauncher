@@ -354,10 +354,11 @@ private fun checkEnabledSetting(setting: Int, default: Boolean): Boolean {
     }
 }
 
-inline fun <reified Loaded : BaseComponentInfo, reified Input : PackageItemInfo> Array<Input>?.loadItems(
+@Suppress("REDUNDANT_INLINE_SUSPEND_FUNCTION_TYPE")
+suspend inline fun <reified Loaded : BaseComponentInfo, reified Input : PackageItemInfo> Array<Input>?.loadItems(
     pm: PackageManager,
     appLabel: CharSequence,
-    progress: (Int, Int) -> Unit,
+    progress: suspend (Int, Int) -> Unit,
     constructor: (Input, CharSequence) -> Loaded
 ): Collection<Loaded> {
     val infos = ConcurrentLinkedDeque<Loaded>()

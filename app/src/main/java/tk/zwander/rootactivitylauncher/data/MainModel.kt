@@ -1,8 +1,8 @@
 package tk.zwander.rootactivitylauncher.data
 
-import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import tk.zwander.rootactivitylauncher.util.AdvancedSearcher
 import tk.zwander.rootactivitylauncher.util.forEachParallel
@@ -11,32 +11,32 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 object MainModel {
-    val apps = MutableLiveData<List<AppInfo>>(listOf())
-    val filteredApps = MutableLiveData<List<AppInfo>>(listOf())
+    val apps = MutableStateFlow<List<AppInfo>>(listOf())
+    val filteredApps = MutableStateFlow<List<AppInfo>>(listOf())
 
-    val enabledFilterMode = MutableLiveData<FilterMode.EnabledFilterMode>(FilterMode.EnabledFilterMode.ShowAll)
-    val exportedFilterMode = MutableLiveData<FilterMode.ExportedFilterMode>(FilterMode.ExportedFilterMode.ShowAll)
-    val permissionFilterMode = MutableLiveData<FilterMode.PermissionFilterMode>(FilterMode.PermissionFilterMode.ShowAll)
+    val enabledFilterMode = MutableStateFlow<FilterMode.EnabledFilterMode>(FilterMode.EnabledFilterMode.ShowAll)
+    val exportedFilterMode = MutableStateFlow<FilterMode.ExportedFilterMode>(FilterMode.ExportedFilterMode.ShowAll)
+    val permissionFilterMode = MutableStateFlow<FilterMode.PermissionFilterMode>(FilterMode.PermissionFilterMode.ShowAll)
 
-    val query = MutableLiveData("")
+    val query = MutableStateFlow("")
 
-    val progress = MutableLiveData<Float?>(null)
+    val progress = MutableStateFlow<Float?>(null)
 
-    val useRegex = MutableLiveData(false)
-    val includeComponents = MutableLiveData(true)
+    val useRegex = MutableStateFlow(false)
+    val includeComponents = MutableStateFlow(true)
 
-    val isSearching = MutableLiveData(false)
+    val isSearching = MutableStateFlow(false)
 
-    val hasFilters: Boolean
-        get() = query.value!!.isNotBlank() ||
+    private val hasFilters: Boolean
+        get() = query.value.isNotBlank() ||
                 enabledFilterMode.value != FilterMode.EnabledFilterMode.ShowAll ||
                 exportedFilterMode.value != FilterMode.ExportedFilterMode.ShowAll ||
                 permissionFilterMode.value != FilterMode.PermissionFilterMode.ShowAll
 
     suspend fun update() = coroutineScope {
-        val apps = apps.value!!.toList()
+        val apps = apps.value.toList()
         val hasFilters = hasFilters
-        val isSearching = isSearching.value!!
+        val isSearching = isSearching.value
 
         launch(Dispatchers.IO) {
             if (hasFilters || isSearching) {
@@ -57,7 +57,7 @@ object MainModel {
                         if (newProgress > oldProgress && newUpdateTime - 10 > lastUpdateTime.get()) {
                             lastUpdateTime.set(newUpdateTime)
 
-                            progress.postValue(newProgress)
+                            progress.emit(newProgress)
                         }
                     }
                     it.onFilterChange(true)
@@ -68,7 +68,7 @@ object MainModel {
                 }
             }
 
-            val filteredApps = if (hasFilters) {
+            val filtered = if (hasFilters) {
                 apps.filter { app ->
                     matches(app)
                 }
@@ -76,15 +76,15 @@ object MainModel {
                 apps
             }
 
-            val sorted = filteredApps.sortedBy { it.label.toString().lowercase() }
+            val sorted = filtered.sortedBy { it.label.toString().lowercase() }
 
-            MainModel.filteredApps.postValue(sorted)
-            progress.postValue(null)
+            filteredApps.emit(sorted)
+            progress.emit(null)
         }
     }
 
     private fun matches(data: AppInfo): Boolean {
-        val query = query.value!!
+        val query = query.value
 
         if (query.isBlank()) return true
 
@@ -92,7 +92,7 @@ object MainModel {
         val serviceFilterEmpty = data.filteredServices.value.isEmpty()
         val receiverFilterEmpty = data.filteredReceivers.value.isEmpty()
 
-        if (includeComponents.value!! && (!activityFilterEmpty || !serviceFilterEmpty || !receiverFilterEmpty)) return true
+        if (includeComponents.value && (!activityFilterEmpty || !serviceFilterEmpty || !receiverFilterEmpty)) return true
 
         val advancedMatch = AdvancedSearcher.matchesHasPermission(query, data)
                 || AdvancedSearcher.matchesRequiresPermission(query, data)
@@ -101,7 +101,7 @@ object MainModel {
 
         if (advancedMatch) return true
 
-        if (useRegex.value!! && query.isValidRegex()) {
+        if (useRegex.value && query.isValidRegex()) {
             if (Regex(query).run {
                     containsMatchIn(data.info.packageName)
                             || containsMatchIn(data.label)

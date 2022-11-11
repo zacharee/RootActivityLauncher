@@ -32,9 +32,9 @@ data class AppInfo(
     val initialReceiversSize: Int,
     private val isForTasker: Boolean,
     private val context: Context,
-    private val activitiesLoader: suspend (progress: (Int, Int) -> Unit) -> Collection<ActivityInfo>,
-    private val servicesLoader: suspend (progress: (Int, Int) -> Unit) -> Collection<ServiceInfo>,
-    private val receiversLoader: suspend (progress: (Int, Int) -> Unit) -> Collection<ReceiverInfo>,
+    private val activitiesLoader: suspend (progress: suspend (Int, Int) -> Unit) -> Collection<ActivityInfo>,
+    private val servicesLoader: suspend (progress: suspend (Int, Int) -> Unit) -> Collection<ServiceInfo>,
+    private val receiversLoader: suspend (progress: suspend (Int, Int) -> Unit) -> Collection<ReceiverInfo>,
 ) {
     val filteredActivities = MutableStateFlow<List<ActivityInfo>>(ArrayList(initialActivitiesSize))
     val filteredServices = MutableStateFlow<List<ServiceInfo>>(ArrayList(initialServicesSize))
@@ -106,7 +106,7 @@ data class AppInfo(
                 )
     }
 
-    suspend fun loadEverything(willBeFiltering: Boolean, progressCallback: (Int, Int) -> Unit) = coroutineScope {
+    suspend fun loadEverything(willBeFiltering: Boolean, progressCallback: suspend (Int, Int) -> Unit) = coroutineScope {
         val total = totalUnfilteredSize
         val current = AtomicInteger(0)
 
@@ -138,16 +138,16 @@ data class AppInfo(
     suspend fun onFilterChange(afterLoading: Boolean) {
         filterChangeMutex.withLock {
             val query = withContext(Dispatchers.Main) {
-                MainModel.query.value!!
+                MainModel.query.value
             }
             val enabledFilterMode = withContext(Dispatchers.Main) {
-                MainModel.enabledFilterMode.value!!
+                MainModel.enabledFilterMode.value
             }
             val exportedFilterMode = withContext(Dispatchers.Main) {
-                MainModel.exportedFilterMode.value!!
+                MainModel.exportedFilterMode.value
             }
             val permissionFilterMode = withContext(Dispatchers.Main) {
-                MainModel.permissionFilterMode.value!!
+                MainModel.permissionFilterMode.value
             }
 
             filteredActivities.emit(
@@ -177,7 +177,7 @@ data class AppInfo(
 
     private val loadActivitiesMutex = Mutex()
 
-    suspend fun loadActivities(willBeFiltering: Boolean, progress: (Int, Int) -> Unit) = coroutineScope {
+    suspend fun loadActivities(willBeFiltering: Boolean, progress: suspend (Int, Int) -> Unit) = coroutineScope {
         loadActivitiesMutex.withLock {
             if (!_hasLoadedActivities && activitiesSize > 0 && _loadedActivities.isEmpty()) {
                 _loadedActivities.clear()
@@ -194,7 +194,7 @@ data class AppInfo(
 
     private val loadServicesMutex = Mutex()
 
-    suspend fun loadServices(willBeFiltering: Boolean, progress: (Int, Int) -> Unit) = coroutineScope {
+    suspend fun loadServices(willBeFiltering: Boolean, progress: suspend (Int, Int) -> Unit) = coroutineScope {
         loadServicesMutex.withLock {
             if (!_hasLoadedServices && servicesSize > 0 && _loadedServices.isEmpty()) {
                 _loadedServices.clear()
@@ -211,7 +211,7 @@ data class AppInfo(
 
     private val loadReceiversMutex = Mutex()
 
-    suspend fun loadReceivers(willBeFiltering: Boolean, progress: (Int, Int) -> Unit) = coroutineScope {
+    suspend fun loadReceivers(willBeFiltering: Boolean, progress: suspend (Int, Int) -> Unit) = coroutineScope {
         loadReceiversMutex.withLock {
             if (!_hasLoadedReceivers && receiversSize > 0 && _loadedReceivers.isEmpty()) {
                 _loadedReceivers.clear()

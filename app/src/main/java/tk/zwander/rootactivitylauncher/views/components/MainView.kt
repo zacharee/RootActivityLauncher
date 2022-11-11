@@ -31,8 +31,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -148,23 +148,23 @@ fun MainView(
         }
     }
 
-    val enabledFilterMode by MainModel.enabledFilterMode.observeAsState()
-    val exportedFilterMode by MainModel.exportedFilterMode.observeAsState()
-    val permissionFilterMode by MainModel.permissionFilterMode.observeAsState()
-    val query by MainModel.query.observeAsState()
-    val apps by MainModel.apps.observeAsState()
-    val filteredApps by MainModel.filteredApps.observeAsState()
-    val progress by MainModel.progress.observeAsState()
-    val isSearching by MainModel.isSearching.observeAsState()
-    val useRegex by MainModel.useRegex.observeAsState()
-    val includeComponents by MainModel.includeComponents.observeAsState()
+    val enabledFilterMode by MainModel.enabledFilterMode.collectAsState()
+    val exportedFilterMode by MainModel.exportedFilterMode.collectAsState()
+    val permissionFilterMode by MainModel.permissionFilterMode.collectAsState()
+    val query by MainModel.query.collectAsState()
+    val apps by MainModel.apps.collectAsState()
+    val filteredApps by MainModel.filteredApps.collectAsState()
+    val progress by MainModel.progress.collectAsState()
+    val isSearching by MainModel.isSearching.collectAsState()
+    val useRegex by MainModel.useRegex.collectAsState()
+    val includeComponents by MainModel.includeComponents.collectAsState()
 
     LaunchedEffect(
         isSearching,
         useRegex,
         includeComponents
     ) {
-        if (isSearching == true) {
+        if (isSearching) {
             MainModel.update()
         }
     }
@@ -213,7 +213,7 @@ fun MainView(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     state = appListState
                 ) {
-                    items(items = filteredApps ?: listOf(), key = { it.info.packageName }) { app ->
+                    items(items = filteredApps, key = { it.info.packageName }) { app ->
                         AppItem(
                             info = app,
                             isForTasker = isForTasker,
@@ -222,7 +222,7 @@ fun MainView(
 
                             },
                             progressCallback = {
-                                MainModel.progress.postValue(it)
+                                MainModel.progress.emit(it)
                             },
                             extractCallback = {
                                 extractInfo = it
@@ -264,9 +264,9 @@ fun MainView(
 
     FilterDialog(
         showing = showingFilterDialog,
-        initialEnabledMode = MainModel.enabledFilterMode.value!!,
-        initialExportedMode = MainModel.exportedFilterMode.value!!,
-        initialPermissionMode = MainModel.permissionFilterMode.value!!,
+        initialEnabledMode = MainModel.enabledFilterMode.collectAsState().value,
+        initialExportedMode = MainModel.exportedFilterMode.collectAsState().value,
+        initialPermissionMode = MainModel.permissionFilterMode.collectAsState().value,
         onDismissRequest = { enabled, exported, permission ->
             MainModel.enabledFilterMode.value = enabled
             MainModel.exportedFilterMode.value = exported

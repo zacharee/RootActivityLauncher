@@ -64,7 +64,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                             val loaded = loadApp(getPackageInfo(host), packageManager)
 
                             launch(Dispatchers.Main) {
-                                MainModel.apps.value = MainModel.apps.value!! + loaded
+                                MainModel.apps.value = MainModel.apps.value + loaded
                             }
                         }
                     }
@@ -72,7 +72,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                     Intent.ACTION_PACKAGE_REMOVED -> {
                         if (host != null) {
                             launch(Dispatchers.Main) {
-                                MainModel.apps.value = MainModel.apps.value!!.toMutableList().apply {
+                                MainModel.apps.value = MainModel.apps.value.toMutableList().apply {
                                     removeAll { it.info.packageName == host }
                                 }
                             }
@@ -82,7 +82,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                     Intent.ACTION_PACKAGE_REPLACED -> {
                         if (host != null) {
                             launch(Dispatchers.Main) {
-                                val old = ArrayList(MainModel.apps.value!!)
+                                val old = ArrayList(MainModel.apps.value)
 
                                 old[old.indexOfFirst { it.info.packageName == host }] =
                                     loadApp(getPackageInfo(host), packageManager)
@@ -176,7 +176,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
     private fun loadDataAsync(silent: Boolean = false): Deferred<*> {
         return async(Dispatchers.Main) {
             if (!silent) {
-                MainModel.progress.postValue(0f)
+                MainModel.progress.emit(0f)
             }
 
             //This mess is because of a bug in Marshmallow and possibly earlier that
@@ -277,14 +277,14 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                         if (Float.fromBits(previousProgress.get()) < p) {
                             previousProgress.set(p.toBits())
 
-                            MainModel.progress.postValue(p)
+                            MainModel.progress.emit(p)
                         }
                     }
                 }
             }
 
-            MainModel.apps.postValue(loaded.toList())
-            MainModel.progress.postValue(null)
+            MainModel.apps.emit(loaded.toList())
+            MainModel.progress.emit(null)
         }
     }
 
