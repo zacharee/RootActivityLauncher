@@ -1,9 +1,5 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <style name="BaseTheme" parent="Theme.Material3.DynamicColors.DayNight">
-        <item name="alertDialogStyle">@style/DialogTheme</item>
-        <item name="materialAlertDialogTheme">@style/MaterialAlertDialogTheme</item>
-        <item name="actionOverflowMenuStyle">@style/PopupMenuTheme</item>
-        <item name="popupMenuBackground">@drawable/popup_menu_background</item>
         <item name="android:windowNoTitle">true</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
@@ -25,23 +21,5 @@
         <item name="android:windowEnterAnimation">@null</item>
         <item name="android:windowExitAnimation">@null</item>
         <item name="android:windowNoDisplay">true</item>
-    </style>
-
-    <style name="MaterialAlertDialogTheme" parent="ThemeOverlay.Material3.MaterialAlertDialog">
-        <item name="alertDialogStyle">@style/DialogTheme</item>
-    </style>
-
-    <style name="DialogTheme" parent="MaterialAlertDialog.Material3">
-        <item name="dialogCornerRadius">@dimen/corner_radius</item>
-        <item name="shapeAppearance">@style/DialogCorners</item>
-    </style>
-
-    <style name="DialogCorners" parent="ShapeAppearance.Material3.MediumComponent">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">@dimen/corner_radius</item>
-    </style>
-
-    <style name="PopupMenuTheme" parent="Widget.Material3.PopupMenu.Overflow">
-        <item name="popupMenuBackground">@drawable/popup_menu_background</item>
     </style>
 </resources>
