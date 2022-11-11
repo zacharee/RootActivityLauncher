@@ -38,7 +38,7 @@ fun BottomBar(
     includeComponents: Boolean?,
     query: String?,
     progress: Float?,
-    apps: List<AppInfo>?,
+    apps: List<AppInfo>,
     appListState: LazyStaggeredGridState,
     onShowFilterDialog: () -> Unit,
     modifier: Modifier = Modifier
@@ -159,12 +159,12 @@ fun BottomBar(
             }
 
             AnimatedVisibility(
-                visible = progress == null && lastIndex < apps!!.size - 1
+                visible = progress == null && lastIndex < apps.size - 1
             ) {
                 IconButton(
                     onClick = {
                         scope.launch {
-                            if (apps!!.size - 1 - lastIndex > 20) {
+                            if (apps.size - 1 - lastIndex > 20) {
                                 appListState.scrollToItem(apps.size - 1)
                             } else {
                                 appListState.animateScrollToItem(apps.size - 1)

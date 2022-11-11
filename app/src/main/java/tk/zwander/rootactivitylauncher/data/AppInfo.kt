@@ -9,7 +9,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -263,11 +262,11 @@ data class AppInfo(
             }
         }
 
-        if (query.isBlank() || !MainModel.includeComponents.value!!) return true
+        if (query.isBlank() || !MainModel.includeComponents.value) return true
 
         val advancedMatch = AdvancedSearcher.matchesRequiresPermission(query, data.info)
 
-        if (MainModel.useRegex.value!! && query.isValidRegex()) {
+        if (MainModel.useRegex.value && query.isValidRegex()) {
             if (Regex(query).run {
                     containsMatchIn(data.info.name)
                             || containsMatchIn(data.label)
