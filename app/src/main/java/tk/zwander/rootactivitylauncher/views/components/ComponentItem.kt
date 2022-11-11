@@ -33,8 +33,8 @@ fun ComponentItem(
     var showingComponentInfo by rememberSaveable {
         mutableStateOf(false)
     }
-    var enabled by rememberSaveable(appEnabled) {
-        mutableStateOf(true)
+    var enabled by rememberSaveable {
+        mutableStateOf(appEnabled)
     }
 
     LaunchedEffect(component.info.packageName, appEnabled) {
@@ -69,7 +69,7 @@ fun ComponentItem(
                     Button.LaunchButton(component)
                 )
             },
-            enabled = enabled,
+            enabled = enabled && appEnabled,
             onEnabledChanged = {
                 enabled = it
             }
