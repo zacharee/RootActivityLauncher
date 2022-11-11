@@ -1,13 +1,10 @@
 <resources>
     <string name="app_name">Root Activity Launcher</string>
 
-    <string name="action_and_extras">Action &amp; Extras</string>
     <string name="extras">Extras</string>
-    <string name="global_extras">Global Extras</string>
     <string name="action">Action</string>
     <string name="hint_key">Key</string>
     <string name="hint_value">Value</string>
-    <string name="add_extra">Add Extra</string>
     <string name="filter">Filter</string>
     <string name="scroll_top">Scroll to Top</string>
     <string name="scroll_bottom">Scroll to Bottom</string>
@@ -15,14 +12,10 @@
     <string name="app_info">App Info</string>
     <string name="include_components">Search Components</string>
     <string name="data">Data</string>
-    <string name="categories">Categories (newline-separated)</string>
     <string name="category">Category</string>
 
-    <string name="set_extras">Set Extras</string>
-    <string name="set_global_extras">Set Global Extras</string>
     <string name="launch">Launch</string>
     <string name="create_shortcut">Create Shortcut</string>
-    <string name="launch_status">Launch Status</string>
     <string name="component_info">Component Info</string>
     <string name="extract_apk">Extract APK(s)</string>
     <string name="type">Type</string>
@@ -76,7 +69,6 @@
     <string name="filter_unexported">Show Only Unexported</string>
 
     <string name="requires_root">Requires Root</string>
-    <string name="loading">Loading…</string>
 
     <string name="twitter">Twitter</string>
     <string name="website">Website</string>
@@ -86,15 +78,12 @@
     <string name="supporters">Supporters</string>
     <string name="telegram">Telegram</string>
     <string name="discord">Discord</string>
-    <string name="social">Social</string>
 
     <string name="device_admin_desc">Device Admin can be used on Samsung One UI devices to launch otherwise un-launchable components.</string>
     <string name="choose_extract_folder_msg">Choose a folder to extract the APK(s) to.</string>
     
     <string name="usage_advanced_search">Advanced Search</string>
     <string name="search">Search</string>
-    <string name="search_options">Search Options</string>
-    <string name="delete">Delete</string>
 
     <string name="extraction_failed">Extraction failed: %s</string>
     <string name="unable_to_launch">Unable to launch: %s</string>

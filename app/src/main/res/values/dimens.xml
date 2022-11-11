@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <dimen name="item_recycler_max_height">500dp</dimen>
-    <dimen name="item_recycler_fading_edge_length">20dp</dimen>
-    <dimen name="corner_radius">12dp</dimen>
-</resources>

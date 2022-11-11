@@ -11,7 +11,6 @@ import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -95,9 +94,6 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
             }
         }
     }
-
-    private val permissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission(), ::onPermissionResult)
 
     private var currentDataJob: Deferred<*>? = null
 
@@ -339,7 +335,6 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
             initialActivitiesSize = activities?.size ?: 0,
             initialServicesSize = services?.size ?: 0,
             initialReceiversSize = receivers?.size ?: 0,
-            isForTasker = isForTasker,
             context = this@MainActivity
         )
     }

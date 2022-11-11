@@ -29,7 +29,6 @@ data class AppInfo(
     val initialActivitiesSize: Int,
     val initialServicesSize: Int,
     val initialReceiversSize: Int,
-    private val isForTasker: Boolean,
     private val context: Context,
     private val activitiesLoader: suspend (progress: suspend (Int, Int) -> Unit) -> Collection<ActivityInfo>,
     private val servicesLoader: suspend (progress: suspend (Int, Int) -> Unit) -> Collection<ServiceInfo>,

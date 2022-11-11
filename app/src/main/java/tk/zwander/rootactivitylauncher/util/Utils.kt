@@ -114,10 +114,6 @@ fun Context.updateCategoriesForComponent(componentName: String, categories: List
     prefs.categories = map
 }
 
-fun Context.dpToPx(dp: Number): Int {
-    return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), resources.displayMetrics).toInt()
-}
-
 fun Context.createShortcut(
     label: CharSequence,
     icon: IconCompat,
@@ -164,58 +160,12 @@ fun Context.launchUrl(url: String) {
     }
 }
 
-fun Context.launchEmail(to: String, subject: String) {
-    try {
-        val intent = Intent(Intent.ACTION_SENDTO)
-        intent.setDataAndType(
-            Uri.parse("mailto:${Uri.encode(to)}?subject=${Uri.encode(subject)}"),
-            "text/plain"
-        )
-
-        startActivity(intent)
-    } catch (e: Exception) {
-        Toast.makeText(this, resources.getString(R.string.unable_to_launch, e.localizedMessage), Toast.LENGTH_SHORT).show()
-    }
-}
-
 fun constructComponentKey(component: PackageItemInfo): String {
     return constructComponentKey(component.packageName, component.name)
 }
 
 fun constructComponentKey(packageName: String, componentName: String): String {
     return "$packageName/$componentName"
-}
-
-fun <T> Collection<T>.forEachParallelBlocking(context: CoroutineContext = Dispatchers.IO, block: suspend CoroutineScope.(T) -> Unit) = runBlocking {
-    forEachParallel(context, block)
-}
-
-suspend fun <T> Array<T>.forEachParallelIndexed(context: CoroutineContext = Dispatchers.IO, block: suspend CoroutineScope.(Int, T) -> Unit) = coroutineScope {
-    val jobs = ArrayList<Deferred<*>>(size)
-
-    forEachIndexed { index, t ->
-        jobs.add(
-            async(context) {
-                block(index, t)
-            }
-        )
-    }
-
-    jobs.awaitAll()
-}
-
-suspend fun <T> Collection<T>.forEachParallelIndexed(context: CoroutineContext = Dispatchers.IO, block: suspend CoroutineScope.(Int, T) -> Unit) = coroutineScope {
-    val jobs = ArrayList<Deferred<*>>(size)
-
-    forEachIndexed { index, t ->
-        jobs.add(
-            async(context) {
-                block(index, t)
-            }
-        )
-    }
-
-    jobs.awaitAll()
 }
 
 suspend fun <T> Collection<T>.forEachParallel(context: CoroutineContext = Dispatchers.IO, block: suspend CoroutineScope.(T) -> Unit) = coroutineScope {
@@ -281,10 +231,6 @@ fun requestShizukuPermission(resultListener: (Boolean) -> Unit): Boolean {
         true
     }
 }
-
-//Take a pixel value and return its representation in DP.
-fun Context.pxAsDp(pxVal: Number) =
-    pxVal.toFloat() / resources.displayMetrics.density
 
 fun Context.showRootToast() {
     try {
