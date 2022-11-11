@@ -191,12 +191,9 @@ fun MainView(
             onRefresh = onRefresh,
             indicator = { state, trigger ->
                 SwipeRefreshIndicator(
-                    // Pass the SwipeRefreshState + trigger through
                     state = state,
                     refreshTriggerDistance = trigger,
-                    // Enable the scale animation
                     scale = true,
-                    // Change the color and shape
                     backgroundColor = MaterialTheme.colorScheme.primary,
                 )
             }

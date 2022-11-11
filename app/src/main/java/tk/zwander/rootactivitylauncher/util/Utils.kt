@@ -13,7 +13,6 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.util.SparseArray
-import android.util.TypedValue
 import android.widget.Toast
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat

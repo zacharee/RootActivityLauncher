@@ -43,6 +43,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
             addAction(Intent.ACTION_PACKAGE_ADDED)
             addAction(Intent.ACTION_PACKAGE_REMOVED)
             addAction(Intent.ACTION_PACKAGE_REPLACED)
+            addDataScheme("package")
         }
 
         fun register() {
@@ -55,38 +56,40 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
 
         override fun onReceive(context: Context?, intent: Intent?) {
             launch(Dispatchers.IO) {
-                val host = intent?.data?.host
+                val pkg = intent?.data?.schemeSpecificPart
 
                 when (intent?.action) {
                     Intent.ACTION_PACKAGE_ADDED -> {
-                        if (host != null) {
-                            val loaded = loadApp(getPackageInfo(host), packageManager)
+                        if (pkg != null) {
+                            val loaded = loadApp(getPackageInfo(pkg), packageManager)
 
                             launch(Dispatchers.Main) {
-                                MainModel.apps.value = MainModel.apps.value + loaded
+                                MainModel.apps.emit(MainModel.apps.value + loaded)
                             }
                         }
                     }
 
                     Intent.ACTION_PACKAGE_REMOVED -> {
-                        if (host != null) {
+                        if (pkg != null) {
                             launch(Dispatchers.Main) {
-                                MainModel.apps.value = MainModel.apps.value.toMutableList().apply {
-                                    removeAll { it.info.packageName == host }
-                                }
+                                MainModel.apps.emit(
+                                    MainModel.apps.value.toMutableList().apply {
+                                        removeAll { it.info.packageName == pkg }
+                                    }
+                                )
                             }
                         }
                     }
 
                     Intent.ACTION_PACKAGE_REPLACED -> {
-                        if (host != null) {
+                        if (pkg != null) {
                             launch(Dispatchers.Main) {
                                 val old = ArrayList(MainModel.apps.value)
 
-                                old[old.indexOfFirst { it.info.packageName == host }] =
-                                    loadApp(getPackageInfo(host), packageManager)
+                                old[old.indexOfFirst { it.info.packageName == pkg }] =
+                                    loadApp(getPackageInfo(pkg), packageManager)
 
-                                MainModel.apps.value = old
+                                MainModel.apps.emit(old)
                             }
                         }
                     }
