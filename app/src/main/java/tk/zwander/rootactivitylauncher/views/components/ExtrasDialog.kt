@@ -1,6 +1,7 @@
 package tk.zwander.rootactivitylauncher.views.components
 
 import android.content.Context
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -130,6 +131,7 @@ fun ExtrasDialog(
             ExtrasDialogContents(
                 model = model,
                 modifier = Modifier.fillMaxWidth()
+                    .animateContentSize()
             )
         },
         properties = DialogProperties(
@@ -181,47 +183,46 @@ fun ExtrasDialogContents(
             modifier = Modifier.fillMaxWidth()
         )
 
-        fun handleCategoryUpdate(id: UUID, index: Int, newValue: String?) {
-            val isLast = categories.lastIndex == index
-
-            val copy = ArrayList(categories)
-
-            when {
-                newValue.isNullOrBlank() -> {
-                    if (!isLast) {
-                        val next = categories[index + 1]
-
-                        if (next.second.isNullOrBlank()) {
-                            copy[index] = id to newValue
-                            copy.removeAll { it.first == next.first }
-                        }
-                    } else {
-                        copy[index] = id to newValue
-                    }
-                }
-
-                else -> {
-                    copy[index] = id to newValue
-
-                    if (isLast) {
-                        copy.add(UUID.randomUUID() to "")
-                    }
-                }
-            }
-
-            scope.launch {
-                model.categories.emit(copy)
-            }
-        }
-
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             itemsIndexed(items = categories, key = { _, item -> item.first }) { index, cat ->
                 CategoryField(
                     value = cat.second ?: "",
-                    onValueChange = {
-                        handleCategoryUpdate(cat.first, index, it)
+                    onValueChange = { newValue ->
+                        val isLast = categories.lastIndex == index
+                        val id = cat.first
+
+                        val copy = ArrayList(categories)
+
+                        when {
+                            newValue.isBlank() -> {
+                                if (!isLast) {
+                                    val next = categories[index + 1]
+
+                                    if (next.second.isNullOrBlank()) {
+                                        copy[index] = id to newValue
+                                        copy.removeAll { it.first == next.first }
+                                    } else {
+                                        copy.removeAt(index)
+                                    }
+                                } else {
+                                    copy[index] = id to newValue
+                                }
+                            }
+
+                            else -> {
+                                copy[index] = id to newValue
+
+                                if (isLast) {
+                                    copy.add(UUID.randomUUID() to "")
+                                }
+                            }
+                        }
+
+                        scope.launch {
+                            model.categories.emit(copy)
+                        }
                     }
                 )
             }
@@ -230,59 +231,6 @@ fun ExtrasDialogContents(
         Spacer(Modifier.size(8.dp))
         Text(text = stringResource(id = R.string.extras))
 
-        fun handleExtraUpdate(
-            id: UUID,
-            index: Int,
-            newKey: String?,
-            newType: ExtraType?,
-            newValue: String?
-        ) {
-            val isLast = extras.lastIndex == index
-            val copy = ArrayList(extras)
-
-            when {
-                (newKey.isNullOrBlank() && newValue.isNullOrBlank() && newType == null) -> {
-                    if (!isLast) {
-                        val next = copy[index + 1]
-
-                        if (next.second.run { key.isBlank() && value.isBlank() }) {
-                            val old = copy[index]
-                            copy[index] = id to ExtraInfo(
-                                key = newKey ?: old.second.key,
-                                value = newValue ?: old.second.value,
-                                type = newType ?: old.second.type
-                            )
-                            copy.removeAll { it.first == next.first }
-                        }
-                    } else {
-                        val old = copy[index]
-                        copy[index] = id to ExtraInfo(
-                            key = newKey ?: old.second.key,
-                            value = newValue ?: old.second.value,
-                            type = newType ?: old.second.type
-                        )
-                    }
-                }
-
-                else -> {
-                    val old = copy[index]
-                    copy[index] = id to ExtraInfo(
-                        key = newKey ?: old.second.key,
-                        value = newValue ?: old.second.value,
-                        type = newType ?: old.second.type
-                    )
-
-                    if (isLast && !newKey.isNullOrBlank()) {
-                        copy.add(UUID.randomUUID() to ExtraInfo("", ""))
-                    }
-                }
-            }
-
-            scope.launch {
-                model.extras.emit(copy)
-            }
-        }
-
         LazyColumn(
             modifier = Modifier,
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -290,8 +238,48 @@ fun ExtrasDialogContents(
             itemsIndexed(items = extras, key = { _, item -> item.first }) { index, item ->
                 ExtraItem(
                     extraInfo = item.second
-                ) { key, type, value ->
-                    handleExtraUpdate(item.first, index, key, type, value)
+                ) { newKey, newType, newValue ->
+                    val id = item.first
+                    val copy = ArrayList(extras)
+                    val isLast = extras.lastIndex == index
+
+                    fun replace() {
+                        val old = copy[index]
+                        copy[index] = id to ExtraInfo(
+                            key = newKey ?: old.second.key,
+                            value = newValue ?: old.second.value,
+                            type = newType ?: old.second.type
+                        )
+                    }
+
+                    when {
+                        (newKey.isNullOrBlank() && newValue.isNullOrBlank() && newType == null) -> {
+                            if (!isLast) {
+                                val next = copy[index + 1]
+
+                                if (next.second.run { key.isBlank() && value.isBlank() }) {
+                                    replace()
+                                    copy.removeAll { it.first == next.first }
+                                } else {
+                                    copy.removeAt(index)
+                                }
+                            } else {
+                                replace()
+                            }
+                        }
+
+                        else -> {
+                            replace()
+
+                            if (isLast && !newKey.isNullOrBlank()) {
+                                copy.add(UUID.randomUUID() to ExtraInfo("", ""))
+                            }
+                        }
+                    }
+
+                    scope.launch {
+                        model.extras.emit(copy)
+                    }
                 }
             }
         }
