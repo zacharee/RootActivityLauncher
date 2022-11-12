@@ -17,7 +17,7 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
-import tk.zwander.rootactivitylauncher.util.AdminReceiver
+import tk.zwander.rootactivitylauncher.util.receiver.AdminReceiver
 import tk.zwander.rootactivitylauncher.util.isTouchWiz
 
 sealed interface ActivityLaunchStrategy : LaunchStrategy {

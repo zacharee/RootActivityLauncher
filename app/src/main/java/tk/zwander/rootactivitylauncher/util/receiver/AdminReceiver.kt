@@ -1,4 +1,4 @@
-package tk.zwander.rootactivitylauncher.util
+package tk.zwander.rootactivitylauncher.util.receiver
 
 import android.app.admin.DeviceAdminReceiver
 

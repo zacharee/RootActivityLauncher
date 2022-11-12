@@ -8,6 +8,9 @@ import androidx.preference.PreferenceManager
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 
+val Context.prefs: PrefManager
+    get() = PrefManager.getInstance(this)
+
 class PrefManager private constructor(context: Context) : ContextWrapper(context) {
     companion object {
         @SuppressLint("StaticFieldLeak")

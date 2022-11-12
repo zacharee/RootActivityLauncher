@@ -22,8 +22,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ComponentActionButton
-import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
+import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.util.isActuallyEnabled
 import tk.zwander.rootactivitylauncher.views.dialogs.ComponentInfoDialog
 import tk.zwander.rootactivitylauncher.views.dialogs.ExtrasDialog
@@ -52,56 +52,17 @@ fun AppItem(
     val filteredServices by info.filteredServices.collectAsState()
     val filteredReceivers by info.filteredReceivers.collectAsState()
 
-    val activityCount by info.aSize.collectAsState(info.activitiesSize)
-    val servicesCount by info.sSize.collectAsState(info.servicesSize)
-    val receiversCount by info.rSize.collectAsState(info.receiversSize)
+    val activityCount by info.activitiesSize.collectAsState()
+    val servicesCount by info.servicesSize.collectAsState()
+    val receiversCount by info.receiversSize.collectAsState()
 
     val activitiesExpanded by info.activitiesExpanded.collectAsState()
     val servicesExpanded by info.servicesExpanded.collectAsState()
     val receiversExpanded by info.receiversExpanded.collectAsState()
 
-    var activitiesLoading by remember {
-        mutableStateOf(false)
-    }
-    var servicesLoading by remember {
-        mutableStateOf(false)
-    }
-    var receiversLoading by remember {
-        mutableStateOf(false)
-    }
-
-    LaunchedEffect(key1 = activitiesExpanded) {
-        if (activitiesExpanded) {
-            activitiesLoading = !info.hasLoadedActivities.value
-            withContext(Dispatchers.IO) {
-                info.loadActivities(true)
-                info.onFilterChange(true)
-            }
-            activitiesLoading = false
-        }
-    }
-
-    LaunchedEffect(key1 = servicesExpanded) {
-        if (servicesExpanded) {
-            servicesLoading = !info.hasLoadedServices.value
-            withContext(Dispatchers.IO) {
-                info.loadServices(true)
-                info.onFilterChange(true)
-            }
-            servicesLoading = false
-        }
-    }
-
-    LaunchedEffect(key1 = receiversExpanded) {
-        if (receiversExpanded) {
-            receiversLoading = !info.hasLoadedReceivers.value
-            withContext(Dispatchers.IO) {
-                info.loadReceivers(true)
-                info.onFilterChange(true)
-            }
-            receiversLoading = false
-        }
-    }
+    val activitiesLoading by info.activitiesLoading.collectAsState()
+    val servicesLoading by info.servicesLoading.collectAsState()
+    val receiversLoading by info.receiversLoading.collectAsState()
 
     LaunchedEffect(info.info.packageName) {
         enabled = withContext(Dispatchers.IO) {

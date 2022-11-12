@@ -94,7 +94,7 @@ fun ComponentGroup(
 
             AnimatedVisibility(
                 modifier = Modifier.fillMaxWidth(),
-                visible = expanded,
+                visible = expanded && items.isNotEmpty(),
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {

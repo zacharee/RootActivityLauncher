@@ -74,6 +74,9 @@ dependencies {
     implementation 'com.github.zacharee:PatreonSupportersRetrieval:8436bbdbdc'
     implementation 'com.joaomgcd:taskerpluginlibrary:0.4.3'
 
+    api platform("com.ensody.reactivestate:reactivestate-bom:5.0.2")
+    implementation "com.ensody.reactivestate:reactivestate"
+
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
     implementation 'com.github.Chainfire:libsuperuser:1.1.0.201907261845'

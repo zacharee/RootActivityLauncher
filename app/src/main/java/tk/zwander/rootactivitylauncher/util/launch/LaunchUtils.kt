@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
+import tk.zwander.rootactivitylauncher.data.prefs
 import tk.zwander.rootactivitylauncher.util.*
 
 private fun Context.createLaunchArgs(extras: List<ExtraInfo>, componentKey: String): LaunchArgs {

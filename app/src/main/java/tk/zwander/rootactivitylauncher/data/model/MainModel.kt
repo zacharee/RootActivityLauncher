@@ -1,5 +1,7 @@
 package tk.zwander.rootactivitylauncher.data.model
 
+import com.ensody.reactivestate.derived
+import com.ensody.reactivestate.get
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -7,9 +9,9 @@ import kotlinx.coroutines.launch
 import tk.zwander.rootactivitylauncher.data.FilterMode
 import tk.zwander.rootactivitylauncher.util.AdvancedSearcher
 import tk.zwander.rootactivitylauncher.util.forEachParallel
-import tk.zwander.rootactivitylauncher.util.isValidRegex
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
+import java.util.regex.PatternSyntaxException
 
 object MainModel {
     val apps = MutableStateFlow<List<AppModel>>(listOf())
@@ -20,6 +22,16 @@ object MainModel {
     val permissionFilterMode = MutableStateFlow<FilterMode.PermissionFilterMode>(FilterMode.PermissionFilterMode.ShowAll)
 
     val query = MutableStateFlow("")
+    val isQueryValidRegex = derived {
+        get(query).run {
+            try {
+                Regex(this)
+                true
+            } catch (e: PatternSyntaxException) {
+                false
+            }
+        }
+    }
 
     val progress = MutableStateFlow<Float?>(null)
 
@@ -102,7 +114,7 @@ object MainModel {
 
         if (advancedMatch) return true
 
-        if (useRegex.value && query.isValidRegex()) {
+        if (useRegex.value && isQueryValidRegex.value) {
             if (Regex(query).run {
                     containsMatchIn(data.info.packageName)
                             || containsMatchIn(data.label)

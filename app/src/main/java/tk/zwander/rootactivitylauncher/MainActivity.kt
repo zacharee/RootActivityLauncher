@@ -22,9 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import kotlinx.coroutines.*
 import rikka.shizuku.Shizuku
+import tk.zwander.rootactivitylauncher.data.component.*
 import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.data.model.MainModel
-import tk.zwander.rootactivitylauncher.data.component.*
 import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.MainView
 import tk.zwander.rootactivitylauncher.views.theme.Theme
@@ -336,7 +336,8 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
             initialActivitiesSize = activities?.size ?: 0,
             initialServicesSize = services?.size ?: 0,
             initialReceiversSize = receivers?.size ?: 0,
-            context = this@MainActivity
+            context = this@MainActivity,
+            scope = this@MainActivity
         )
     }
 }

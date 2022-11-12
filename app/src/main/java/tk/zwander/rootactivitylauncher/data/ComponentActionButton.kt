@@ -5,10 +5,10 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.drawable.toBitmap
 import tk.zwander.rootactivitylauncher.R
+import tk.zwander.rootactivitylauncher.activities.ShortcutLaunchActivity
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.data.model.AppModel
-import tk.zwander.rootactivitylauncher.util.createShortcut
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
 import tk.zwander.rootactivitylauncher.util.launch.launchActivity
 import tk.zwander.rootactivitylauncher.util.launch.launchReceiver
@@ -75,7 +75,8 @@ sealed class ComponentActionButton<T>(protected val data: T) {
         override val labelRes = R.string.create_shortcut
 
         override suspend fun onClick(context: Context) {
-            context.createShortcut(
+            ShortcutLaunchActivity.createShortcut(
+                context = context,
                 label = data.label,
                 icon = IconCompat.createWithBitmap(
                     (data.info.loadIcon(context.packageManager) ?: ContextCompat.getDrawable(
