@@ -56,8 +56,4 @@ class ShortcutLaunchActivity : AppCompatActivity() {
 
         finish()
     }
-
-    override fun onDestroy() {
-        super.onDestroy()
-    }
 }
