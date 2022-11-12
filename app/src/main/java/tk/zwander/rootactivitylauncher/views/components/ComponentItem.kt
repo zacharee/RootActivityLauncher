@@ -14,8 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import tk.zwander.rootactivitylauncher.data.ComponentActionButton
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.util.isActuallyEnabled
+import tk.zwander.rootactivitylauncher.views.dialogs.ComponentInfoDialog
+import tk.zwander.rootactivitylauncher.views.dialogs.ExtrasDialog
 
 @Composable
 fun ComponentItem(
@@ -59,14 +62,14 @@ fun ComponentItem(
             component = component,
             whichButtons = remember(component.info.packageName) {
                 arrayListOf(
-                    Button.ComponentInfoButton(component.info) {
+                    ComponentActionButton.ComponentInfoButton(component.info) {
                         showingComponentInfo = true
                     },
-                    Button.IntentDialogButton(component.component.flattenToString()) {
+                    ComponentActionButton.IntentDialogButton(component.component.flattenToString()) {
                         showingIntentOptions = true
                     },
-                    Button.CreateShortcutButton(component),
-                    Button.LaunchButton(component)
+                    ComponentActionButton.CreateShortcutButton(component),
+                    ComponentActionButton.LaunchButton(component)
                 )
             },
             enabled = enabled && appEnabled,
@@ -76,12 +79,11 @@ fun ComponentItem(
         )
     }
 
-    if (showingIntentOptions) {
-        ExtrasDialog(
-            componentKey = component.component.flattenToString(),
-            onDismissRequest = { showingIntentOptions = false }
-        )
-    }
+    ExtrasDialog(
+        showing = showingIntentOptions,
+        componentKey = component.component.flattenToString(),
+        onDismissRequest = { showingIntentOptions = false }
+    )
 
     ComponentInfoDialog(
         info = component.info,

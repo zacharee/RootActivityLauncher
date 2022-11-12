@@ -22,12 +22,12 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import kotlinx.coroutines.*
 import rikka.shizuku.Shizuku
-import tk.zwander.rootactivitylauncher.data.AppInfo
-import tk.zwander.rootactivitylauncher.data.MainModel
+import tk.zwander.rootactivitylauncher.data.model.AppModel
+import tk.zwander.rootactivitylauncher.data.model.MainModel
 import tk.zwander.rootactivitylauncher.data.component.*
 import tk.zwander.rootactivitylauncher.util.*
-import tk.zwander.rootactivitylauncher.views.components.MainView
-import tk.zwander.rootactivitylauncher.views.components.Theme
+import tk.zwander.rootactivitylauncher.views.MainView
+import tk.zwander.rootactivitylauncher.views.theme.Theme
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
@@ -254,7 +254,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
             }
 
             val max = apps.size - 1
-            val loaded = ConcurrentLinkedQueue<AppInfo>()
+            val loaded = ConcurrentLinkedQueue<AppModel>()
 
             val progressIndex = AtomicInteger(0)
             val lastUpdate = AtomicLong(0L)
@@ -299,14 +299,14 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
         )
     }
 
-    private suspend fun loadApp(app: PackageInfo, pm: PackageManager): AppInfo = coroutineScope {
+    private suspend fun loadApp(app: PackageInfo, pm: PackageManager): AppModel = coroutineScope {
         val activities = app.activities
         val services = app.services
         val receivers = app.receivers
 
         val appLabel = app.applicationInfo.loadLabel(pm)
 
-        return@coroutineScope AppInfo(
+        return@coroutineScope AppModel(
             pInfo = app,
             label = appLabel,
             activitiesLoader = { progress ->

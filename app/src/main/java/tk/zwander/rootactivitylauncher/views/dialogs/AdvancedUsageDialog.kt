@@ -1,4 +1,4 @@
-package tk.zwander.rootactivitylauncher.views.components
+package tk.zwander.rootactivitylauncher.views.dialogs
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

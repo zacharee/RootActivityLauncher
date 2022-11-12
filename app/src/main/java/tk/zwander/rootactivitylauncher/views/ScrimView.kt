@@ -1,4 +1,4 @@
-package tk.zwander.rootactivitylauncher.views.components
+package tk.zwander.rootactivitylauncher.views
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn

@@ -1,6 +1,5 @@
 package tk.zwander.rootactivitylauncher.views.components
 
-import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.pm.ServiceInfo
 import androidx.compose.animation.core.animateFloatAsState
@@ -38,9 +37,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.IconCompat
-import androidx.core.graphics.drawable.toBitmap
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.github.skgmn.composetooltip.AnchorEdge
@@ -48,127 +44,21 @@ import com.github.skgmn.composetooltip.Tooltip
 import com.github.skgmn.composetooltip.rememberTooltipStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import tk.zwander.rootactivitylauncher.R
-import tk.zwander.rootactivitylauncher.data.AppInfo
+import tk.zwander.rootactivitylauncher.data.ComponentActionButton
+import tk.zwander.rootactivitylauncher.data.component.Availability
+import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
-import tk.zwander.rootactivitylauncher.data.component.ComponentType
-import tk.zwander.rootactivitylauncher.util.createShortcut
-import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
-import tk.zwander.rootactivitylauncher.util.launch.launchActivity
-import tk.zwander.rootactivitylauncher.util.launch.launchReceiver
-import tk.zwander.rootactivitylauncher.util.launch.launchService
-import tk.zwander.rootactivitylauncher.util.openAppInfo
 import tk.zwander.rootactivitylauncher.util.setComponentEnabled
 import tk.zwander.rootactivitylauncher.util.setPackageEnabled
-
-enum class Availability(val labelRes: Int, val tintRes: Int) {
-    EXPORTED(R.string.exported, R.color.colorExported),
-    PERMISSION_REQUIRED(R.string.permission_required, R.color.colorNeedsPermission),
-    UNEXPORTED(R.string.unexported, R.color.colorUnexported),
-    NA(0, 0)
-}
-
-sealed class Button<T>(protected val data: T) {
-    abstract val iconRes: Int
-    abstract val labelRes: Int
-
-    abstract suspend fun onClick(context: Context)
-
-    override fun equals(other: Any?): Boolean {
-        return other != null &&
-                other::class == this::class &&
-                data == (other as Button<*>).data
-    }
-
-    override fun hashCode(): Int {
-        return this::class.qualifiedName!!.hashCode() * 31 +
-                data.hashCode()
-    }
-
-    class ComponentInfoButton(data: Any, private val onClick: (info: Any) -> Unit) :
-        Button<Any>(data) {
-        override val iconRes = R.drawable.ic_baseline_help_outline_24
-        override val labelRes = R.string.component_info
-
-        override suspend fun onClick(context: Context) {
-            onClick(data)
-        }
-    }
-
-    class IntentDialogButton(data: String, private val onClick: () -> Unit) : Button<String>(data) {
-        override val iconRes = R.drawable.tune
-        override val labelRes = R.string.intent
-
-        override suspend fun onClick(context: Context) {
-            onClick()
-        }
-    }
-
-    class AppInfoButton(data: String) : Button<String>(data) {
-        override val iconRes = R.drawable.about_outline
-        override val labelRes = R.string.app_info
-
-        override suspend fun onClick(context: Context) {
-            context.openAppInfo(data)
-        }
-    }
-
-    class SaveApkButton(data: AppInfo, private val onClick: (AppInfo) -> Unit) :
-        Button<AppInfo>(data) {
-        override val iconRes = R.drawable.save
-        override val labelRes = R.string.extract_apk
-
-        override suspend fun onClick(context: Context) {
-            onClick(data)
-        }
-    }
-
-    class CreateShortcutButton(data: BaseComponentInfo) : Button<BaseComponentInfo>(data) {
-        override val iconRes = R.drawable.ic_baseline_link_24
-        override val labelRes = R.string.create_shortcut
-
-        override suspend fun onClick(context: Context) {
-            context.createShortcut(
-                label = data.label,
-                icon = IconCompat.createWithBitmap(
-                    (data.info.loadIcon(context.packageManager) ?: ContextCompat.getDrawable(
-                        context,
-                        R.mipmap.ic_launcher
-                    ))!!.toBitmap()
-                ),
-                componentKey = data.component.flattenToString(),
-                componentType = data.type()
-            )
-        }
-    }
-
-    class LaunchButton(data: BaseComponentInfo) : Button<BaseComponentInfo>(data) {
-        override val iconRes = R.drawable.ic_baseline_open_in_new_24
-        override val labelRes = R.string.launch
-
-        override suspend fun onClick(context: Context) {
-            val componentKey = data.component.flattenToString()
-
-            val extras = context.findExtrasForComponent(data.component.packageName) +
-                    context.findExtrasForComponent(componentKey)
-
-            when (data.type()) {
-                ComponentType.ACTIVITY -> context.launchActivity(extras, componentKey)
-                ComponentType.SERVICE -> context.launchService(extras, componentKey)
-                ComponentType.RECEIVER -> context.launchReceiver(extras, componentKey)
-            }
-        }
-    }
-}
 
 @Composable
 fun AppBar(
     icon: Any?,
     name: String,
-    app: AppInfo,
+    app: AppModel,
     enabled: Boolean,
     onEnabledChanged: (Boolean) -> Unit,
-    whichButtons: List<Button<*>>,
+    whichButtons: List<ComponentActionButton<*>>,
     modifier: Modifier = Modifier,
     showActions: Boolean = true,
 ) {
@@ -196,7 +86,7 @@ fun ComponentBar(
     icon: Any?,
     name: String,
     component: BaseComponentInfo,
-    whichButtons: List<Button<*>>,
+    whichButtons: List<ComponentActionButton<*>>,
     enabled: Boolean,
     onEnabledChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
@@ -239,7 +129,7 @@ private fun BarGuts(
     enabled: Boolean,
     onEnabledChanged: suspend (Boolean) -> Unit,
     availability: Availability,
-    whichButtons: List<Button<*>>,
+    whichButtons: List<ComponentActionButton<*>>,
     modifier: Modifier = Modifier,
     showActions: Boolean = true,
 ) {
@@ -357,7 +247,7 @@ private fun BarGuts(
                     var showingTooltip by remember {
                         mutableStateOf(false)
                     }
-                    val buttonEnabled = button !is Button.LaunchButton || enabled
+                    val buttonEnabled = button !is ComponentActionButton.LaunchButton || enabled
 
                     ComponentButton(
                         button = button,
@@ -374,7 +264,7 @@ private fun BarGuts(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ComponentButton(
-    button: Button<*>,
+    button: ComponentActionButton<*>,
     showingTooltip: Boolean,
     onShowingTooltipChanged: (Boolean) -> Unit,
     enabled: Boolean,

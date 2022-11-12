@@ -1,9 +1,10 @@
-package tk.zwander.rootactivitylauncher.data
+package tk.zwander.rootactivitylauncher.data.model
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import tk.zwander.rootactivitylauncher.data.FilterMode
 import tk.zwander.rootactivitylauncher.util.AdvancedSearcher
 import tk.zwander.rootactivitylauncher.util.forEachParallel
 import tk.zwander.rootactivitylauncher.util.isValidRegex
@@ -11,8 +12,8 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 object MainModel {
-    val apps = MutableStateFlow<List<AppInfo>>(listOf())
-    val filteredApps = MutableStateFlow<List<AppInfo>>(listOf())
+    val apps = MutableStateFlow<List<AppModel>>(listOf())
+    val filteredApps = MutableStateFlow<List<AppModel>>(listOf())
 
     val enabledFilterMode = MutableStateFlow<FilterMode.EnabledFilterMode>(FilterMode.EnabledFilterMode.ShowAll)
     val exportedFilterMode = MutableStateFlow<FilterMode.ExportedFilterMode>(FilterMode.ExportedFilterMode.ShowAll)
@@ -83,7 +84,7 @@ object MainModel {
         }
     }
 
-    private fun matches(data: AppInfo): Boolean {
+    private fun matches(data: AppModel): Boolean {
         val query = query.value
 
         if (query.isBlank()) return true

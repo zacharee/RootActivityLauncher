@@ -1,4 +1,4 @@
-package tk.zwander.rootactivitylauncher.views.components
+package tk.zwander.rootactivitylauncher.views.dialogs
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Box

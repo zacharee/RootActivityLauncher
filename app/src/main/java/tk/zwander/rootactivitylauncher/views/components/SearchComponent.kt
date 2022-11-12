@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import tk.zwander.rootactivitylauncher.R
+import tk.zwander.rootactivitylauncher.views.dialogs.AdvancedUsageDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

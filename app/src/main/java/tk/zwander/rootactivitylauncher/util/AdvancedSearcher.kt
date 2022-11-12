@@ -3,7 +3,7 @@ package tk.zwander.rootactivitylauncher.util
 import android.content.pm.ActivityInfo
 import android.content.pm.ComponentInfo
 import android.content.pm.ServiceInfo
-import tk.zwander.rootactivitylauncher.data.AppInfo
+import tk.zwander.rootactivitylauncher.data.model.AppModel
 
 object AdvancedSearcher {
     enum class LogicMode {
@@ -67,7 +67,7 @@ object AdvancedSearcher {
         }
     }
 
-    fun matchesHasPermission(query: String, data: AppInfo): Boolean {
+    fun matchesHasPermission(query: String, data: AppModel): Boolean {
         return itemMatch(query, HAS_PERMISSION) { mode, items ->
             val p = data.pInfo.requestedPermissions ?: return@itemMatch false
 
@@ -75,7 +75,7 @@ object AdvancedSearcher {
         }
     }
 
-    fun matchesRequiresPermission(query: String, data: AppInfo): Boolean {
+    fun matchesRequiresPermission(query: String, data: AppModel): Boolean {
         return matchesRequiresPermission(query, data.info.permission)
     }
 
@@ -96,7 +96,7 @@ object AdvancedSearcher {
         }
     }
 
-    fun matchesDeclaresPermission(query: String, data: AppInfo): Boolean {
+    fun matchesDeclaresPermission(query: String, data: AppModel): Boolean {
         return itemMatch(query, DECLARES_PERMISSION) { mode, items ->
             val declaredPermissions = data.pInfo.permissions?.map { it.name } ?: return@itemMatch false
 
@@ -104,7 +104,7 @@ object AdvancedSearcher {
         }
     }
 
-    fun matchesRequiresFeature(query: String, data: AppInfo): Boolean {
+    fun matchesRequiresFeature(query: String, data: AppModel): Boolean {
         return itemMatch(query, REQUIRES_FEATURE) { mode, items ->
             val requiredFeatures = data.pInfo.reqFeatures?.map { it.name } ?: return@itemMatch false
 

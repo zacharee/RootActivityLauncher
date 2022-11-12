@@ -1,6 +1,5 @@
-package tk.zwander.rootactivitylauncher.views.components
+package tk.zwander.rootactivitylauncher.views.dialogs
 
-import android.content.Context
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -42,100 +41,75 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
-import kotlinx.coroutines.flow.MutableStateFlow
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.ExtraType
-import tk.zwander.rootactivitylauncher.util.findActionForComponent
-import tk.zwander.rootactivitylauncher.util.findCategoriesForComponent
-import tk.zwander.rootactivitylauncher.util.findDataForComponent
-import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
+import tk.zwander.rootactivitylauncher.data.model.ExtrasDialogModel
 import tk.zwander.rootactivitylauncher.util.updateActionForComponent
 import tk.zwander.rootactivitylauncher.util.updateCategoriesForComponent
 import tk.zwander.rootactivitylauncher.util.updateDataForComponent
 import tk.zwander.rootactivitylauncher.util.updateExtrasForComponent
 import java.util.UUID
 
-class ExtrasDialogModel(private val context: Context, private val componentKey: String) {
-    val extras = MutableStateFlow<List<Pair<UUID, ExtraInfo>>>(
-        ArrayList<Pair<UUID, ExtraInfo>>().apply {
-            addAll(context.findExtrasForComponent(componentKey).map {
-                UUID.randomUUID() to it
-            })
-
-            add(UUID.randomUUID() to ExtraInfo("", ""))
-        }
-    )
-
-    val categories = MutableStateFlow<List<Pair<UUID, String?>>>(
-        ArrayList<Pair<UUID, String?>>().apply {
-            addAll(context.findCategoriesForComponent(componentKey).map {
-                UUID.randomUUID() to it
-            })
-
-            add(UUID.randomUUID() to "")
-        }
-    )
-
-    val action = MutableStateFlow(context.findActionForComponent(componentKey))
-    val data = MutableStateFlow(context.findDataForComponent(componentKey))
-}
-
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ExtrasDialog(
+    showing: Boolean,
     componentKey: String,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
+    if (showing) {
+        val context = LocalContext.current
 
-    val model = remember {
-        ExtrasDialogModel(context, componentKey)
-    }
+        val model = remember {
+            ExtrasDialogModel(context, componentKey)
+        }
 
-    AlertDialog(
-        onDismissRequest = onDismissRequest,
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    context.updateExtrasForComponent(
-                        componentKey,
-                        model.extras.value.mapNotNull { if (it.second.key.isBlank()) null else it.second }
-                    )
-                    context.updateActionForComponent(componentKey, model.action.value)
-                    context.updateDataForComponent(componentKey, model.data.value)
-                    context.updateCategoriesForComponent(
-                        componentKey,
-                        model.categories.value.mapNotNull { if (it.second.isNullOrBlank()) null else it.second }
-                    )
+        AlertDialog(
+            onDismissRequest = onDismissRequest,
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        context.updateExtrasForComponent(
+                            componentKey,
+                            model.extras.value.mapNotNull { if (it.second.key.isBlank()) null else it.second }
+                        )
+                        context.updateActionForComponent(componentKey, model.action.value)
+                        context.updateDataForComponent(componentKey, model.data.value)
+                        context.updateCategoriesForComponent(
+                            componentKey,
+                            model.categories.value.mapNotNull { if (it.second.isNullOrBlank()) null else it.second }
+                        )
 
-                    onDismissRequest()
+                        onDismissRequest()
+                    }
+                ) {
+                    Text(text = stringResource(id = android.R.string.ok))
                 }
-            ) {
-                Text(text = stringResource(id = android.R.string.ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(id = android.R.string.cancel))
-            }
-        },
-        modifier = modifier.fillMaxWidth(0.85f),
-        title = {
-            Text(text = stringResource(id = R.string.intent))
-        },
-        text = {
-            ExtrasDialogContents(
-                model = model,
-                modifier = Modifier.fillMaxWidth()
-                    .animateContentSize()
-            )
-        },
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-        ),
-    )
+            },
+            dismissButton = {
+                TextButton(onClick = onDismissRequest) {
+                    Text(text = stringResource(id = android.R.string.cancel))
+                }
+            },
+            modifier = modifier.fillMaxWidth(0.85f),
+            title = {
+                Text(text = stringResource(id = R.string.intent))
+            },
+            text = {
+                ExtrasDialogContents(
+                    model = model,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize()
+                )
+            },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false,
+            ),
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -290,7 +264,7 @@ private fun CategoryField(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ExtraItem(
     extraInfo: ExtraInfo,
@@ -382,31 +356,12 @@ private fun ExtraItem(
         }
     }
 
-    if (showingTypeDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                showingTypeDialog = false
-            },
-            title = {
-                Text(text = stringResource(id = R.string.type))
-            },
-            text = {
-                ExtrasTypeDialogContents(
-                    initial = extraInfo.safeType,
-                    onTypeSelected = {
-                        onUpdate(null, it, null)
-                        showingTypeDialog = false
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = { showingTypeDialog = false }) {
-                    Text(text = stringResource(id = android.R.string.cancel))
-                }
-            },
-            properties = DialogProperties(usePlatformDefaultWidth = false),
-            modifier = Modifier.fillMaxWidth(0.85f)
-        )
-    }
+    ExtrasTypeDialog(
+        showing = showingTypeDialog,
+        extraInfo = extraInfo,
+        onDismissRequest = { showingTypeDialog = false },
+        onTypeSelected = {
+            onUpdate(null, it, null)
+        }
+    )
 }

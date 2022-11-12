@@ -1,4 +1,4 @@
-package tk.zwander.rootactivitylauncher.views.components
+package tk.zwander.rootactivitylauncher.views.dialogs
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.FilterMode
+import tk.zwander.rootactivitylauncher.views.components.SelectableCard
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable

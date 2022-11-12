@@ -1,4 +1,4 @@
-package tk.zwander.rootactivitylauncher.data
+package tk.zwander.rootactivitylauncher.data.model
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import tk.zwander.rootactivitylauncher.data.FilterMode
 import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ReceiverInfo
@@ -22,7 +23,7 @@ import tk.zwander.rootactivitylauncher.util.isValidRegex
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.atomic.AtomicInteger
 
-data class AppInfo(
+data class AppModel(
     val pInfo: PackageInfo,
     val info: ApplicationInfo = pInfo.applicationInfo,
     val label: CharSequence,
@@ -80,7 +81,7 @@ data class AppInfo(
     private var _hasLoadedReceivers = false
 
     override fun equals(other: Any?): Boolean {
-        return other is AppInfo
+        return other is AppModel
                 && info.packageName == other.info.packageName
                 && super.equals(other)
                 && activitiesSize == other.activitiesSize

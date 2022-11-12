@@ -1,4 +1,4 @@
-package tk.zwander.rootactivitylauncher.views.components
+package tk.zwander.rootactivitylauncher.views.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

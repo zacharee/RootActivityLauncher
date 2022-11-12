@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.parcelize.Parcelize
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.util.launchUrl
+import tk.zwander.rootactivitylauncher.views.dialogs.PatreonSupportersDialog
 
 @Parcelize
 private data class MenuItem(

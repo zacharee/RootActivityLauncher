@@ -21,16 +21,19 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import tk.zwander.rootactivitylauncher.R
-import tk.zwander.rootactivitylauncher.data.AppInfo
+import tk.zwander.rootactivitylauncher.data.ComponentActionButton
+import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.util.isActuallyEnabled
+import tk.zwander.rootactivitylauncher.views.dialogs.ComponentInfoDialog
+import tk.zwander.rootactivitylauncher.views.dialogs.ExtrasDialog
 
 @Composable
 fun AppItem(
-    info: AppInfo,
+    info: AppModel,
     isForTasker: Boolean,
     selectionCallback: (BaseComponentInfo) -> Unit,
-    extractCallback: (AppInfo) -> Unit,
+    extractCallback: (AppModel) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showingIntentDialog by remember {
@@ -125,14 +128,14 @@ fun AppItem(
                 app = info,
                 whichButtons = remember {
                     listOf(
-                        Button.ComponentInfoButton(info.pInfo) {
+                        ComponentActionButton.ComponentInfoButton(info.pInfo) {
                             showingComponentInfo = true
                         },
-                        Button.IntentDialogButton(info.info.packageName) {
+                        ComponentActionButton.IntentDialogButton(info.info.packageName) {
                             showingIntentDialog = true
                         },
-                        Button.AppInfoButton(info.info.packageName),
-                        Button.SaveApkButton(info, extractCallback)
+                        ComponentActionButton.AppInfoButton(info.info.packageName),
+                        ComponentActionButton.SaveApkButton(info, extractCallback)
                     )
                 },
                 enabled = enabled,
@@ -187,13 +190,12 @@ fun AppItem(
             )
         }
     }
-    
-    if (showingIntentDialog) {
-        ExtrasDialog(
-            componentKey = info.info.packageName, 
-            onDismissRequest = { showingIntentDialog = false }
-        )
-    }
+
+    ExtrasDialog(
+        showing = showingIntentDialog,
+        componentKey = info.info.packageName,
+        onDismissRequest = { showingIntentDialog = false }
+    )
 
     ComponentInfoDialog(
         info = info.pInfo,
