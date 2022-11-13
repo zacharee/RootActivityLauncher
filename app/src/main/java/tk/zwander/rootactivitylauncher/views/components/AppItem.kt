@@ -154,15 +154,13 @@ fun AppItem(
 
     ExtrasDialog(
         showing = showingIntentDialog,
-        componentKey = info.info.packageName,
-        onDismissRequest = { showingIntentDialog = false }
-    )
+        componentKey = info.info.packageName
+    ) { showingIntentDialog = false }
 
     ComponentInfoDialog(
         info = info.pInfo,
-        showing = showingComponentInfo,
-        onDismissRequest = { showingComponentInfo = false }
-    )
+        showing = showingComponentInfo
+    ) { showingComponentInfo = false }
 }
 
 private fun getCoilData(info: ApplicationInfo): Any {

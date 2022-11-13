@@ -81,15 +81,13 @@ fun ComponentItem(
 
     ExtrasDialog(
         showing = showingIntentOptions,
-        componentKey = component.component.flattenToString(),
-        onDismissRequest = { showingIntentOptions = false }
-    )
+        componentKey = component.component.flattenToString()
+    ) { showingIntentOptions = false }
 
     ComponentInfoDialog(
         info = component.info,
-        showing = showingComponentInfo,
-        onDismissRequest = { showingComponentInfo = false }
-    )
+        showing = showingComponentInfo
+    ) { showingComponentInfo = false }
 }
 
 private fun getCoilData(data: BaseComponentInfo): Any {
