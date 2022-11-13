@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import kotlinx.atomicfu.AtomicInt
+import kotlinx.atomicfu.AtomicLong
 import tk.zwander.rootactivitylauncher.R
 
 val Int.hexString: String
@@ -21,3 +23,25 @@ fun Context.launchUrl(url: String) {
 
 val Context.isTouchWiz: Boolean
     get() = packageManager.hasSystemFeature("com.samsung.feature.samsung_experience_mobile")
+
+fun updateProgress(
+    current: AtomicInt,
+    lastUpdateTime: AtomicLong,
+    total: Int,
+    setter: (newProgress: Float) -> Unit
+) {
+    val oldCurrent = current.value
+    val newCurrent = current.incrementAndGet()
+
+    val oldProgress = (oldCurrent / total.toFloat() * 100f).toInt() / 100f
+    val newProgress = (newCurrent / total.toFloat() * 100f).toInt() / 100f
+
+    val oldUpdateTime = lastUpdateTime.value
+    val newUpdateTime = System.currentTimeMillis()
+
+    if (newProgress > oldProgress && newUpdateTime > oldUpdateTime) {
+        lastUpdateTime.value = newUpdateTime
+
+        setter(newProgress)
+    }
+}

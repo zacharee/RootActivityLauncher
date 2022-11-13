@@ -4,11 +4,11 @@ import android.util.SparseArray
 import androidx.core.util.forEach
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 fun <T, R> SparseArray<out T>.map(transform: (T) -> R): List<R> {
     return mapTo(ArrayList(), transform)
@@ -22,7 +22,19 @@ fun <T, R, C : MutableCollection<in R>> SparseArray<out T>.mapTo(destination: C,
     return destination
 }
 
-suspend fun <T> Collection<T>.forEachParallel(context: CoroutineContext = Dispatchers.IO, block: suspend CoroutineScope.(T) -> Unit) = coroutineScope {
+suspend fun <T> Collection<T>.forEachParallel(context: CoroutineContext = EmptyCoroutineContext, block: suspend CoroutineScope.(T) -> Unit) = coroutineScope {
+    val jobs = ArrayList<Deferred<*>>(size)
+    forEach {
+        jobs.add(
+            async(context) {
+                block(it)
+            }
+        )
+    }
+    jobs.awaitAll()
+}
+
+suspend fun <T> Array<T>.forEachParallel(context: CoroutineContext = EmptyCoroutineContext, block: suspend CoroutineScope.(T) -> Unit) = coroutineScope {
     val jobs = ArrayList<Deferred<*>>(size)
     forEach {
         jobs.add(

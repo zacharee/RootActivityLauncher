@@ -44,6 +44,7 @@ import tk.zwander.rootactivitylauncher.views.dialogs.FilterDialog
 @Composable
 fun MainView(
     isForTasker: Boolean,
+    mainModel: MainModel,
     onItemSelected: (BaseComponentInfo) -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier
@@ -83,16 +84,16 @@ fun MainView(
         }
     }
 
-    val enabledFilterMode by MainModel.enabledFilterMode.collectAsState()
-    val exportedFilterMode by MainModel.exportedFilterMode.collectAsState()
-    val permissionFilterMode by MainModel.permissionFilterMode.collectAsState()
-    val query by MainModel.query.collectAsState()
-    val apps by MainModel.apps.collectAsState()
-    val filteredApps by MainModel.filteredApps.collectAsState()
-    val progress by MainModel.progress.collectAsState()
-    val isSearching by MainModel.isSearching.collectAsState()
-    val useRegex by MainModel.useRegex.collectAsState()
-    val includeComponents by MainModel.includeComponents.collectAsState()
+    val enabledFilterMode by mainModel.enabledFilterMode.collectAsState()
+    val exportedFilterMode by mainModel.exportedFilterMode.collectAsState()
+    val permissionFilterMode by mainModel.permissionFilterMode.collectAsState()
+    val query by mainModel.query.collectAsState()
+    val apps by mainModel.apps.collectAsState()
+    val filteredApps by mainModel.filteredApps.collectAsState()
+    val progress by mainModel.progress.collectAsState()
+    val isSearching by mainModel.isSearching.collectAsState()
+    val useRegex by mainModel.useRegex.collectAsState()
+    val includeComponents by mainModel.includeComponents.collectAsState()
 
     LaunchedEffect(extractInfo) {
         if (extractInfo != null) {
@@ -106,7 +107,7 @@ fun MainView(
         includeComponents
     ) {
         if (isSearching) {
-            MainModel.update()
+            mainModel.update()
         }
     }
 
@@ -117,7 +118,7 @@ fun MainView(
         permissionFilterMode,
         query
     ) {
-        MainModel.update()
+        mainModel.update()
     }
 
     Surface(
@@ -170,6 +171,18 @@ fun MainView(
                         appListState = appListState,
                         onShowFilterDialog = {
                             showingFilterDialog = true
+                        },
+                        onQueryChanged = {
+                            mainModel.query.value = it
+                        },
+                        onIncludeComponentsChanged = {
+                            mainModel.includeComponents.value = it
+                        },
+                        onIsSearchingChanged = {
+                            mainModel.isSearching.value = it
+                        },
+                        onUseRegexChanged = {
+                            mainModel.useRegex.value = it
                         }
                     )
                 }
@@ -184,13 +197,13 @@ fun MainView(
 
     FilterDialog(
         showing = showingFilterDialog,
-        initialEnabledMode = MainModel.enabledFilterMode.collectAsState().value,
-        initialExportedMode = MainModel.exportedFilterMode.collectAsState().value,
-        initialPermissionMode = MainModel.permissionFilterMode.collectAsState().value,
+        initialEnabledMode = mainModel.enabledFilterMode.collectAsState().value,
+        initialExportedMode = mainModel.exportedFilterMode.collectAsState().value,
+        initialPermissionMode = mainModel.permissionFilterMode.collectAsState().value,
         onDismissRequest = { enabled, exported, permission ->
-            MainModel.enabledFilterMode.value = enabled
-            MainModel.exportedFilterMode.value = exported
-            MainModel.permissionFilterMode.value = permission
+            mainModel.enabledFilterMode.value = enabled
+            mainModel.exportedFilterMode.value = exported
+            mainModel.permissionFilterMode.value = permission
             showingFilterDialog = false
         }
     )

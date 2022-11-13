@@ -15,9 +15,7 @@ import android.provider.Settings
 import android.widget.Toast
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
-import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.prefs
-import java.util.concurrent.ConcurrentLinkedDeque
 
 fun determineComponentNamePackage(componentName: String): String {
     val component = ComponentName.unflattenFromString(componentName)
@@ -161,21 +159,3 @@ private fun checkEnabledSetting(setting: Int, default: Boolean): Boolean {
 
 val ComponentInfo.safeComponentName: ComponentName
     get() = ComponentName(packageName, name)
-
-suspend inline fun <reified Loaded : BaseComponentInfo, reified Input : PackageItemInfo> Array<Input>?.loadItems(
-    pm: PackageManager,
-    appLabel: CharSequence,
-    noinline progress: (suspend (Int, Int) -> Unit)?,
-    constructor: (Input, CharSequence) -> Loaded
-): Collection<Loaded> {
-    val infos = ConcurrentLinkedDeque<Loaded>()
-
-    this?.forEachIndexed { index, input ->
-        val label = input.loadLabel(pm).ifBlank { appLabel }
-
-        infos.add(constructor(input, label))
-        progress?.invoke(index, size)
-    }
-
-    return infos
-}

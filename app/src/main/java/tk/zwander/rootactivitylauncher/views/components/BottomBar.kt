@@ -30,19 +30,22 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.model.AppModel
-import tk.zwander.rootactivitylauncher.data.model.MainModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BottomBar(
-    isSearching: Boolean?,
-    useRegex: Boolean?,
-    includeComponents: Boolean?,
+    isSearching: Boolean,
+    useRegex: Boolean,
+    includeComponents: Boolean,
     query: String?,
     progress: Float?,
     apps: List<AppModel>,
     appListState: LazyStaggeredGridState,
     onShowFilterDialog: () -> Unit,
+    onUseRegexChanged: (Boolean) -> Unit,
+    onIncludeComponentsChanged: (Boolean) -> Unit,
+    onIsSearchingChanged: (Boolean) -> Unit,
+    onQueryChanged: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
@@ -75,8 +78,8 @@ fun BottomBar(
                         ) {
                             SelectableCard(
                                 modifier = Modifier.weight(1f),
-                                selected = useRegex == true,
-                                onClick = { MainModel.useRegex.value = !useRegex!! },
+                                selected = useRegex,
+                                onClick = { onUseRegexChanged(!useRegex) },
                                 unselectedColor = Color.Transparent
                             ) {
                                 Box(
@@ -91,8 +94,8 @@ fun BottomBar(
 
                             SelectableCard(
                                 modifier = Modifier.weight(1f),
-                                selected = includeComponents == true,
-                                onClick = { MainModel.includeComponents.value = !includeComponents!! },
+                                selected = includeComponents,
+                                onClick = { onIncludeComponentsChanged(!includeComponents) },
                                 unselectedColor = Color.Transparent
                             ) {
                                 Box(
@@ -116,10 +119,10 @@ fun BottomBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 SearchComponent(
-                    expanded = isSearching == true,
+                    expanded = isSearching,
                     query = query!!,
-                    onExpandChange = { MainModel.isSearching.value = it },
-                    onQueryChange = { MainModel.query.value = it },
+                    onExpandChange = onIsSearchingChanged,
+                    onQueryChange = onQueryChanged,
                     modifier = Modifier.weight(1f)
                 )
 

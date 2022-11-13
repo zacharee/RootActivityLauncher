@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
+import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.*
 import rikka.shizuku.Shizuku
 import tk.zwander.rootactivitylauncher.data.component.*
@@ -30,13 +31,13 @@ import tk.zwander.rootactivitylauncher.views.MainView
 import tk.zwander.rootactivitylauncher.views.theme.Theme
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicLong
 
 @SuppressLint("RestrictedApi")
 open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), PermissionResultListener {
     protected open val isForTasker = false
     protected open var selectedItem: Pair<ComponentType, ComponentName>? = null
+
+    protected val model = MainModel()
 
     private val packageUpdateReceiver = object : BroadcastReceiver() {
         val filter = IntentFilter().apply {
@@ -63,28 +64,28 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                         if (pkg != null) {
                             val loaded = loadApp(getPackageInfo(pkg), packageManager)
 
-                            MainModel.apps.value = MainModel.apps.value + loaded
+                            model.apps.value = model.apps.value + loaded
                         }
                     }
 
                     Intent.ACTION_PACKAGE_REMOVED -> {
                         if (pkg != null) {
-                            val new = MainModel.apps.value.toMutableList().apply {
+                            val new = model.apps.value.toMutableList().apply {
                                 removeAll { it.info.packageName == pkg }
                             }
 
-                            MainModel.apps.value = new
+                            model.apps.value = new
                         }
                     }
 
                     Intent.ACTION_PACKAGE_REPLACED -> {
                         if (pkg != null) {
-                            val old = ArrayList(MainModel.apps.value)
+                            val old = ArrayList(model.apps.value)
 
                             old[old.indexOfFirst { it.info.packageName == pkg }] =
                                 loadApp(getPackageInfo(pkg), packageManager)
 
-                            MainModel.apps.value = old
+                            model.apps.value = old
                         }
                     }
                 }
@@ -151,7 +152,8 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                     onRefresh = {
                         currentDataJob?.cancel()
                         currentDataJob = loadDataAsync()
-                    }
+                    },
+                    mainModel = model
                 )
             }
         }
@@ -171,9 +173,9 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
     }
 
     private fun loadDataAsync(silent: Boolean = false): Deferred<*> {
-        return async(Dispatchers.Main) {
+        return async(Dispatchers.IO) {
             if (!silent) {
-                MainModel.progress.value = 0f
+                model.progress.value = 0f
             }
 
             //This mess is because of a bug in Marshmallow and possibly earlier that
@@ -256,9 +258,8 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
             val max = apps.size - 1
             val loaded = ConcurrentLinkedQueue<AppModel>()
 
-            val progressIndex = AtomicInteger(0)
-            val lastUpdate = AtomicLong(0L)
-            val previousProgress = AtomicInteger(0f.toBits())
+            val progressIndex = atomic(0)
+            val lastUpdate = atomic(0L)
 
             apps.forEachParallel { app ->
                 loadApp(app, packageManager).let {
@@ -266,22 +267,14 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                 }
 
                 if (!silent) {
-                    val p = progressIndex.incrementAndGet().toFloat() / max.toFloat()
-                    val time = System.currentTimeMillis()
-
-                    if (time - lastUpdate.get() >= 10) {
-                        lastUpdate.set(time)
-                        if (Float.fromBits(previousProgress.get()) < p) {
-                            previousProgress.set(p.toBits())
-
-                            MainModel.progress.value = p
-                        }
+                    updateProgress(progressIndex, lastUpdate, max) {
+                        model.progress.value = it
                     }
                 }
             }
 
-            MainModel.apps.value = loaded.toList()
-            MainModel.progress.value = null
+            model.apps.value = loaded.toList()
+            model.progress.value = null
         }
     }
 
@@ -300,44 +293,14 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
     }
 
     private suspend fun loadApp(app: PackageInfo, pm: PackageManager): AppModel = coroutineScope {
-        val activities = app.activities
-        val services = app.services
-        val receivers = app.receivers
-
         val appLabel = app.applicationInfo.loadLabel(pm)
 
         return@coroutineScope AppModel(
             pInfo = app,
             label = appLabel,
-            activitiesLoader = { progress ->
-                activities.loadItems(
-                    pm = pm,
-                    appLabel = appLabel,
-                    progress = progress,
-                    constructor = { input, label -> ActivityInfo(input, label) }
-                )
-            },
-            servicesLoader = { progress ->
-                services.loadItems(
-                    pm = pm,
-                    appLabel = appLabel,
-                    progress = progress,
-                    constructor = { input, label -> ServiceInfo(input, label) }
-                )
-            },
-            receiversLoader = { progress ->
-                receivers.loadItems(
-                    pm = pm,
-                    appLabel = appLabel,
-                    progress = progress,
-                    constructor = { input, label -> ReceiverInfo(input, label) }
-                )
-            },
-            initialActivitiesSize = activities?.size ?: 0,
-            initialServicesSize = services?.size ?: 0,
-            initialReceiversSize = receivers?.size ?: 0,
             context = this@MainActivity,
-            scope = this@MainActivity
+            scope = this@MainActivity,
+            mainModel = model
         )
     }
 }

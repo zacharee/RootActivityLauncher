@@ -1,7 +1,6 @@
 package tk.zwander.rootactivitylauncher.data.model
 
-import com.ensody.reactivestate.derived
-import com.ensody.reactivestate.get
+import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,11 +8,10 @@ import kotlinx.coroutines.launch
 import tk.zwander.rootactivitylauncher.data.FilterMode
 import tk.zwander.rootactivitylauncher.util.AdvancedSearcher
 import tk.zwander.rootactivitylauncher.util.forEachParallel
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicLong
+import tk.zwander.rootactivitylauncher.util.updateProgress
 import java.util.regex.PatternSyntaxException
 
-object MainModel {
+class MainModel {
     val apps = MutableStateFlow<List<AppModel>>(listOf())
     val filteredApps = MutableStateFlow<List<AppModel>>(listOf())
 
@@ -22,16 +20,6 @@ object MainModel {
     val permissionFilterMode = MutableStateFlow<FilterMode.PermissionFilterMode>(FilterMode.PermissionFilterMode.ShowAll)
 
     val query = MutableStateFlow("")
-    val isQueryValidRegex = derived {
-        get(query).run {
-            try {
-                Regex(this)
-                true
-            } catch (e: PatternSyntaxException) {
-                false
-            }
-        }
-    }
 
     val progress = MutableStateFlow<Float?>(null)
 
@@ -54,22 +42,12 @@ object MainModel {
         launch(Dispatchers.IO) {
             if (hasFilters || isSearching) {
                 val total = apps.sumOf { it.totalUnfilteredSize }
-                val current = AtomicInteger(0)
-                val lastUpdateTime = AtomicLong(0L)
+                val current = atomic(0)
+                val lastUpdateTime = atomic(0L)
 
                 apps.forEachParallel {
-                    it.loadEverything(true) { _, _ ->
-                        val oldCurrent = current.get()
-                        val newCurrent = current.incrementAndGet()
-
-                        val oldProgress = (oldCurrent / total.toFloat() * 100f).toInt() / 100f
-                        val newProgress = (newCurrent / total.toFloat() * 100f).toInt() / 100f
-
-                        val newUpdateTime = System.currentTimeMillis()
-
-                        if (newProgress > oldProgress && newUpdateTime - 10 > lastUpdateTime.get()) {
-                            lastUpdateTime.set(newUpdateTime)
-
+                    it.loadEverything(true) {
+                        updateProgress(current, lastUpdateTime, total) { newProgress ->
                             progress.value = newProgress
                         }
                     }
@@ -98,6 +76,17 @@ object MainModel {
 
     private fun matches(data: AppModel): Boolean {
         val query = query.value
+        val useRegex = useRegex.value
+        val isValidRegex = if (useRegex) {
+            try {
+                Regex(query)
+                true
+            } catch (e: PatternSyntaxException) {
+                false
+            }
+        } else {
+            false
+        }
 
         if (query.isBlank()) return true
 
@@ -114,7 +103,7 @@ object MainModel {
 
         if (advancedMatch) return true
 
-        if (useRegex.value && isQueryValidRegex.value) {
+        if (useRegex && isValidRegex) {
             if (Regex(query).run {
                     containsMatchIn(data.info.packageName)
                             || containsMatchIn(data.label)
