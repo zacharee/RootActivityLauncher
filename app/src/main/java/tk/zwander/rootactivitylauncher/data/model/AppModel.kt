@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -115,21 +116,24 @@ data class AppModel(
         }
 
         scope.launch(Dispatchers.IO) {
-            activitiesExpanded.collect {
-                activitiesLoading.value = it && !hasLoadedActivities.value
-            }
+            activitiesExpanded.combine(hasLoadedActivities) { expanded, loaded -> expanded && !loaded }
+                .collect {
+                    activitiesLoading.value = it
+                }
         }
 
         scope.launch(Dispatchers.IO) {
-            servicesExpanded.collect {
-                servicesLoading.value = it && !hasLoadedServices.value
-            }
+            servicesExpanded.combine(hasLoadedServices) { expanded, loaded -> expanded && !loaded }
+                .collect {
+                    servicesLoading.value = it
+                }
         }
 
         scope.launch(Dispatchers.IO) {
-            receiversExpanded.collect {
-                receiversLoading.value = it && !hasLoadedReceivers.value
-            }
+            receiversExpanded.combine(hasLoadedReceivers) { expanded, loaded -> expanded && !loaded }
+                .collect {
+                    receiversLoading.value = it
+                }
         }
     }
 
