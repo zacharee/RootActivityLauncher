@@ -1,7 +1,6 @@
 package tk.zwander.rootactivitylauncher.views.components
 
 import android.net.Uri
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -10,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
@@ -24,7 +24,6 @@ import tk.zwander.rootactivitylauncher.views.dialogs.ExtrasDialog
 fun ComponentItem(
     forTasker: Boolean,
     component: BaseComponentInfo,
-    onClick: () -> Unit,
     appEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -47,12 +46,8 @@ fun ComponentItem(
     }
 
     Box(
-        modifier = modifier
-            .then(if (forTasker) {
-                Modifier.clickable {
-                    onClick()
-                }
-            } else Modifier)
+        modifier = modifier,
+        contentAlignment = Alignment.CenterStart
     ) {
         ComponentBar(
             icon = rememberSaveable {
@@ -75,7 +70,8 @@ fun ComponentItem(
             enabled = enabled && appEnabled,
             onEnabledChanged = {
                 enabled = it
-            }
+            },
+            showActions = !forTasker
         )
     }
 

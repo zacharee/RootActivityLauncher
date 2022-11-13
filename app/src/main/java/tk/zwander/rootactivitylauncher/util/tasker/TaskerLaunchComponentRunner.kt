@@ -7,14 +7,11 @@ import com.joaomgcd.taskerpluginlibrary.input.TaskerInput
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResult
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultError
 import com.joaomgcd.taskerpluginlibrary.runner.TaskerPluginResultSucess
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.data.tasker.TaskerLaunchComponentInfo
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
-import tk.zwander.rootactivitylauncher.util.launch.launchActivity
-import tk.zwander.rootactivitylauncher.util.launch.launchReceiver
-import tk.zwander.rootactivitylauncher.util.launch.launchService
+import tk.zwander.rootactivitylauncher.util.launch.launch
 
 class TaskerLaunchComponentRunner : TaskerPluginRunnerActionNoOutput<TaskerLaunchComponentInfo>() {
     override fun run(
@@ -33,26 +30,30 @@ class TaskerLaunchComponentRunner : TaskerPluginRunnerActionNoOutput<TaskerLaunc
         }
 
         val componentObj = ComponentName.unflattenFromString(component)
+        val extras =
+            context.findExtrasForComponent(componentObj.packageName) + context.findExtrasForComponent(
+                component
+            )
+        var result: TaskerPluginResult<Unit> = TaskerPluginResultError(
+            -1,
+            "Unable to launch component: $type, $component. You may need root or Shizuku."
+        )
 
-        val extras = context.findExtrasForComponent(componentObj.packageName) + context.findExtrasForComponent(component)
+        runBlocking {
+            val componentType = try {
+                ComponentType.valueOf(type)
+            } catch (e: Exception) {
+                result = TaskerPluginResultError(12, "Invalid component type $type")
+                null
+            }
 
-        var result: TaskerPluginResult<Unit> = TaskerPluginResultError(-1, "Unable to launch component: $type, $component. You may need root or Shizuku.")
-
-        runBlocking(Dispatchers.IO) {
-            when(type) {
-                ComponentType.ACTIVITY.toString() -> {
-                    if (context.launchActivity(extras, component))
-                        result = TaskerPluginResultSucess()
-                }
-                ComponentType.RECEIVER.toString() -> {
-                    if (context.launchReceiver(extras, component))
-                        result = TaskerPluginResultSucess()
-                }
-                ComponentType.SERVICE.toString() -> {
-                    if (context.launchService(extras, component))
-                        result = TaskerPluginResultSucess()
-                }
-                else -> result = TaskerPluginResultError(1, "Incorrect type $type.")
+            if (context.launch(
+                    componentType ?: return@runBlocking,
+                    extras,
+                    component
+                )
+            ) {
+                result = TaskerPluginResultSucess()
             }
         }
 

@@ -17,14 +17,16 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
-import tk.zwander.rootactivitylauncher.util.receiver.AdminReceiver
 import tk.zwander.rootactivitylauncher.util.isTouchWiz
+import tk.zwander.rootactivitylauncher.util.receiver.AdminReceiver
 
 sealed interface ActivityLaunchStrategy : LaunchStrategy {
     object Normal : ActivityLaunchStrategy {
         override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
             return try {
-                startActivity(args.intent)
+                val i = Intent(args.intent)
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(i)
                 true
             } catch (e: SecurityException) {
                 Log.e("RootActivityLauncher", "Failure to normally start Activity", e)

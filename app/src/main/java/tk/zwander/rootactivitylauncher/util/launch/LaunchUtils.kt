@@ -5,8 +5,12 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
+import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.data.prefs
-import tk.zwander.rootactivitylauncher.util.*
+import tk.zwander.rootactivitylauncher.util.findActionForComponent
+import tk.zwander.rootactivitylauncher.util.findCategoriesForComponent
+import tk.zwander.rootactivitylauncher.util.findDataForComponent
+import tk.zwander.rootactivitylauncher.util.showRootToast
 
 private fun Context.createLaunchArgs(extras: List<ExtraInfo>, componentKey: String): LaunchArgs {
     val intent = Intent(prefs.findActionForComponent(componentKey))
@@ -55,4 +59,12 @@ suspend fun Context.launchActivity(extras: List<ExtraInfo>, componentKey: String
 
 suspend fun Context.launchReceiver(extras: List<ExtraInfo>, componentKey: String): Boolean {
     return launch<ReceiverLaunchStrategy>(extras, componentKey)
+}
+
+suspend fun Context.launch(type: ComponentType, extras: List<ExtraInfo>, componentKey: String): Boolean {
+    return when (type) {
+        ComponentType.ACTIVITY -> launchActivity(extras, componentKey)
+        ComponentType.SERVICE -> launchService(extras, componentKey)
+        ComponentType.RECEIVER -> launchReceiver(extras, componentKey)
+    }
 }

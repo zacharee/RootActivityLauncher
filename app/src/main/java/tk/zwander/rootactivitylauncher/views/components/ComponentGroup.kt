@@ -113,10 +113,18 @@ fun ComponentGroup(
                         ComponentItem(
                             forTasker = forTasker,
                             component = it,
-                            onClick = { onItemSelected(it) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 32.dp, end = 8.dp),
+                                .heightIn(min = 56.dp)
+                                .then(if (forTasker) {
+                                    Modifier.clickable {
+                                        onItemSelected(it)
+                                    }
+                                } else Modifier)
+                                .padding(
+                                    start = 32.dp,
+                                    end = 8.dp,
+                                ),
                             appEnabled = appEnabled
                         )
                     }

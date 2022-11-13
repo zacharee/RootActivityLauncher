@@ -46,8 +46,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import tk.zwander.rootactivitylauncher.data.ComponentActionButton
 import tk.zwander.rootactivitylauncher.data.component.Availability
-import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
+import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.util.setComponentEnabled
 import tk.zwander.rootactivitylauncher.util.setPackageEnabled
 
