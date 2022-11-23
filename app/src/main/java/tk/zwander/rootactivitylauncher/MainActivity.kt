@@ -62,9 +62,13 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                 when (intent?.action) {
                     Intent.ACTION_PACKAGE_ADDED -> {
                         if (pkg != null) {
-                            val loaded = loadApp(getPackageInfo(pkg), packageManager)
+                            try {
+                                val loaded = loadApp(getPackageInfo(pkg), packageManager)
 
-                            model.apps.value = model.apps.value + loaded
+                                model.apps.value = model.apps.value + loaded
+                            } catch (e: PackageManager.NameNotFoundException) {
+                                Log.e("RootActivityLauncher", "Error parsing package info for newly-added app.", e)
+                            }
                         }
                     }
 
@@ -78,12 +82,13 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                         }
                     }
 
-                    Intent.ACTION_PACKAGE_REPLACED -> {
+                    Intent.ACTION_PACKAGE_CHANGED, Intent.ACTION_PACKAGE_REPLACED -> {
                         if (pkg != null) {
                             val old = ArrayList(model.apps.value)
+                            val oldIndex = old.indexOfFirst { it.info.packageName == pkg }
+                                .takeIf { it != -1 } ?: return@launch
 
-                            old[old.indexOfFirst { it.info.packageName == pkg }] =
-                                loadApp(getPackageInfo(pkg), packageManager)
+                            old[oldIndex] = loadApp(getPackageInfo(pkg), packageManager)
 
                             model.apps.value = old
                         }

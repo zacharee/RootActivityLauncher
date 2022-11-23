@@ -1,7 +1,5 @@
 package tk.zwander.rootactivitylauncher.views.components
 
-import android.content.pm.ApplicationInfo
-import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,6 +22,7 @@ import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ComponentActionButton
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.model.AppModel
+import tk.zwander.rootactivitylauncher.util.getCoilData
 import tk.zwander.rootactivitylauncher.util.isActuallyEnabled
 import tk.zwander.rootactivitylauncher.views.dialogs.ComponentInfoDialog
 import tk.zwander.rootactivitylauncher.views.dialogs.ExtrasDialog
@@ -79,7 +78,7 @@ fun AppItem(
         ) {
             AppBar(
                 icon = remember {
-                    getCoilData(info.info)
+                    info.info.getCoilData()
                 },
                 name = info.label.toString(),
                 showActions = !isForTasker,
@@ -161,14 +160,4 @@ fun AppItem(
         info = info.pInfo,
         showing = showingComponentInfo
     ) { showingComponentInfo = false }
-}
-
-private fun getCoilData(info: ApplicationInfo): Any {
-    val res = info.icon
-
-    return if (res != 0) {
-        Uri.parse("android.resource://${info.packageName}/$res")
-    } else {
-        Uri.parse("android.resource://android/${com.android.internal.R.drawable.sym_def_app_icon}")
-    }
 }

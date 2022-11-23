@@ -1,6 +1,5 @@
 package tk.zwander.rootactivitylauncher.views.components
 
-import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import tk.zwander.rootactivitylauncher.data.ComponentActionButton
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
+import tk.zwander.rootactivitylauncher.util.getCoilData
 import tk.zwander.rootactivitylauncher.util.isActuallyEnabled
 import tk.zwander.rootactivitylauncher.views.dialogs.ComponentInfoDialog
 import tk.zwander.rootactivitylauncher.views.dialogs.ExtrasDialog
@@ -51,7 +51,7 @@ fun ComponentItem(
     ) {
         ComponentBar(
             icon = rememberSaveable {
-                getCoilData(component)
+                component.getCoilData()
             },
             name = component.label.toString(),
             component = component,
@@ -84,20 +84,4 @@ fun ComponentItem(
         info = component.info,
         showing = showingComponentInfo
     ) { showingComponentInfo = false }
-}
-
-private fun getCoilData(data: BaseComponentInfo): Any {
-    val res = data.info.iconResource.run {
-        if (this == 0) data.info.applicationInfo.iconRes.run {
-            if (this == 0) data.info.applicationInfo.roundIconRes
-            else this
-        }
-        else this
-    }
-
-    return if (res != 0) {
-        Uri.parse("android.resource://${data.info.packageName}/$res")
-    } else {
-        Uri.parse("android.resource://android/${com.android.internal.R.drawable.sym_def_app_icon}")
-    }
 }
