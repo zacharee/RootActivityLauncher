@@ -39,8 +39,8 @@ fun Menu(
     val items = remember {
         listOf(
             MenuItem(
-                "https://twitter.com/Wander1236",
-                R.string.twitter
+                "https://androiddev.social/@wander1236",
+                R.string.mastodon
             ),
             MenuItem(
                 "https://zwander.dev",
