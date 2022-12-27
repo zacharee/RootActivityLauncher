@@ -7,7 +7,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import com.google.android.material.composethemeadapter3.Mdc3Theme
+import com.google.accompanist.themeadapter.material3.Mdc3Theme
 
 @Composable
 fun Theme(

@@ -14,6 +14,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -24,11 +28,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import tk.zwander.rootactivitylauncher.R
@@ -40,7 +42,7 @@ import tk.zwander.rootactivitylauncher.views.components.AppList
 import tk.zwander.rootactivitylauncher.views.components.BottomBar
 import tk.zwander.rootactivitylauncher.views.dialogs.FilterDialog
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun MainView(
     isForTasker: Boolean,
@@ -121,77 +123,81 @@ fun MainView(
         mainModel.update()
     }
 
+    val refreshState = rememberPullRefreshState(
+        refreshing = false,
+        onRefresh = onRefresh
+    )
+
     Surface(
         modifier = modifier
     ) {
-        SwipeRefresh(
-            state = rememberSwipeRefreshState(false),
-            onRefresh = onRefresh,
-            indicator = { state, trigger ->
-                SwipeRefreshIndicator(
-                    state = state,
-                    refreshTriggerDistance = trigger,
-                    scale = true,
-                    backgroundColor = MaterialTheme.colorScheme.primary,
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .pullRefresh(
+                    state = refreshState
                 )
-            }
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .navigationBarsPadding()
+                    .captionBarPadding()
+                    .imePadding()
             ) {
-                Column(
+                AppList(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .navigationBarsPadding()
-                        .captionBarPadding()
-                        .imePadding()
-                ) {
-                    AppList(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        appListState = appListState,
-                        isForTasker = isForTasker,
-                        onItemSelected = onItemSelected,
-                        extractCallback = {
-                            extractInfo = it
-                        },
-                        filteredApps = filteredApps
-                    )
+                        .fillMaxWidth()
+                        .weight(1f),
+                    appListState = appListState,
+                    isForTasker = isForTasker,
+                    onItemSelected = onItemSelected,
+                    extractCallback = {
+                        extractInfo = it
+                    },
+                    filteredApps = filteredApps
+                )
 
-                    BottomBar(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        isSearching = isSearching,
-                        useRegex = useRegex,
-                        includeComponents = includeComponents,
-                        query = query,
-                        progress = progress,
-                        apps = apps,
-                        appListState = appListState,
-                        onShowFilterDialog = {
-                            showingFilterDialog = true
-                        },
-                        onQueryChanged = {
-                            mainModel.query.value = it
-                        },
-                        onIncludeComponentsChanged = {
-                            mainModel.includeComponents.value = it
-                        },
-                        onIsSearchingChanged = {
-                            mainModel.isSearching.value = it
-                        },
-                        onUseRegexChanged = {
-                            mainModel.useRegex.value = it
-                        }
-                    )
-                }
-
-                ScrimView(
-                    modifier = Modifier.fillMaxSize(),
-                    progress = progress
+                BottomBar(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    isSearching = isSearching,
+                    useRegex = useRegex,
+                    includeComponents = includeComponents,
+                    query = query,
+                    progress = progress,
+                    apps = apps,
+                    appListState = appListState,
+                    onShowFilterDialog = {
+                        showingFilterDialog = true
+                    },
+                    onQueryChanged = {
+                        mainModel.query.value = it
+                    },
+                    onIncludeComponentsChanged = {
+                        mainModel.includeComponents.value = it
+                    },
+                    onIsSearchingChanged = {
+                        mainModel.isSearching.value = it
+                    },
+                    onUseRegexChanged = {
+                        mainModel.useRegex.value = it
+                    }
                 )
             }
+
+            PullRefreshIndicator(
+                refreshing = false,
+                state = refreshState,
+                backgroundColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
+
+            ScrimView(
+                modifier = Modifier.fillMaxSize(),
+                progress = progress
+            )
         }
     }
 
