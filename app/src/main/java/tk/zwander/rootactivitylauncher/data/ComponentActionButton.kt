@@ -2,14 +2,13 @@ package tk.zwander.rootactivitylauncher.data
 
 import android.content.Context
 import android.content.IntentFilter
-import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.IconCompat
-import androidx.core.graphics.drawable.toBitmap
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.activities.ShortcutLaunchActivity
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
+import tk.zwander.rootactivitylauncher.util.getCoilData
 import tk.zwander.rootactivitylauncher.util.launch.launch
 import tk.zwander.rootactivitylauncher.util.openAppInfo
 
@@ -76,12 +75,7 @@ sealed class ComponentActionButton<T>(protected val data: T) {
             ShortcutLaunchActivity.createShortcut(
                 context = context,
                 label = data.label,
-                icon = IconCompat.createWithBitmap(
-                    (data.info.loadIcon(context.packageManager) ?: ContextCompat.getDrawable(
-                        context,
-                        R.mipmap.ic_launcher
-                    ))!!.toBitmap()
-                ),
+                icon = IconCompat.createWithContentUri(data.getCoilData()),
                 componentKey = data.component.flattenToString(),
                 componentType = data.type()
             )

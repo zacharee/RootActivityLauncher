@@ -5,7 +5,7 @@ import android.net.Uri
 import com.android.internal.R
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 
-fun BaseComponentInfo.getCoilData(): Any {
+fun BaseComponentInfo.getCoilData(): Uri {
     val res = info.iconResource
 
     return if (res != 0) {
@@ -15,7 +15,7 @@ fun BaseComponentInfo.getCoilData(): Any {
     }
 }
 
-fun ApplicationInfo.getCoilData(): Any {
+fun ApplicationInfo.getCoilData(): Uri {
     val res = icon
 
     return if (res != 0) {
