@@ -5,22 +5,34 @@ import android.net.Uri
 import com.android.internal.R
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 
-fun BaseComponentInfo.getCoilData(): Uri {
+fun BaseComponentInfo.getIconResourceId(): Pair<String, Int> {
     val res = info.iconResource
 
     return if (res != 0) {
-        Uri.parse("android.resource://${info.packageName}/$res")
+        info.packageName to res
     } else {
-        return info.applicationInfo.getCoilData()
+        info.applicationInfo.getIconResourceId()
     }
 }
 
-fun ApplicationInfo.getCoilData(): Uri {
+fun ApplicationInfo.getIconResourceId(): Pair<String, Int> {
     val res = icon
 
     return if (res != 0) {
-        Uri.parse("android.resource://${packageName}/$res")
+        packageName to res
     } else {
-        Uri.parse("android.resource://android/${R.drawable.sym_def_app_icon}")
+        "android" to R.drawable.sym_def_app_icon
     }
+}
+
+fun BaseComponentInfo.getCoilData(): Uri {
+    val id = getIconResourceId()
+
+    return Uri.parse("android.resource://${id.first}/${id.second}")
+}
+
+fun ApplicationInfo.getCoilData(): Uri {
+    val id = getIconResourceId()
+
+    return Uri.parse("android.resource://${id.first}/${id.second}")
 }

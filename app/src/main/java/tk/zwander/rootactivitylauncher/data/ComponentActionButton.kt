@@ -1,8 +1,14 @@
 package tk.zwander.rootactivitylauncher.data
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.IntentFilter
 import androidx.core.graphics.drawable.IconCompat
+import androidx.core.graphics.drawable.toBitmap
+import coil.imageLoader
+import coil.request.ImageRequest
+import coil.size.Dimension
+import coil.size.Size
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.activities.ShortcutLaunchActivity
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
@@ -71,11 +77,19 @@ sealed class ComponentActionButton<T>(protected val data: T) {
         override val iconRes = R.drawable.ic_baseline_link_24
         override val labelRes = R.string.create_shortcut
 
+        @SuppressLint("RestrictedApi")
         override suspend fun onClick(context: Context) {
             ShortcutLaunchActivity.createShortcut(
                 context = context,
                 label = data.label,
-                icon = IconCompat.createWithContentUri(data.getCoilData()),
+                icon = IconCompat.createWithBitmap(
+                    context.imageLoader.execute(
+                        ImageRequest.Builder(context)
+                            .data(data.getCoilData())
+                            .size(Size(Dimension(512), Dimension.Undefined))
+                            .build()
+                    ).drawable?.toBitmap()!!
+                ),
                 componentKey = data.component.flattenToString(),
                 componentType = data.type()
             )
