@@ -1,6 +1,7 @@
 package tk.zwander.rootactivitylauncher.data.model
 
 import android.content.Context
+import android.content.IntentFilter
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageItemInfo
@@ -8,9 +9,12 @@ import android.content.pm.PackageManager
 import com.google.android.gms.common.internal.Objects
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -29,13 +33,14 @@ data class AppModel(
     val pInfo: PackageInfo,
     val info: ApplicationInfo = pInfo.applicationInfo,
     val label: CharSequence,
+    val filters: List<IntentFilter>,
     private val mainModel: MainModel,
     private val scope: CoroutineScope,
     private val context: Context,
 ) {
-    private val initialActivitiesSize: Int = pInfo.activities?.size ?: 0
-    private val initialServicesSize: Int = pInfo.services?.size ?: 0
-    private val initialReceiversSize: Int = pInfo.receivers?.size ?: 0
+    val initialActivitiesSize: Int = pInfo.activities?.size ?: 0
+    val initialServicesSize: Int = pInfo.services?.size ?: 0
+    val initialReceiversSize: Int = pInfo.receivers?.size ?: 0
 
     private val hasLoadedActivities = MutableStateFlow(false)
     private val hasLoadedServices = MutableStateFlow(false)
@@ -53,9 +58,15 @@ data class AppModel(
     val filteredServices = MutableStateFlow<List<ServiceInfo>>(ArrayList(initialServicesSize))
     val filteredReceivers = MutableStateFlow<List<ReceiverInfo>>(ArrayList(initialReceiversSize))
 
-    val activitiesSize = MutableStateFlow(initialActivitiesSize)
-    val servicesSize = MutableStateFlow(initialServicesSize)
-    val receiversSize = MutableStateFlow(initialReceiversSize)
+    val activitiesSize = filteredActivities.combine(hasLoadedActivities) { items, hasLoaded ->
+        if (hasLoaded) items.size else initialActivitiesSize
+    }.stateIn(GlobalScope, SharingStarted.Eagerly, initialActivitiesSize)
+    val servicesSize = filteredServices.combine(hasLoadedServices) { items, hasLoaded ->
+        if (hasLoaded) items.size else initialServicesSize
+    }.stateIn(GlobalScope, SharingStarted.Eagerly, initialServicesSize)
+    val receiversSize = filteredReceivers.combine(hasLoadedReceivers) { items, hasLoaded ->
+        if (hasLoaded) items.size else initialReceiversSize
+    }.stateIn(GlobalScope, SharingStarted.Eagerly, initialReceiversSize)
 
     val totalUnfilteredSize: Int = initialActivitiesSize + initialServicesSize + initialReceiversSize
 
@@ -94,24 +105,6 @@ data class AppModel(
                         onFilterChange(true)
                     }
                 }
-            }
-        }
-
-        scope.launch(Dispatchers.IO) {
-            hasLoadedActivities.collect {
-                activitiesSize.value = if (it) filteredActivities.value.size else initialActivitiesSize
-            }
-        }
-
-        scope.launch(Dispatchers.IO) {
-            hasLoadedServices.collect {
-                servicesSize.value = if (it) filteredServices.value.size else initialServicesSize
-            }
-        }
-
-        scope.launch(Dispatchers.IO) {
-            hasLoadedReceivers.collect {
-                receiversSize.value = if (it) filteredReceivers.value.size else initialReceiversSize
             }
         }
 

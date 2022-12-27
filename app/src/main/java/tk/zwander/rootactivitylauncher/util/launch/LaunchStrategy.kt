@@ -1,6 +1,7 @@
 package tk.zwander.rootactivitylauncher.util.launch
 
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import eu.chainfire.libsuperuser.Shell
 import rikka.shizuku.Shizuku
@@ -10,7 +11,7 @@ import java.util.concurrent.TimeUnit
 
 interface LaunchStrategy {
     suspend fun Context.canRun(): Boolean = true
-    suspend fun Context.tryLaunch(args: LaunchArgs): Boolean
+    suspend fun Context.tryLaunch(args: LaunchArgs): Throwable?
 }
 
 interface CommandLaunchStrategy : LaunchStrategy {
@@ -25,7 +26,7 @@ interface ShizukuLaunchStrategy : LaunchStrategy {
 }
 
 interface ShizukuShellLaunchStrategy : ShizukuLaunchStrategy, CommandLaunchStrategy {
-    override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
+    override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
         return try {
             val command = StringBuilder(makeCommand(args))
 
@@ -34,14 +35,18 @@ interface ShizukuShellLaunchStrategy : ShizukuLaunchStrategy, CommandLaunchStrat
             Shizuku.newProcess(arrayOf("sh", "-c", command.toString()), null, null).run {
                 waitForTimeout(1000, TimeUnit.MILLISECONDS)
 
-                Log.e("RootActivityLauncher", "Shizuku Command Output\n${inputStream.bufferedReader().use { it.readLines().joinToString("\n") }}")
-                Log.e("RootActivityLauncher", "Shizuku Error Output\n${errorStream.bufferedReader().use { it.readLines().joinToString("\n") }}")
+                Log.e("RootActivityLauncher", "Shizuku Command Output\n${inputStream.bufferedReader().use { it.readText() }}")
+                Log.e("RootActivityLauncher", "Shizuku Error Output\n${errorStream.bufferedReader().use { it.readText() }}")
 
-                exitValue() == 0
+                if (exitValue() == 0) {
+                    null
+                } else {
+                    Exception(errorStream.bufferedReader().use { it.readText() })
+                }
             }
         } catch (e: Exception) {
             Log.e("RootActivityLauncher", "Failure to launch through Shizuku process.", e)
-            false
+            e
         }
     }
 }
@@ -51,12 +56,47 @@ interface RootLaunchStrategy : CommandLaunchStrategy {
         return Shell.SU.available()
     }
 
-    override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
+    override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
         val command = StringBuilder(makeCommand(args))
+        val errorOutput = mutableListOf<String>()
 
         args.addToCommand(command)
 
-        return Shell.Pool.SU.run(command.toString()) == 0
+        val result = Shell.Pool.SU.run(command.toString(), null, errorOutput, false)
+
+        return if (result == 0) null else Exception(errorOutput.joinToString("\n"))
+    }
+}
+
+interface IterativeLaunchStrategy : LaunchStrategy {
+    fun extraFlags(): Int? {
+        return null
+    }
+
+    override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
+        var latestError: Throwable? = null
+
+        args.filters.forEach { filter ->
+            try {
+                val intent = Intent(args.intent)
+
+                extraFlags()?.let { flags ->
+                    intent.addFlags(flags)
+                }
+
+                intent.categories?.clear()
+                intent.action = if (filter.countActions() > 0) filter.getAction(0) else Intent.ACTION_MAIN
+                filter.categoriesIterator().forEach { intent.addCategory(it) }
+
+                startActivity(intent)
+                return null
+            } catch (e: Throwable) {
+                Log.e("RootActivityLauncher", "Error with alternative filter", e)
+                latestError = e
+            }
+        }
+
+        return latestError
     }
 }
 

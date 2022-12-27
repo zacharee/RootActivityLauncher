@@ -3,10 +3,8 @@ package tk.zwander.rootactivitylauncher.util
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import android.widget.Toast
 import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuProvider
-import tk.zwander.rootactivitylauncher.R
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.random.Random
@@ -60,10 +58,4 @@ fun requestShizukuPermission(resultListener: (Boolean) -> Unit): Boolean {
             false
         }
     }
-}
-
-fun Context.showRootToast() {
-    try {
-        Toast.makeText(this, R.string.requires_root, Toast.LENGTH_SHORT).show()
-    } catch (_: Exception) {}
 }

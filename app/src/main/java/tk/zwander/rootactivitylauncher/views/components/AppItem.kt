@@ -51,9 +51,9 @@ fun AppItem(
     val filteredServices by info.filteredServices.collectAsState()
     val filteredReceivers by info.filteredReceivers.collectAsState()
 
-    val activityCount by info.activitiesSize.collectAsState()
-    val servicesCount by info.servicesSize.collectAsState()
-    val receiversCount by info.receiversSize.collectAsState()
+    val activityCount by info.activitiesSize.collectAsState(info.initialActivitiesSize)
+    val servicesCount by info.servicesSize.collectAsState(info.initialServicesSize)
+    val receiversCount by info.receiversSize.collectAsState(info.initialReceiversSize)
 
     val activitiesExpanded by info.activitiesExpanded.collectAsState()
     val servicesExpanded by info.servicesExpanded.collectAsState()
@@ -116,7 +116,8 @@ fun AppItem(
                 onItemSelected = selectionCallback,
                 count = activityCount,
                 appEnabled = enabled,
-                loading = activitiesLoading
+                loading = activitiesLoading,
+                app = info
             )
 
             ComponentGroup(
@@ -131,7 +132,8 @@ fun AppItem(
                 onItemSelected = selectionCallback,
                 count = servicesCount,
                 appEnabled = enabled,
-                loading = servicesLoading
+                loading = servicesLoading,
+                app = info
             )
 
             ComponentGroup(
@@ -146,7 +148,8 @@ fun AppItem(
                 onItemSelected = selectionCallback,
                 count = receiversCount,
                 appEnabled = enabled,
-                loading = receiversLoading
+                loading = receiversLoading,
+                app = info
             )
         }
     }

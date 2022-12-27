@@ -3,10 +3,8 @@ package tk.zwander.rootactivitylauncher.util
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import kotlinx.atomicfu.AtomicInt
 import kotlinx.atomicfu.AtomicLong
-import tk.zwander.rootactivitylauncher.R
 
 val Int.hexString: String
     get() = Integer.toHexString(this)
@@ -16,9 +14,7 @@ fun Context.launchUrl(url: String) {
         val browserIntent =
             Intent(Intent.ACTION_VIEW, Uri.parse(url))
         startActivity(browserIntent)
-    } catch (e: Exception) {
-        Toast.makeText(this, resources.getString(R.string.unable_to_launch, e.localizedMessage), Toast.LENGTH_SHORT).show()
-    }
+    } catch (_: Exception) {}
 }
 
 val Context.isTouchWiz: Boolean

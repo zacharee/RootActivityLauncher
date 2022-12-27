@@ -1,18 +1,16 @@
 package tk.zwander.rootactivitylauncher.data
 
 import android.content.Context
+import android.content.IntentFilter
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.drawable.toBitmap
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.activities.ShortcutLaunchActivity
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
-import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
-import tk.zwander.rootactivitylauncher.util.launch.launchActivity
-import tk.zwander.rootactivitylauncher.util.launch.launchReceiver
-import tk.zwander.rootactivitylauncher.util.launch.launchService
+import tk.zwander.rootactivitylauncher.util.launch.launch
 import tk.zwander.rootactivitylauncher.util.openAppInfo
 
 sealed class ComponentActionButton<T>(protected val data: T) {
@@ -90,7 +88,7 @@ sealed class ComponentActionButton<T>(protected val data: T) {
         }
     }
 
-    class LaunchButton(data: BaseComponentInfo) : ComponentActionButton<BaseComponentInfo>(data) {
+    class LaunchButton(data: BaseComponentInfo, private val filters: List<IntentFilter>, private val errorCallback: (error: Throwable?) -> Unit) : ComponentActionButton<BaseComponentInfo>(data) {
         override val iconRes = R.drawable.ic_baseline_open_in_new_24
         override val labelRes = R.string.launch
 
@@ -100,11 +98,9 @@ sealed class ComponentActionButton<T>(protected val data: T) {
             val extras = context.findExtrasForComponent(data.component.packageName) +
                     context.findExtrasForComponent(componentKey)
 
-            when (data.type()) {
-                ComponentType.ACTIVITY -> context.launchActivity(extras, componentKey)
-                ComponentType.SERVICE -> context.launchService(extras, componentKey)
-                ComponentType.RECEIVER -> context.launchReceiver(extras, componentKey)
-            }
+            val result = context.launch(data.type(), extras, componentKey, filters)
+
+            errorCallback(result)
         }
     }
 }

@@ -16,11 +16,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +46,7 @@ import com.github.skgmn.composetooltip.Tooltip
 import com.github.skgmn.composetooltip.rememberTooltipStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ComponentActionButton
 import tk.zwander.rootactivitylauncher.data.component.Availability
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
@@ -64,6 +67,10 @@ fun AppBar(
 ) {
     val context = LocalContext.current
 
+    var appStateError by rememberSaveable {
+        mutableStateOf<String?>(null)
+    }
+
     BarGuts(
         icon = icon,
         name = name,
@@ -71,7 +78,8 @@ fun AppBar(
         enabled = enabled,
         availability = Availability.NA,
         onEnabledChanged = {
-            if (context.setPackageEnabled(app.info, it)) {
+            appStateError = context.setPackageEnabled(app.info, it)?.message
+            if (appStateError == null) {
                 onEnabledChanged(it)
             }
         },
@@ -79,6 +87,10 @@ fun AppBar(
         modifier = modifier,
         showActions = showActions
     )
+
+    ErrorDialog(error = appStateError) {
+        appStateError = null
+    }
 }
 
 @Composable
@@ -94,13 +106,18 @@ fun ComponentBar(
 ) {
     val context = LocalContext.current
 
+    var componentStateError by rememberSaveable {
+        mutableStateOf<String?>(null)
+    }
+
     BarGuts(
         icon = icon,
         name = name,
         subLabel = component.component.flattenToString(),
         enabled = enabled,
         onEnabledChanged = {
-            if (context.setComponentEnabled(component, it)) {
+            componentStateError = context.setComponentEnabled(component, it)?.message
+            if (componentStateError == null) {
                 onEnabledChanged(it)
             }
         },
@@ -118,6 +135,30 @@ fun ComponentBar(
         modifier = modifier,
         showActions = showActions
     )
+
+    ErrorDialog(error = componentStateError) {
+        componentStateError = null
+    }
+}
+
+@Composable
+private fun ErrorDialog(error: String?, onDismissRequest: () -> Unit) {
+    if (error != null) {
+        AlertDialog(
+            onDismissRequest = onDismissRequest,
+            title = {
+                Text(text = stringResource(id = R.string.state_change_error))
+            },
+            text = {
+                Text(text = stringResource(id = R.string.unable_to_change_component_state, error))
+            },
+            confirmButton = {
+                TextButton(onClick = onDismissRequest) {
+                    Text(text = stringResource(id = android.R.string.ok))
+                }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -298,7 +339,7 @@ private fun ComponentButton(
                     },
                     onClick = {
                         if (enabled) {
-                            scope.launch(Dispatchers.IO) {
+                            scope.launch(Dispatchers.Main) {
                                 button.onClick(context)
                             }
                         }

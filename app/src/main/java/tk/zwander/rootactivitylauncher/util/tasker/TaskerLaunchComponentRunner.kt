@@ -50,8 +50,9 @@ class TaskerLaunchComponentRunner : TaskerPluginRunnerActionNoOutput<TaskerLaunc
             if (context.launch(
                     componentType ?: return@runBlocking,
                     extras,
-                    component
-                )
+                    component,
+                    context.packageManager.getAllIntentFilters(componentObj.packageName)
+                ) == null
             ) {
                 result = TaskerPluginResultSucess()
             }

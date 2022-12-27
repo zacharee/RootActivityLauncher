@@ -22,19 +22,24 @@ import tk.zwander.rootactivitylauncher.util.receiver.AdminReceiver
 
 sealed interface ActivityLaunchStrategy : LaunchStrategy {
     object Normal : ActivityLaunchStrategy {
-        override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
             return try {
                 val i = Intent(args.intent)
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(i)
-                true
+                null
             } catch (e: SecurityException) {
                 Log.e("RootActivityLauncher", "Failure to normally start Activity", e)
-                false
+                e
             } catch (e: ActivityNotFoundException) {
                 Log.e("RootActivityLauncher", "Failure to normally start Activity", e)
-                false
+                e
             }
+        }
+    }
+    object Iterative : ActivityLaunchStrategy, IterativeLaunchStrategy {
+        override fun extraFlags(): Int {
+            return Intent.FLAG_ACTIVITY_NEW_TASK
         }
     }
     object SamsungExploit : ActivityLaunchStrategy {
@@ -42,21 +47,21 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
             return Build.VERSION.SDK_INT > Build.VERSION_CODES.P && isTouchWiz
         }
 
-        override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
             return try {
                 val wrapperIntent = Intent("com.samsung.server.telecom.USER_SELECT_WIFI_SERVICE_CALL")
                 wrapperIntent.putExtra("extra_call_intent", args.intent)
 
                 applicationContext.sendBroadcast(wrapperIntent)
-                true
+                null
             } catch (e: Exception) {
                 Log.e("RootActivityLauncher", "Failure to launch with Samsung exploit", e)
-                false
+                e
             }
         }
     }
     object ShizukuJava : ActivityLaunchStrategy, ShizukuLaunchStrategy {
-        override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
             return try {
                 val iam = IActivityManager.Stub.asInterface(
                     ShizukuBinderWrapper(
@@ -68,10 +73,10 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
                     null, null, null, 0, 0,
                     null, null
                 )
-                true
+                null
             } catch (e: Exception) {
                 Log.e("RootActivityLauncher", "Failure to launch through Shizuku binder", e)
-                false
+                e
             }
         }
     }
@@ -87,7 +92,7 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
             return dpm.isAdminActive(ComponentName(this, AdminReceiver::class.java))
         }
 
-        override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
             return try {
                 val cInfoClass = Class.forName("com.samsung.android.knox.ContextInfo")
                 val cInfo = cInfoClass.getDeclaredConstructor(Int::class.java)
@@ -102,10 +107,10 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
                 iapClass.getMethod("startApp", cInfoClass, String::class.java, String::class.java)
                     .invoke(iap, cInfo, cmp.packageName, cmp.className)
 
-                true
+                null
             } catch (e: Exception) {
                 Log.e("RootActivityLauncher", "Unable to launch through KNOX", e)
-                false
+                e
             }
         }
     }
@@ -118,18 +123,19 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
 
 sealed interface ServiceLaunchStrategy : LaunchStrategy {
     object Normal : ServiceLaunchStrategy {
-        override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
             return try {
                 ContextCompat.startForegroundService(this, args.intent)
-                true
+                null
             } catch (e: SecurityException) {
                 Log.e("RootActivityLauncher", "Failure to normally start Service", e)
-                false
+                e
             }
         }
     }
+    object Iterative : ServiceLaunchStrategy, IterativeLaunchStrategy
     object ShizukuJava : ServiceLaunchStrategy, ShizukuLaunchStrategy {
-        override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
             return try {
                 val iam = IActivityManager.Stub.asInterface(ShizukuBinderWrapper(
                     SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)))
@@ -138,10 +144,10 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
                     null, args.intent, null, false, "com.android.shell",
                     null, UserHandle.USER_CURRENT
                 )
-                true
+                null
             } catch (e: Throwable) {
                 Log.e("RootActivityLauncher", "Failure to launch through Shizuku binder.", e)
-                false
+                e
             }
         }
     }
@@ -159,18 +165,19 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
 
 sealed interface ReceiverLaunchStrategy : LaunchStrategy {
     object Normal : ReceiverLaunchStrategy {
-        override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
             return try {
                 sendBroadcast(args.intent)
-                true
+                null
             } catch (e: SecurityException) {
                 Log.e("RootActivityLauncher", "Failure to normally send broadcast.", e)
-                false
+                e
             }
         }
     }
+    object Iterative : ReceiverLaunchStrategy, IterativeLaunchStrategy
     object ShizukuJava : ReceiverLaunchStrategy, ShizukuLaunchStrategy {
-        override suspend fun Context.tryLaunch(args: LaunchArgs): Boolean {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
             return try {
                 val iam = IActivityManager.Stub.asInterface(ShizukuBinderWrapper(
                     SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)))
@@ -180,10 +187,10 @@ sealed interface ReceiverLaunchStrategy : LaunchStrategy {
                     null, null, AppOpsManager.OP_NONE, null, false, false,
                     0
                 )
-                true
+                null
             } catch (e: Throwable) {
                 Log.e("RootActivityLauncher", "Failure to launch through Shizuku binder.", e)
-                false
+                e
             }
         }
     }

@@ -68,8 +68,6 @@
     <string name="filter_exported">Show Only Exported</string>
     <string name="filter_unexported">Show Only Unexported</string>
 
-    <string name="requires_root">Requires Root</string>
-
     <string name="mastodon">Mastodon</string>
     <string name="website">Website</string>
     <string name="github">GitHub</string>
@@ -86,7 +84,10 @@
     <string name="search">Search</string>
 
     <string name="extraction_failed">Extraction failed: %s</string>
-    <string name="unable_to_launch">Unable to launch: %s</string>
+    <string name="unable_to_launch_template">Unable to launch this component. You may need to use Shizuku or root. Error below:\n\n%s</string>
+    <string name="unable_to_change_component_state">Unable to change the state of this component. You may need to use Shizuku or root. Error below:\n\n%s</string>
+    <string name="launch_error">Launch Error</string>
+    <string name="state_change_error">State Change Error</string>
 
     <string name="usage_advanced_search_has_permission">Has Permission</string>
     <string name="usage_advanced_search_has_permission_desc">You can use Root Activity Launcher to search for apps that request different permissions. The basic format is: \"has-permission:[AND/OR;]list,of,permissions\". If you use \"AND\", apps must request all permissions in the list to be shown in the results. If you use \"OR\" apps must request at least one permission in the list. The default mode is \"AND\".</string>
@@ -99,4 +100,12 @@
 
     <string name="usage_advanced_search_requires_feature">Requires Feature</string>
     <string name="usage_advanced_search_requires_feature_desc">You can use Root Activity Launcher to search for apps that require different features. The basic format is: \"requires-feature:[AND/OR;]list,of,features\". If you use \"AND\", apps must require all features in the list to be shown in the results. If you use \"OR\" apps must require at least one feature in the list. The default mode is \"AND\".</string>
+
+    <string name="unknown_launch_error">Unknown error launching %s</string>
+    <string name="unknown_state_change_error">Unknown error changing state for %s</string>
+    <string name="root_or_shizuku_required">Root or Shizuku is required.</string>
+    <string name="self_disable_error">You can\'t disable Root Activity Launcher from Root Activity Launcher!</string>
+    <string name="no_root_access">No root access!</string>
+    <string name="no_shizuku_access">No Shizuku permissions!</string>
+    <string name="shizuku_not_running">Shizuku is not running!</string>
 </resources>

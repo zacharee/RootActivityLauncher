@@ -1,5 +1,6 @@
 package tk.zwander.rootactivitylauncher.activities
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -12,9 +13,7 @@ import kotlinx.coroutines.runBlocking
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.util.determineComponentNamePackage
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
-import tk.zwander.rootactivitylauncher.util.launch.launchActivity
-import tk.zwander.rootactivitylauncher.util.launch.launchReceiver
-import tk.zwander.rootactivitylauncher.util.launch.launchService
+import tk.zwander.rootactivitylauncher.util.launch.launch
 
 class ShortcutLaunchActivity : AppCompatActivity() {
     companion object {
@@ -31,8 +30,8 @@ class ShortcutLaunchActivity : AppCompatActivity() {
             with(context) {
                 val shortcut = Intent(this, ShortcutLaunchActivity::class.java)
                 shortcut.action = Intent.ACTION_MAIN
-                shortcut.putExtra(ShortcutLaunchActivity.EXTRA_COMPONENT_KEY, componentKey)
-                shortcut.putExtra(ShortcutLaunchActivity.EXTRA_COMPONENT_TYPE, componentType.serialize())
+                shortcut.putExtra(EXTRA_COMPONENT_KEY, componentKey)
+                shortcut.putExtra(EXTRA_COMPONENT_TYPE, componentType.serialize())
 
                 val info = ShortcutInfoCompat.Builder(this, componentKey)
                     .setIcon(icon)
@@ -71,20 +70,12 @@ class ShortcutLaunchActivity : AppCompatActivity() {
         val globalExtras = findExtrasForComponent(determineComponentNamePackage(componentKey!!))
 
         runBlocking(Dispatchers.IO) {
-            when (componentType) {
-                ComponentType.ACTIVITY -> {
-                    launchActivity(globalExtras + extras, componentKey!!)
-                }
-
-                ComponentType.SERVICE -> {
-                    launchService(globalExtras + extras, componentKey!!)
-                }
-
-                ComponentType.RECEIVER -> {
-                    launchReceiver(globalExtras + extras, componentKey!!)
-                }
-                else -> {}
-            }
+            launch(
+                componentType!!,
+                globalExtras + extras,
+                componentKey!!,
+                packageManager.getAllIntentFilters(ComponentName.unflattenFromString(componentKey!!).packageName)
+            )
         }
 
         finish()

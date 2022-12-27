@@ -12,8 +12,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-import android.widget.Toast
-import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.prefs
 
@@ -92,9 +90,7 @@ fun Context.openAppInfo(packageName: String) {
 
     try {
         startActivity(intent)
-    } catch (e: Exception) {
-        Toast.makeText(this, resources.getString(R.string.unable_to_launch, e.localizedMessage), Toast.LENGTH_SHORT).show()
-    }
+    } catch (_: Exception) {}
 }
 
 fun ActivityInfo.persistableModeToString(): String {
