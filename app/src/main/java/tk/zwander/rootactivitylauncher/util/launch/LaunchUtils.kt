@@ -32,15 +32,20 @@ private fun Context.createLaunchArgs(extras: List<ExtraInfo>, componentKey: Stri
 }
 
 private suspend inline fun <reified T : LaunchStrategy> Context.performLaunch(args: LaunchArgs): Throwable? {
+    var latestResult: Throwable? = null
+
     T::class.sealedSubclasses.forEach {
         with (it.objectInstance!!) {
             if (canRun()) {
-                return tryLaunch(args)
+                latestResult = tryLaunch(args)
+                if (latestResult == null) {
+                    return null
+                }
             }
         }
     }
 
-    return Exception(resources.getString(R.string.unknown_launch_error, args.intent.component?.flattenToString()))
+    return latestResult ?: Exception(resources.getString(R.string.unknown_launch_error, args.intent.component?.flattenToString()))
 }
 
 private suspend inline fun <reified T : LaunchStrategy> Context.launch(extras: List<ExtraInfo>, componentKey: String, filters: List<IntentFilter>): Throwable? {
