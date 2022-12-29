@@ -2,9 +2,11 @@ package tk.zwander.rootactivitylauncher.util.launch
 
 import android.app.AppOpsManager
 import android.app.IActivityManager
+import android.app.IApplicationThread
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.UserHandle
 import android.util.Log
 import eu.chainfire.libsuperuser.Shell
@@ -40,24 +42,20 @@ interface ShizukuActivityLaunchStrategy : ShizukuLaunchStrategy {
                 SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE))
         )
 
-        iam.startActivity(
-            null, "com.android.shell", intent,
-            null, null, null, 0, 0,
-            null, null
-        )
-    }
-}
-
-interface ShizukuReceiverLaunchStrategy : ShizukuLaunchStrategy {
-    override suspend fun Context.callLaunch(intent: Intent) {
-        val iam = IActivityManager.Stub.asInterface(ShizukuBinderWrapper(
-            SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)))
-
-        iam.broadcastIntent(
-            null, intent, null, null, 0, null,
-            null, null, AppOpsManager.OP_NONE, null, false, false,
-            0
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            iam.startActivityWithFeature(
+                null, "com.android.shell", null, intent,
+                null, null, null, 0, 0,
+                null, null
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            iam.startActivity(
+                null, "com.android.shell", intent,
+                null, null, null, 0,
+                0, null, null
+            )
+        }
     }
 }
 
@@ -66,10 +64,68 @@ interface ShizukuServiceLaunchStrategy : ShizukuLaunchStrategy {
         val iam = IActivityManager.Stub.asInterface(ShizukuBinderWrapper(
             SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)))
 
-        iam.startService(
-            null, intent, null, false, "com.android.shell",
-            null, UserHandle.USER_CURRENT
-        )
+        when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
+                iam.startService(
+                    null, intent, null, false, "com.android.shell",
+                    null, UserHandle.USER_CURRENT
+                )
+            }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> {
+                iam::class.java.getMethod(
+                    "startService",
+                    IApplicationThread::class.java, Intent::class.java,
+                    String::class.java, Boolean::class.java,
+                    String::class.java, Int::class.java
+                ).invoke(
+                    iam,
+                    null, intent, null, false, "com.android.shell", UserHandle.USER_CURRENT
+                )
+            }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> {
+                iam::class.java.getMethod(
+                    "startService",
+                    IApplicationThread::class.java, Intent::class.java,
+                    String::class.java, String::class.java, Int::class.java
+                ).invoke(
+                    iam,
+                    null, intent, null, "com.android.shell", UserHandle.USER_CURRENT
+                )
+            }
+            else -> {
+                iam::class.java.getMethod(
+                    "startService",
+                    IApplicationThread::class.java, Intent::class.java,
+                    String::class.java, Int::class.java
+                ).invoke(
+                    iam,
+                    null, intent, null, UserHandle.USER_CURRENT
+                )
+            }
+        }
+    }
+}
+
+interface ShizukuReceiverLaunchStrategy : ShizukuLaunchStrategy {
+    override suspend fun Context.callLaunch(intent: Intent) {
+        val iam = IActivityManager.Stub.asInterface(ShizukuBinderWrapper(
+            SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)))
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            iam.broadcastIntentWithFeature(
+                null, null, intent, null,
+                null, 0, null, null, null,
+                null, null, AppOpsManager.OP_NONE,
+                null, false, false, 0
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            iam.broadcastIntent(
+                null, intent, null, null,
+                0, null, null, null,
+                AppOpsManager.OP_NONE, null, false, false, 0
+            )
+        }
     }
 }
 
@@ -80,6 +136,7 @@ interface ShizukuShellLaunchStrategy : ShizukuLaunchStrategy, CommandLaunchStrat
 
             args.addToCommand(command)
 
+            @Suppress("DEPRECATION")
             Shizuku.newProcess(arrayOf("sh", "-c", command.toString()), null, null).run {
                 waitForTimeout(1000, TimeUnit.MILLISECONDS)
 
