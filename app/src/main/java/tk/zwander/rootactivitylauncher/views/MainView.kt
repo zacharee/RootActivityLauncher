@@ -166,7 +166,7 @@ fun MainView(
                     includeComponents = includeComponents,
                     query = query,
                     progress = progress,
-                    apps = apps,
+                    apps = filteredApps,
                     appListState = appListState,
                     onShowFilterDialog = {
                         showingFilterDialog = true
