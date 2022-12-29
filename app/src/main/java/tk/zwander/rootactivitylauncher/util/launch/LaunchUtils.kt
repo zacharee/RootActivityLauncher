@@ -48,16 +48,12 @@ private suspend inline fun <reified T : LaunchStrategy> Context.performLaunch(ar
     return latestResult ?: Exception(resources.getString(R.string.unknown_launch_error, args.intent.component?.flattenToString()))
 }
 
-private suspend inline fun <reified T : LaunchStrategy> Context.launch(extras: List<ExtraInfo>, componentKey: String, filters: List<IntentFilter>): Throwable? {
+suspend fun Context.launch(type: ComponentType, extras: List<ExtraInfo>, componentKey: String, filters: List<IntentFilter>): Throwable? {
     val args = createLaunchArgs(extras, componentKey, filters)
 
-    return performLaunch<T>(args)
-}
-
-suspend fun Context.launch(type: ComponentType, extras: List<ExtraInfo>, componentKey: String, filters: List<IntentFilter>): Throwable? {
     return when (type) {
-        ComponentType.ACTIVITY -> launch<ActivityLaunchStrategy>(extras, componentKey, filters)
-        ComponentType.SERVICE -> launch<ServiceLaunchStrategy>(extras, componentKey, filters)
-        ComponentType.RECEIVER -> launch<ReceiverLaunchStrategy>(extras, componentKey, filters)
+        ComponentType.ACTIVITY -> performLaunch<ActivityLaunchStrategy>(args)
+        ComponentType.SERVICE -> performLaunch<ServiceLaunchStrategy>(args)
+        ComponentType.RECEIVER -> performLaunch<ReceiverLaunchStrategy>(args)
     }
 }
