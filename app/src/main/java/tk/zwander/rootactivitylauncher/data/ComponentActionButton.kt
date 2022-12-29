@@ -82,14 +82,12 @@ sealed class ComponentActionButton<T>(protected val data: T) {
             ShortcutLaunchActivity.createShortcut(
                 context = context,
                 label = data.label,
-                icon = IconCompat.createWithBitmap(
-                    context.imageLoader.execute(
-                        ImageRequest.Builder(context)
-                            .data(data.getCoilData())
-                            .size(Size(Dimension(512), Dimension.Undefined))
-                            .build()
-                    ).drawable?.toBitmap()!!
-                ),
+                icon = context.imageLoader.execute(
+                    ImageRequest.Builder(context)
+                        .data(data.getCoilData())
+                        .size(Size(Dimension(512), Dimension.Undefined))
+                        .build()
+                ).drawable?.toBitmap()?.let { IconCompat.createWithBitmap(it) },
                 componentKey = data.component.flattenToString(),
                 componentType = data.type()
             )

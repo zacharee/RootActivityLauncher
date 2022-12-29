@@ -23,7 +23,7 @@ class ShortcutLaunchActivity : AppCompatActivity() {
         fun createShortcut(
             context: Context,
             label: CharSequence,
-            icon: IconCompat,
+            icon: IconCompat?,
             componentKey: String,
             componentType: ComponentType
         ) {
