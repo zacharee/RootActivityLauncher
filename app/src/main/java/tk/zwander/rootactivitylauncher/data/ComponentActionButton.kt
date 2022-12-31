@@ -85,7 +85,7 @@ sealed class ComponentActionButton<T>(protected val data: T) {
                 icon = context.imageLoader.execute(
                     ImageRequest.Builder(context)
                         .data(data.getCoilData())
-                        .size(Size(Dimension(512), Dimension.Undefined))
+                        .size(Size(Dimension(256), Dimension.Undefined))
                         .build()
                 ).drawable?.toBitmap()?.let { IconCompat.createWithBitmap(it) },
                 componentKey = data.component.flattenToString(),
