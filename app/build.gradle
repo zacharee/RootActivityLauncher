@@ -70,7 +70,7 @@ dependencies {
     implementation "com.github.skgmn:composetooltip:0.2.0"
 
     implementation 'com.google.android.material:material:1.7.0'
-    implementation 'com.google.code.gson:gson:2.10'
+    implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'com.google.firebase:firebase-crashlytics:18.3.2'
     //Crashlytics doesn't seem to work without this added (wtf)
     implementation 'com.google.firebase:firebase-analytics:21.2.0'
