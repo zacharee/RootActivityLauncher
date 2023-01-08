@@ -18,18 +18,18 @@ import tk.zwander.rootactivitylauncher.util.receiver.AdminReceiver
 
 sealed interface ActivityLaunchStrategy : LaunchStrategy {
     object Normal : ActivityLaunchStrategy {
-        override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
             return try {
                 val i = Intent(args.intent)
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(i)
-                null
+                listOf()
             } catch (e: SecurityException) {
                 Log.e("RootActivityLauncher", "Failure to normally start Activity", e)
-                e
+                listOf(e)
             } catch (e: ActivityNotFoundException) {
                 Log.e("RootActivityLauncher", "Failure to normally start Activity", e)
-                e
+                listOf(e)
             }
         }
     }
@@ -47,27 +47,27 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
             return Build.VERSION.SDK_INT > Build.VERSION_CODES.P && isTouchWiz
         }
 
-        override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
             return try {
                 val wrapperIntent = Intent("com.samsung.server.telecom.USER_SELECT_WIFI_SERVICE_CALL")
                 wrapperIntent.putExtra("extra_call_intent", args.intent)
 
                 applicationContext.sendBroadcast(wrapperIntent)
-                null
+                listOf()
             } catch (e: Exception) {
                 Log.e("RootActivityLauncher", "Failure to launch with Samsung exploit", e)
-                e
+                listOf(e)
             }
         }
     }
     object ShizukuJava : ActivityLaunchStrategy, ShizukuActivityLaunchStrategy {
-        override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
             return try {
                 callLaunch(args.intent)
-                null
+                listOf()
             } catch (e: Exception) {
                 Log.e("RootActivityLauncher", "Failure to launch through Shizuku binder", e)
-                e
+                listOf(e)
             }
         }
     }
@@ -92,7 +92,7 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
             return dpm.isAdminActive(ComponentName(this, AdminReceiver::class.java))
         }
 
-        override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
             return try {
                 val cInfoClass = Class.forName("com.samsung.android.knox.ContextInfo")
                 val cInfo = cInfoClass.getDeclaredConstructor(Int::class.java)
@@ -107,10 +107,10 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
                 iapClass.getMethod("startApp", cInfoClass, String::class.java, String::class.java)
                     .invoke(iap, cInfo, cmp.packageName, cmp.className)
 
-                null
+                listOf()
             } catch (e: Exception) {
                 Log.e("RootActivityLauncher", "Unable to launch through KNOX", e)
-                e
+                listOf(e)
             }
         }
     }
@@ -123,13 +123,13 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
 
 sealed interface ServiceLaunchStrategy : LaunchStrategy {
     object Normal : ServiceLaunchStrategy {
-        override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
             return try {
                 ContextCompat.startForegroundService(this, args.intent)
-                null
+                listOf()
             } catch (e: SecurityException) {
                 Log.e("RootActivityLauncher", "Failure to normally start Service", e)
-                e
+                listOf(e)
             }
         }
     }
@@ -139,13 +139,13 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
         }
     }
     object ShizukuJava : ServiceLaunchStrategy, ShizukuServiceLaunchStrategy {
-        override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
             return try {
                 callLaunch(args.intent)
-                null
+                listOf()
             } catch (e: Throwable) {
                 Log.e("RootActivityLauncher", "Failure to launch through Shizuku binder.", e)
-                e
+                listOf(e)
             }
         }
     }
@@ -168,13 +168,13 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
 
 sealed interface ReceiverLaunchStrategy : LaunchStrategy {
     object Normal : ReceiverLaunchStrategy {
-        override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
             return try {
                 sendBroadcast(args.intent)
-                null
+                listOf()
             } catch (e: SecurityException) {
                 Log.e("RootActivityLauncher", "Failure to normally send broadcast.", e)
-                e
+                listOf(e)
             }
         }
     }
@@ -184,13 +184,13 @@ sealed interface ReceiverLaunchStrategy : LaunchStrategy {
         }
     }
     object ShizukuJava : ReceiverLaunchStrategy, ShizukuReceiverLaunchStrategy {
-        override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
+        override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
             return try {
                 callLaunch(args.intent)
-                null
+                listOf()
             } catch (e: Throwable) {
                 Log.e("RootActivityLauncher", "Failure to launch through Shizuku binder.", e)
-                e
+                listOf(e)
             }
         }
     }

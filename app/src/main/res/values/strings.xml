@@ -84,7 +84,7 @@
     <string name="search">Search</string>
 
     <string name="extraction_failed">Extraction failed: %s</string>
-    <string name="unable_to_launch_template">Unable to launch this component. You may need to use Shizuku or root. Error below:\n\n%s</string>
+    <string name="unable_to_launch_template">Unable to launch this component. You may need to use Shizuku or root. Attempted methods along with their respective errors are shown below.</string>
     <string name="unable_to_change_component_state">Unable to change the state of this component. You may need to use Shizuku or root. Error below:\n\n%s</string>
     <string name="launch_error">Launch Error</string>
     <string name="state_change_error">State Change Error</string>

@@ -52,7 +52,7 @@ class TaskerLaunchComponentRunner : TaskerPluginRunnerActionNoOutput<TaskerLaunc
                     extras,
                     component,
                     context.packageManager.getAllIntentFilters(componentObj.packageName)
-                ) == null
+                ).isEmpty()
             ) {
                 result = TaskerPluginResultSucess()
             }

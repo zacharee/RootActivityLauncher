@@ -31,24 +31,30 @@ private fun Context.createLaunchArgs(extras: List<ExtraInfo>, componentKey: Stri
     return LaunchArgs(intent, extras, filters)
 }
 
-private suspend inline fun <reified T : LaunchStrategy> Context.performLaunch(args: LaunchArgs): Throwable? {
-    var latestResult: Throwable? = null
+private suspend inline fun <reified T : LaunchStrategy> Context.performLaunch(args: LaunchArgs): List<Pair<String, Throwable>> {
+    val errors = mutableListOf<Pair<String, Throwable>>()
 
     T::class.sealedSubclasses.forEach {
         with (it.objectInstance!!) {
             if (canRun()) {
-                latestResult = tryLaunch(args)
-                if (latestResult == null) {
-                    return null
+                val latestResult = tryLaunch(args)
+                if (latestResult.isEmpty()) {
+                    return listOf()
+                } else {
+                    errors.addAll(latestResult.map { r -> it.simpleName!! to r })
                 }
             }
         }
     }
 
-    return latestResult ?: Exception(resources.getString(R.string.unknown_launch_error, args.intent.component?.flattenToString()))
+    return errors.ifEmpty {
+        listOf(
+            "Unknown" to Exception(resources.getString(R.string.unknown_launch_error, args.intent.component?.flattenToString()))
+        )
+    }
 }
 
-suspend fun Context.launch(type: ComponentType, extras: List<ExtraInfo>, componentKey: String, filters: List<IntentFilter>): Throwable? {
+suspend fun Context.launch(type: ComponentType, extras: List<ExtraInfo>, componentKey: String, filters: List<IntentFilter>): List<Pair<String, Throwable>> {
     val args = createLaunchArgs(extras, componentKey, filters)
 
     return when (type) {

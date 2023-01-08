@@ -94,7 +94,7 @@ sealed class ComponentActionButton<T>(protected val data: T) {
         }
     }
 
-    class LaunchButton(data: BaseComponentInfo, private val filters: List<IntentFilter>, private val errorCallback: (error: Throwable?) -> Unit) : ComponentActionButton<BaseComponentInfo>(data) {
+    class LaunchButton(data: BaseComponentInfo, private val filters: List<IntentFilter>, private val errorCallback: (error: List<Pair<String, Throwable>>) -> Unit) : ComponentActionButton<BaseComponentInfo>(data) {
         override val iconRes = R.drawable.ic_baseline_open_in_new_24
         override val labelRes = R.string.launch
 

@@ -1,5 +1,6 @@
 package tk.zwander.rootactivitylauncher.util.launch
 
+import android.app.ActivityManager
 import android.app.AppOpsManager
 import android.app.IActivityManager
 import android.app.IApplicationThread
@@ -19,11 +20,17 @@ import java.util.concurrent.TimeUnit
 
 interface LaunchStrategy {
     suspend fun Context.canRun(): Boolean = true
-    suspend fun Context.tryLaunch(args: LaunchArgs): Throwable?
+    suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable>
 }
 
 interface CommandLaunchStrategy : LaunchStrategy {
     fun makeCommand(args: LaunchArgs): String
+
+    fun makeEscapedCommand(args: LaunchArgs): String {
+        val command = makeCommand(args)
+        return command
+            .replace("$", "\\$")
+    }
 }
 
 interface ShizukuLaunchStrategy : LaunchStrategy {
@@ -42,7 +49,7 @@ interface ShizukuActivityLaunchStrategy : ShizukuLaunchStrategy {
                 SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE))
         )
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        val result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             iam.startActivityWithFeature(
                 null, "com.android.shell", null, intent,
                 null, null, null, 0, 0,
@@ -55,6 +62,10 @@ interface ShizukuActivityLaunchStrategy : ShizukuLaunchStrategy {
                 null, null, null, 0,
                 0, null, null
             )
+        }
+
+        if (result != ActivityManager.START_SUCCESS) {
+            throw Exception("Error starting Activity: $result")
         }
     }
 }
@@ -130,9 +141,9 @@ interface ShizukuReceiverLaunchStrategy : ShizukuLaunchStrategy {
 }
 
 interface ShizukuShellLaunchStrategy : ShizukuLaunchStrategy, CommandLaunchStrategy {
-    override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
+    override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
         return try {
-            val command = StringBuilder(makeCommand(args))
+            val command = StringBuilder(makeEscapedCommand(args))
 
             args.addToCommand(command)
 
@@ -140,18 +151,21 @@ interface ShizukuShellLaunchStrategy : ShizukuLaunchStrategy, CommandLaunchStrat
             Shizuku.newProcess(arrayOf("sh", "-c", command.toString()), null, null).run {
                 waitForTimeout(1000, TimeUnit.MILLISECONDS)
 
-                Log.e("RootActivityLauncher", "Shizuku Command Output\n${inputStream.bufferedReader().use { it.readText() }}")
-                Log.e("RootActivityLauncher", "Shizuku Error Output\n${errorStream.bufferedReader().use { it.readText() }}")
+                val inputText = inputStream.bufferedReader().use { it.readText() }
+                val errorText = errorStream.bufferedReader().use { it.readText() }
+
+                Log.e("RootActivityLauncher", "Shizuku Command Output\n${inputText}")
+                Log.e("RootActivityLauncher", "Shizuku Error Output\n${errorText}")
 
                 if (exitValue() == 0) {
-                    null
+                    listOf()
                 } else {
-                    Exception(errorStream.bufferedReader().use { it.readText() })
+                    listOf(Exception(errorText))
                 }
             }
         } catch (e: Exception) {
             Log.e("RootActivityLauncher", "Failure to launch through Shizuku process.", e)
-            e
+            listOf(e)
         }
     }
 
@@ -165,15 +179,15 @@ interface RootLaunchStrategy : CommandLaunchStrategy {
         return Shell.SU.available()
     }
 
-    override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
-        val command = StringBuilder(makeCommand(args))
+    override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
+        val command = StringBuilder(makeEscapedCommand(args))
         val errorOutput = mutableListOf<String>()
 
         args.addToCommand(command)
 
         val result = Shell.Pool.SU.run(command.toString(), null, errorOutput, false)
 
-        return if (result == 0) null else Exception(errorOutput.joinToString("\n"))
+        return if (result == 0) listOf() else listOf(Exception(errorOutput.joinToString("\n")))
     }
 }
 
@@ -184,8 +198,8 @@ interface IterativeLaunchStrategy : LaunchStrategy {
 
     suspend fun Context.performLaunch(args: LaunchArgs, intent: Intent)
 
-    override suspend fun Context.tryLaunch(args: LaunchArgs): Throwable? {
-        var latestError: Throwable? = null
+    override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
+        val errors = mutableListOf<Throwable>()
 
         args.filters.forEach { filter ->
             try {
@@ -198,17 +212,17 @@ interface IterativeLaunchStrategy : LaunchStrategy {
                 intent.categories?.clear()
                 intent.action = if (filter.countActions() > 0) filter.getAction(0) else Intent.ACTION_MAIN
                 intent.data = if (filter.countDataSchemes() > 0) Uri.parse("${filter.getDataScheme(0)}://yes") else null
-                filter.categoriesIterator().forEach { intent.addCategory(it) }
+                filter.categoriesIterator()?.forEach { intent.addCategory(it) }
 
                 performLaunch(args, intent)
-                return null
+                return listOf()
             } catch (e: Throwable) {
                 Log.e("RootActivityLauncher", "Error with alternative filter", e)
-                latestError = e
+                errors.add(e)
             }
         }
 
-        return latestError
+        return errors
     }
 }
 
