@@ -43,7 +43,7 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
         }
     }
     object SamsungExploit : ActivityLaunchStrategy {
-        override suspend fun Context.canRun(): Boolean {
+        override suspend fun Context.canRun(args: LaunchArgs): Boolean {
             return Build.VERSION.SDK_INT > Build.VERSION_CODES.P && isTouchWiz
         }
 
@@ -71,22 +71,13 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
             }
         }
     }
-    object ShizukuJavaIterative : ActivityLaunchStrategy, ShizukuActivityLaunchStrategy, IterativeLaunchStrategy {
-        override fun extraFlags(): Int {
-            return Intent.FLAG_ACTIVITY_NEW_TASK
-        }
-
-        override suspend fun Context.performLaunch(args: LaunchArgs, intent: Intent) {
-            callLaunch(intent)
-        }
-    }
     object ShizukuShell : ActivityLaunchStrategy, ShizukuShellLaunchStrategy {
         override fun makeCommand(args: LaunchArgs): String {
             return "am start -n ${args.intent.component.flattenToString()}"
         }
     }
     object KNOX : ActivityLaunchStrategy {
-        override suspend fun Context.canRun(): Boolean {
+        override suspend fun Context.canRun(args: LaunchArgs): Boolean {
             val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
 
             return dpm.isAdminActive(ComponentName(this, AdminReceiver::class.java))
@@ -149,11 +140,6 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
             }
         }
     }
-    object ShizukuJavaIterative : ServiceLaunchStrategy, ShizukuServiceLaunchStrategy, IterativeLaunchStrategy {
-        override suspend fun Context.performLaunch(args: LaunchArgs, intent: Intent) {
-            callLaunch(intent)
-        }
-    }
     object ShizukuShell : ServiceLaunchStrategy, ShizukuShellLaunchStrategy {
         override fun makeCommand(args: LaunchArgs): String {
             return "am startservice ${args.intent.component.flattenToString()}"
@@ -192,11 +178,6 @@ sealed interface ReceiverLaunchStrategy : LaunchStrategy {
                 Log.e("RootActivityLauncher", "Failure to launch through Shizuku binder.", e)
                 listOf(e)
             }
-        }
-    }
-    object ShizukuJavaIterative : ReceiverLaunchStrategy, ShizukuReceiverLaunchStrategy, IterativeLaunchStrategy {
-        override suspend fun Context.performLaunch(args: LaunchArgs, intent: Intent) {
-            callLaunch(intent)
         }
     }
     object ShizukuShell : ReceiverLaunchStrategy, ShizukuShellLaunchStrategy {

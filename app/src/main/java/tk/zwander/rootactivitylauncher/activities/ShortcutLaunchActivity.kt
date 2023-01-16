@@ -1,6 +1,5 @@
 package tk.zwander.rootactivitylauncher.activities
 
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -73,8 +72,7 @@ class ShortcutLaunchActivity : AppCompatActivity() {
             launch(
                 componentType!!,
                 globalExtras + extras,
-                componentKey!!,
-                packageManager.getAllIntentFilters(ComponentName.unflattenFromString(componentKey!!).packageName)
+                componentKey!!
             )
         }
 

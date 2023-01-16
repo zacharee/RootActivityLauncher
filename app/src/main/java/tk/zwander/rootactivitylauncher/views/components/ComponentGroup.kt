@@ -114,8 +114,8 @@ fun ComponentGroup(
                     items(items = items, key = { it.hashCode() }) {
                         ComponentItem(
                             forTasker = forTasker,
-                            app = app,
                             component = it,
+                            appEnabled = appEnabled,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = 56.dp)
@@ -127,8 +127,7 @@ fun ComponentGroup(
                                 .padding(
                                     start = 32.dp,
                                     end = 8.dp,
-                                ),
-                            appEnabled = appEnabled
+                                )
                         )
                     }
                 }

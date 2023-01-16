@@ -19,7 +19,7 @@ import tk.zwander.rootactivitylauncher.util.requestShizukuPermission
 import java.util.concurrent.TimeUnit
 
 interface LaunchStrategy {
-    suspend fun Context.canRun(): Boolean = true
+    suspend fun Context.canRun(args: LaunchArgs): Boolean = true
     suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable>
 }
 
@@ -34,7 +34,7 @@ interface CommandLaunchStrategy : LaunchStrategy {
 }
 
 interface ShizukuLaunchStrategy : LaunchStrategy {
-    override suspend fun Context.canRun(): Boolean {
+    override suspend fun Context.canRun(args: LaunchArgs): Boolean {
         return Shizuku.pingBinder() &&
                 (hasShizukuPermission || requestShizukuPermission())
     }
@@ -175,7 +175,7 @@ interface ShizukuShellLaunchStrategy : ShizukuLaunchStrategy, CommandLaunchStrat
 }
 
 interface RootLaunchStrategy : CommandLaunchStrategy {
-    override suspend fun Context.canRun(): Boolean {
+    override suspend fun Context.canRun(args: LaunchArgs): Boolean {
         return Shell.SU.available()
     }
 
@@ -194,6 +194,10 @@ interface RootLaunchStrategy : CommandLaunchStrategy {
 interface IterativeLaunchStrategy : LaunchStrategy {
     fun extraFlags(): Int? {
         return null
+    }
+
+    override suspend fun Context.canRun(args: LaunchArgs): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && args.filters.isNotEmpty()
     }
 
     suspend fun Context.performLaunch(args: LaunchArgs, intent: Intent)

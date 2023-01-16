@@ -2,7 +2,6 @@ package tk.zwander.rootactivitylauncher.data
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.IntentFilter
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.drawable.toBitmap
 import coil.imageLoader
@@ -94,7 +93,10 @@ sealed class ComponentActionButton<T>(protected val data: T) {
         }
     }
 
-    class LaunchButton(data: BaseComponentInfo, private val filters: List<IntentFilter>, private val errorCallback: (error: List<Pair<String, Throwable>>) -> Unit) : ComponentActionButton<BaseComponentInfo>(data) {
+    class LaunchButton(
+        data: BaseComponentInfo,
+        private val errorCallback: (error: List<Pair<String, Throwable>>) -> Unit
+    ) : ComponentActionButton<BaseComponentInfo>(data) {
         override val iconRes = R.drawable.ic_baseline_open_in_new_24
         override val labelRes = R.string.launch
 
@@ -104,7 +106,7 @@ sealed class ComponentActionButton<T>(protected val data: T) {
             val extras = context.findExtrasForComponent(data.component.packageName) +
                     context.findExtrasForComponent(componentKey)
 
-            val result = context.launch(data.type(), extras, componentKey, filters)
+            val result = context.launch(data.type(), extras, componentKey)
 
             errorCallback(result)
         }

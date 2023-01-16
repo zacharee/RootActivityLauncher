@@ -1,6 +1,7 @@
 package tk.zwander.rootactivitylauncher.util
 
 import android.content.Context
+import android.content.IntentFilter
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -88,5 +89,13 @@ fun Context.extractApk(result: Uri, info: AppModel) {
                 ).show()
             }
         }
+    }
+}
+
+fun PackageManager.getAllIntentFiltersCompat(packageName: String): List<IntentFilter> {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        getAllIntentFilters(packageName)
+    } else {
+        listOf()
     }
 }

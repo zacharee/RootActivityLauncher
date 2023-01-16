@@ -299,7 +299,6 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
 
     private suspend fun loadApp(app: PackageInfo, pm: PackageManager): AppModel = coroutineScope {
         val appLabel = app.applicationInfo.loadLabel(pm)
-        val filters = pm.getAllIntentFilters(app.packageName)
 
         return@coroutineScope AppModel(
             pInfo = app,
@@ -307,7 +306,6 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
             context = this@MainActivity,
             scope = this@MainActivity,
             mainModel = model,
-            filters = filters
         )
     }
 }

@@ -44,7 +44,6 @@ import kotlinx.coroutines.withContext
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ComponentActionButton
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
-import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.util.getCoilData
 import tk.zwander.rootactivitylauncher.util.isActuallyEnabled
 import tk.zwander.rootactivitylauncher.views.dialogs.ComponentInfoDialog
@@ -54,7 +53,6 @@ import tk.zwander.rootactivitylauncher.views.dialogs.ExtrasDialog
 @Composable
 fun ComponentItem(
     forTasker: Boolean,
-    app: AppModel,
     component: BaseComponentInfo,
     appEnabled: Boolean,
     modifier: Modifier = Modifier
@@ -99,7 +97,7 @@ fun ComponentItem(
                         showingIntentOptions = true
                     },
                     ComponentActionButton.CreateShortcutButton(component),
-                    ComponentActionButton.LaunchButton(component, app.filters) {
+                    ComponentActionButton.LaunchButton(component) {
                         launchErrors.clear()
                         launchErrors.addAll(it)
                     }

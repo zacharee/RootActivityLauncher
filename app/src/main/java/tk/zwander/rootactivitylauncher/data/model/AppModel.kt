@@ -1,7 +1,6 @@
 package tk.zwander.rootactivitylauncher.data.model
 
 import android.content.Context
-import android.content.IntentFilter
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageItemInfo
@@ -33,7 +32,6 @@ data class AppModel(
     val pInfo: PackageInfo,
     val info: ApplicationInfo = pInfo.applicationInfo,
     val label: CharSequence,
-    val filters: List<IntentFilter>,
     private val mainModel: MainModel,
     private val scope: CoroutineScope,
     private val context: Context,

@@ -3,7 +3,6 @@ package tk.zwander.rootactivitylauncher.util.launch
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.net.Uri
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
@@ -12,9 +11,12 @@ import tk.zwander.rootactivitylauncher.data.prefs
 import tk.zwander.rootactivitylauncher.util.findActionForComponent
 import tk.zwander.rootactivitylauncher.util.findCategoriesForComponent
 import tk.zwander.rootactivitylauncher.util.findDataForComponent
+import tk.zwander.rootactivitylauncher.util.getAllIntentFiltersCompat
 
-private fun Context.createLaunchArgs(extras: List<ExtraInfo>, componentKey: String, filters: List<IntentFilter>): LaunchArgs {
+private fun Context.createLaunchArgs(extras: List<ExtraInfo>, componentKey: String): LaunchArgs {
     val intent = Intent(prefs.findActionForComponent(componentKey))
+    val filters = packageManager.getAllIntentFiltersCompat(intent.component.packageName)
+
     intent.component = ComponentName.unflattenFromString(componentKey)
     intent.data = prefs.findDataForComponent(componentKey)?.let { Uri.parse(it) }
 
@@ -54,8 +56,8 @@ private suspend inline fun <reified T : LaunchStrategy> Context.performLaunch(ar
     }
 }
 
-suspend fun Context.launch(type: ComponentType, extras: List<ExtraInfo>, componentKey: String, filters: List<IntentFilter>): List<Pair<String, Throwable>> {
-    val args = createLaunchArgs(extras, componentKey, filters)
+suspend fun Context.launch(type: ComponentType, extras: List<ExtraInfo>, componentKey: String): List<Pair<String, Throwable>> {
+    val args = createLaunchArgs(extras, componentKey)
 
     return when (type) {
         ComponentType.ACTIVITY -> performLaunch<ActivityLaunchStrategy>(args)
