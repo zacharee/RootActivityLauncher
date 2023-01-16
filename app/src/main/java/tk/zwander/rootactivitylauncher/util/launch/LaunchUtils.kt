@@ -38,7 +38,7 @@ private suspend inline fun <reified T : LaunchStrategy> Context.performLaunch(ar
 
     T::class.sealedSubclasses.forEach {
         with (it.objectInstance!!) {
-            if (canRun()) {
+            if (canRun(args)) {
                 val latestResult = tryLaunch(args)
                 if (latestResult.isEmpty()) {
                     return listOf()
