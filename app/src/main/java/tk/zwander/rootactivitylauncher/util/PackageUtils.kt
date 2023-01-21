@@ -63,7 +63,6 @@ fun Context.extractApk(result: Uri, info: AppModel): List<Throwable> {
         errors.add(Exception("Unable to create file ${info.info.packageName}."))
     } else {
         contentResolver.openOutputStream(baseFile.uri).use { writer ->
-            Log.e("RootActivityLauncher", "$baseDir")
             try {
                 baseDir.inputStream().use { reader ->
                     reader.copyTo(writer!!)
