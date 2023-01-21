@@ -1,6 +1,5 @@
 package tk.zwander.rootactivitylauncher.data.model
 
-import android.util.Log
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +23,7 @@ class MainModel {
     val progress = MutableStateFlow<Float?>(null)
 
     val useRegex = MutableStateFlow(false)
-    val includeComponents = MutableStateFlow(true)
+    val includeComponents = MutableStateFlow(false)
 
     val isSearching = MutableStateFlow(false)
 
@@ -38,9 +37,11 @@ class MainModel {
         val apps = apps.value.toList()
         val hasFilters = hasFilters
         val isSearching = isSearching.value
+        val includeComponents = includeComponents.value
+        val query = query.value
 
         withContext(Dispatchers.IO) {
-            if (hasFilters || isSearching) {
+            if ((hasFilters && !isSearching) || (hasFilters && query.isBlank()) || (isSearching && includeComponents)) {
                 val total = apps.sumOf {
                     it.initialActivitiesSize.value + it.initialServicesSize.value + it.initialReceiversSize.value
                 }
