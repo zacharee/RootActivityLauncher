@@ -16,7 +16,7 @@ android {
         namespace = "tk.zwander.rootactivitylauncher"
         minSdkVersion 21
         targetSdkVersion 33
-        versionCode 26
+        versionCode 27
         versionName versionCode.toString()
     }
 
