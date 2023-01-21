@@ -50,6 +50,9 @@
     <string name="clear">Clear</string>
     <string name="close">Close</string>
     <string name="menu">Menu</string>
+    <string name="favorites">Favorites</string>
+    <string name="favorite">Favorite</string>
+    <string name="unfavorite">Unfavorite</string>
 
     <string name="activities">Activities (%d)</string>
     <string name="services">Services (%d)</string>

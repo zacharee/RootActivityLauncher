@@ -51,6 +51,7 @@ import tk.zwander.rootactivitylauncher.data.ComponentActionButton
 import tk.zwander.rootactivitylauncher.data.component.Availability
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.model.AppModel
+import tk.zwander.rootactivitylauncher.data.model.BaseInfoModel
 import tk.zwander.rootactivitylauncher.util.setComponentEnabled
 import tk.zwander.rootactivitylauncher.util.setPackageEnabled
 
@@ -58,7 +59,7 @@ import tk.zwander.rootactivitylauncher.util.setPackageEnabled
 fun AppBar(
     icon: Any?,
     name: String,
-    app: AppModel,
+    app: BaseInfoModel,
     enabled: Boolean,
     onEnabledChanged: (Boolean) -> Unit,
     whichButtons: List<ComponentActionButton<*>>,
@@ -74,13 +75,15 @@ fun AppBar(
     BarGuts(
         icon = icon,
         name = name,
-        subLabel = app.info.packageName,
+        subLabel = if (app is AppModel) app.info.packageName else null,
         enabled = enabled,
         availability = Availability.NA,
         onEnabledChanged = {
-            appStateError = context.setPackageEnabled(app.info, it)?.message
-            if (appStateError == null) {
-                onEnabledChanged(it)
+            if (app is AppModel) {
+                appStateError = context.setPackageEnabled(app.info, it)?.message
+                if (appStateError == null) {
+                    onEnabledChanged(it)
+                }
             }
         },
         whichButtons = whichButtons,
@@ -166,7 +169,7 @@ private fun ErrorDialog(error: String?, onDismissRequest: () -> Unit) {
 private fun BarGuts(
     icon: Any?,
     name: String,
-    subLabel: String,
+    subLabel: String?,
     enabled: Boolean,
     onEnabledChanged: suspend (Boolean) -> Unit,
     availability: Availability,
@@ -258,12 +261,14 @@ private fun BarGuts(
                     lineHeight = 16.sp
                 )
 
-                Text(
-                    text = subLabel,
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                    lineHeight = 12.sp
-                )
+                subLabel?.let {
+                    Text(
+                        text = subLabel,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                        lineHeight = 12.sp
+                    )
+                }
             }
 
             if (showActions) {
@@ -323,7 +328,7 @@ private fun ComponentButton(
     ) {
         Box(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 8.dp)
                 .combinedClickable(
                     interactionSource = remember {
                         MutableInteractionSource()
@@ -347,8 +352,8 @@ private fun ComponentButton(
                 )
         ) {
             Icon(
-                painter = painterResource(id = button.iconRes),
-                contentDescription = stringResource(id = button.labelRes),
+                painter = painterResource(id = button.getIconRes()),
+                contentDescription = stringResource(id = button.getLabelRes()),
                 tint = LocalContentColor.current.copy(alpha = animatedAlpha)
             )
 
@@ -362,7 +367,7 @@ private fun ComponentButton(
                         tipWidth = 0.dp
                     )
                 ) {
-                    Text(text = stringResource(id = button.labelRes))
+                    Text(text = stringResource(id = button.getLabelRes()))
                 }
             }
         }

@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
@@ -15,10 +16,10 @@ import tk.zwander.rootactivitylauncher.util.getAllIntentFiltersCompat
 
 private fun Context.createLaunchArgs(extras: List<ExtraInfo>, componentKey: String): LaunchArgs {
     val intent = Intent(prefs.findActionForComponent(componentKey))
-    val filters = packageManager.getAllIntentFiltersCompat(intent.component.packageName)
-
     intent.component = ComponentName.unflattenFromString(componentKey)
     intent.data = prefs.findDataForComponent(componentKey)?.let { Uri.parse(it) }
+
+    val filters = packageManager.getAllIntentFiltersCompat(intent.component.packageName)
 
     prefs.findCategoriesForComponent(componentKey).forEach { category ->
         intent.addCategory(category)
@@ -40,6 +41,9 @@ private suspend inline fun <reified T : LaunchStrategy> Context.performLaunch(ar
         with (it.objectInstance!!) {
             if (canRun(args)) {
                 val latestResult = tryLaunch(args)
+
+                Log.e("RootActivityLauncher", "$it $latestResult")
+
                 if (latestResult.isEmpty()) {
                     return listOf()
                 } else {

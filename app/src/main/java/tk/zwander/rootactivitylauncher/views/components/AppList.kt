@@ -17,14 +17,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
-import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
+import tk.zwander.rootactivitylauncher.data.model.AppModel
+import tk.zwander.rootactivitylauncher.data.model.BaseInfoModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AppList(
     appListState: LazyStaggeredGridState,
-    filteredApps: List<AppModel>,
+    filteredApps: List<BaseInfoModel>,
     isForTasker: Boolean,
     onItemSelected: (BaseComponentInfo) -> Unit,
     extractCallback: (AppModel) -> Unit,
@@ -47,9 +48,9 @@ fun AppList(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         state = appListState
     ) {
-        items(items = filteredApps, key = { it.info.packageName }) { app ->
+        items(items = filteredApps, key = { if (it is AppModel) it.info.packageName else "favorite_item" }) { info ->
             AppItem(
-                info = app,
+                info = info,
                 isForTasker = isForTasker,
                 selectionCallback = {
                     onItemSelected(it)

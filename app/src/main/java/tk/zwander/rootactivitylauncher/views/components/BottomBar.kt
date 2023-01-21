@@ -29,7 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import tk.zwander.rootactivitylauncher.R
-import tk.zwander.rootactivitylauncher.data.model.AppModel
+import tk.zwander.rootactivitylauncher.data.model.BaseInfoModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -39,7 +39,7 @@ fun BottomBar(
     includeComponents: Boolean,
     query: String?,
     progress: Float?,
-    apps: List<AppModel>,
+    apps: List<BaseInfoModel>,
     appListState: LazyStaggeredGridState,
     onShowFilterDialog: () -> Unit,
     onUseRegexChanged: (Boolean) -> Unit,
@@ -60,7 +60,7 @@ fun BottomBar(
             modifier = Modifier.fillMaxWidth()
         ) {
             AnimatedVisibility(
-                visible = isSearching == true,
+                visible = isSearching,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Box(

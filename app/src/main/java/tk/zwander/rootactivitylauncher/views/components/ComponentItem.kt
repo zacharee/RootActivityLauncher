@@ -88,8 +88,9 @@ fun ComponentItem(
             },
             name = component.label.toString(),
             component = component,
-            whichButtons = remember(component.info.packageName) {
+            whichButtons = remember(component.component.flattenToString()) {
                 arrayListOf(
+                    ComponentActionButton.FavoriteButton(component),
                     ComponentActionButton.ComponentInfoButton(component.info) {
                         showingComponentInfo = true
                     },

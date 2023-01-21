@@ -25,7 +25,10 @@ import kotlinx.coroutines.*
 import rikka.shizuku.Shizuku
 import tk.zwander.rootactivitylauncher.data.component.*
 import tk.zwander.rootactivitylauncher.data.model.AppModel
+import tk.zwander.rootactivitylauncher.data.model.BaseInfoModel
+import tk.zwander.rootactivitylauncher.data.model.FavoriteModel
 import tk.zwander.rootactivitylauncher.data.model.MainModel
+import tk.zwander.rootactivitylauncher.data.prefs
 import tk.zwander.rootactivitylauncher.util.*
 import tk.zwander.rootactivitylauncher.views.MainView
 import tk.zwander.rootactivitylauncher.views.theme.Theme
@@ -47,6 +50,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
             addDataScheme("package")
         }
 
+        @SuppressLint("UnspecifiedRegisterReceiverFlag")
         fun register() {
             registerReceiver(this, filter)
         }
@@ -75,7 +79,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                     Intent.ACTION_PACKAGE_REMOVED -> {
                         if (pkg != null) {
                             val new = model.apps.value.toMutableList().apply {
-                                removeAll { it.info.packageName == pkg }
+                                removeAll { it is AppModel && it.info.packageName == pkg }
                             }
 
                             model.apps.value = new
@@ -85,7 +89,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                     Intent.ACTION_PACKAGE_CHANGED, Intent.ACTION_PACKAGE_REPLACED -> {
                         if (pkg != null) {
                             val old = ArrayList(model.apps.value)
-                            val oldIndex = old.indexOfFirst { it.info.packageName == pkg }
+                            val oldIndex = old.indexOfFirst { it is AppModel && it.info.packageName == pkg }
                                 .takeIf { it != -1 } ?: return@launch
 
                             old[oldIndex] = loadApp(getPackageInfo(pkg), packageManager)
@@ -261,12 +265,23 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
             }
 
             val max = apps.size - 1
-            val loaded = ConcurrentLinkedQueue<AppModel>()
+            val loaded = ConcurrentLinkedQueue<BaseInfoModel>()
+
+            loaded.add(
+                FavoriteModel(
+                    activityKeys = prefs.favoriteActivities,
+                    serviceKeys = prefs.favoriteServices,
+                    receiverKeys = prefs.favoriteReceivers,
+                    context = this@MainActivity,
+                    scope = this@MainActivity,
+                    mainModel = model
+                )
+            )
 
             val progressIndex = atomic(0)
             val lastUpdate = atomic(0L)
 
-            apps.forEachParallel { app ->
+            apps.forEachParallel(context = Dispatchers.IO, scope = this) { app ->
                 loadApp(app, packageManager).let {
                     loaded.add(it)
                 }

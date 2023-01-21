@@ -4,6 +4,7 @@ import android.app.ActivityManager
 import android.app.AppOpsManager
 import android.app.IActivityManager
 import android.app.IApplicationThread
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -75,7 +76,7 @@ interface ShizukuServiceLaunchStrategy : ShizukuLaunchStrategy {
         val iam = IActivityManager.Stub.asInterface(ShizukuBinderWrapper(
             SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)))
 
-        when {
+        val cn = when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
                 iam.startService(
                     null, intent, null, false, "com.android.shell",
@@ -91,7 +92,7 @@ interface ShizukuServiceLaunchStrategy : ShizukuLaunchStrategy {
                 ).invoke(
                     iam,
                     null, intent, null, false, "com.android.shell", UserHandle.USER_CURRENT
-                )
+                ) as? ComponentName
             }
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> {
                 iam::class.java.getMethod(
@@ -101,7 +102,7 @@ interface ShizukuServiceLaunchStrategy : ShizukuLaunchStrategy {
                 ).invoke(
                     iam,
                     null, intent, null, "com.android.shell", UserHandle.USER_CURRENT
-                )
+                ) as? ComponentName
             }
             else -> {
                 iam::class.java.getMethod(
@@ -111,8 +112,14 @@ interface ShizukuServiceLaunchStrategy : ShizukuLaunchStrategy {
                 ).invoke(
                     iam,
                     null, intent, null, UserHandle.USER_CURRENT
-                )
+                ) as? ComponentName
             }
+        }
+
+        when (cn?.packageName) {
+            null -> throw Exception("Unable to find service!")
+            "!" -> throw Exception("Requires permission ${cn.className}")
+            "!!", "?" -> throw Exception(cn.className)
         }
     }
 }
@@ -157,7 +164,7 @@ interface ShizukuShellLaunchStrategy : ShizukuLaunchStrategy, CommandLaunchStrat
                 Log.e("RootActivityLauncher", "Shizuku Command Output\n${inputText}")
                 Log.e("RootActivityLauncher", "Shizuku Error Output\n${errorText}")
 
-                if (exitValue() == 0) {
+                if (exitValue() == 0 && errorText.isEmpty()) {
                     listOf()
                 } else {
                     listOf(Exception(errorText))

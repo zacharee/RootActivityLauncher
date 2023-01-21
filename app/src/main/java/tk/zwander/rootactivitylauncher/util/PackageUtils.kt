@@ -1,9 +1,12 @@
 package tk.zwander.rootactivitylauncher.util
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.IntentFilter
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Build
 import android.util.Log
@@ -97,5 +100,32 @@ fun PackageManager.getAllIntentFiltersCompat(packageName: String): List<IntentFi
         getAllIntentFilters(packageName)
     } else {
         listOf()
+    }
+}
+
+@Suppress("DEPRECATION")
+fun PackageManager.getActivityInfoCompat(componentName: ComponentName, flags: Int = 0): ActivityInfo {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        getActivityInfo(componentName, PackageManager.ComponentInfoFlags.of(flags.toLong()))
+    } else {
+        getActivityInfo(componentName, flags)
+    }
+}
+
+@Suppress("DEPRECATION")
+fun PackageManager.getServiceInfoCompat(componentName: ComponentName, flags: Int = 0): ServiceInfo {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        getServiceInfo(componentName, PackageManager.ComponentInfoFlags.of(flags.toLong()))
+    } else {
+        getServiceInfo(componentName, flags)
+    }
+}
+
+@Suppress("DEPRECATION")
+fun PackageManager.getReceiverInfoCompat(componentName: ComponentName, flags: Int = 0): ActivityInfo {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        getReceiverInfo(componentName, PackageManager.ComponentInfoFlags.of(flags.toLong()))
+    } else {
+        getReceiverInfo(componentName, flags)
     }
 }

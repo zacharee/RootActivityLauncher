@@ -64,6 +64,7 @@ dependencies {
     implementation 'androidx.activity:activity-compose:1.6.1'
     implementation "com.google.android.material:compose-theme-adapter-3:1.1.1"
     implementation 'com.google.accompanist:accompanist-themeadapter-material3:0.28.0'
+    implementation "androidx.datastore:datastore-preferences:1.1.0-alpha01"
 
     implementation("io.coil-kt:coil:2.2.2")
     implementation("io.coil-kt:coil-compose:2.2.2")

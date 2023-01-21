@@ -36,12 +36,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
-import tk.zwander.rootactivitylauncher.data.model.AppModel
 
 @Composable
 fun ComponentGroup(
     titleRes: Int,
-    app: AppModel,
     items: List<BaseComponentInfo>,
     forTasker: Boolean,
     expanded: Boolean,

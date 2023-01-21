@@ -6,7 +6,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -22,11 +21,11 @@ fun <T, R, C : MutableCollection<in R>> SparseArray<out T>.mapTo(destination: C,
     return destination
 }
 
-suspend fun <T> Collection<T>.forEachParallel(context: CoroutineContext = EmptyCoroutineContext, block: suspend CoroutineScope.(T) -> Unit) = coroutineScope {
+suspend fun <T> Collection<T>.forEachParallel(context: CoroutineContext = EmptyCoroutineContext, scope: CoroutineScope = CoroutineScope(context), block: suspend CoroutineScope.(T) -> Unit) {
     val jobs = ArrayList<Deferred<*>>(size)
     forEach {
         jobs.add(
-            async(context) {
+            scope.async(context) {
                 block(it)
             }
         )
@@ -34,11 +33,11 @@ suspend fun <T> Collection<T>.forEachParallel(context: CoroutineContext = EmptyC
     jobs.awaitAll()
 }
 
-suspend fun <T> Array<T>.forEachParallel(context: CoroutineContext = EmptyCoroutineContext, block: suspend CoroutineScope.(T) -> Unit) = coroutineScope {
+suspend fun <T> Array<T>.forEachParallel(context: CoroutineContext = EmptyCoroutineContext, scope: CoroutineScope = CoroutineScope(context), block: suspend CoroutineScope.(T) -> Unit) {
     val jobs = ArrayList<Deferred<*>>(size)
     forEach {
         jobs.add(
-            async(context) {
+            scope.async(context) {
                 block(it)
             }
         )

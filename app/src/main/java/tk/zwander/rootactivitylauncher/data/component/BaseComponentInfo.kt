@@ -4,9 +4,8 @@ import android.content.ComponentName
 import android.content.pm.ComponentInfo
 import com.google.android.gms.common.internal.Objects
 import tk.zwander.rootactivitylauncher.util.constructComponentKey
-import java.lang.IllegalStateException
 
-open class BaseComponentInfo(
+sealed class BaseComponentInfo(
     open val info: ComponentInfo,
     open val label: CharSequence
 ) : Comparable<BaseComponentInfo> {
@@ -17,7 +16,6 @@ open class BaseComponentInfo(
             is ActivityInfo -> ComponentType.ACTIVITY
             is ReceiverInfo -> ComponentType.RECEIVER
             is ServiceInfo -> ComponentType.SERVICE
-            else -> throw IllegalStateException("Unrecognized instance ${this.javaClass.canonicalName}")
         }
     }
 
