@@ -20,4 +20,10 @@ sealed class FilterMode(val id: Int) {
         object ShowRequiresPermission : PermissionFilterMode(R.string.filter_requires_permission)
         object ShowNoPermissionRequired : PermissionFilterMode(R.string.filter_requires_no_permission)
     }
+
+    sealed class HasComponentsFilterMode(id: Int) : FilterMode(id) {
+        object ShowAll : HasComponentsFilterMode(R.string.filter_all)
+        object ShowHasComponents : HasComponentsFilterMode(R.string.filter_has_components)
+        object ShowHasNoComponents : HasComponentsFilterMode(R.string.filter_has_no_components)
+    }
 }

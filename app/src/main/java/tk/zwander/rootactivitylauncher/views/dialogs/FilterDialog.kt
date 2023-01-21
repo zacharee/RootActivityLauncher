@@ -29,10 +29,12 @@ fun FilterDialog(
     initialEnabledMode: FilterMode.EnabledFilterMode,
     initialExportedMode: FilterMode.ExportedFilterMode,
     initialPermissionMode: FilterMode.PermissionFilterMode,
+    initialComponentMode: FilterMode.HasComponentsFilterMode,
     onDismissRequest: (
         FilterMode.EnabledFilterMode,
         FilterMode.ExportedFilterMode,
-        FilterMode.PermissionFilterMode
+        FilterMode.PermissionFilterMode,
+        FilterMode.HasComponentsFilterMode,
     ) -> Unit,
 ) {
     if (showing) {
@@ -45,10 +47,13 @@ fun FilterDialog(
         var permissionMode by remember {
             mutableStateOf(initialPermissionMode)
         }
+        var componentMode by remember {
+            mutableStateOf(initialComponentMode)
+        }
 
         BaseAlertDialog(
             onDismissRequest = {
-                onDismissRequest(enabledMode, exportedMode, permissionMode)
+                onDismissRequest(enabledMode, exportedMode, permissionMode, componentMode)
             },
             title = {
                 Text(text = stringResource(id = R.string.filter))
@@ -56,7 +61,7 @@ fun FilterDialog(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        onDismissRequest(enabledMode, exportedMode, permissionMode)
+                        onDismissRequest(enabledMode, exportedMode, permissionMode, componentMode)
                     }
                 ) {
                     Text(text = stringResource(id = android.R.string.ok))
@@ -68,7 +73,8 @@ fun FilterDialog(
                         onDismissRequest(
                             initialEnabledMode,
                             initialExportedMode,
-                            initialPermissionMode
+                            initialPermissionMode,
+                            initialComponentMode,
                         )
                     }
                 ) {
@@ -119,6 +125,19 @@ fun FilterDialog(
                             permissionMode = it
                         },
                         selectedMode = permissionMode
+                    )
+
+                    FilterGroup(
+                        name = stringResource(id = R.string.component_filter),
+                        modes = arrayOf(
+                            FilterMode.HasComponentsFilterMode.ShowAll,
+                            FilterMode.HasComponentsFilterMode.ShowHasComponents,
+                            FilterMode.HasComponentsFilterMode.ShowHasNoComponents
+                        ),
+                        onModeSelected = {
+                            componentMode = it
+                        },
+                        selectedMode = componentMode
                     )
                 }
             },

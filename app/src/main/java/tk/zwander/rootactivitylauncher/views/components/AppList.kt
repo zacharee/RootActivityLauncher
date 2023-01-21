@@ -14,12 +14,16 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.data.model.BaseInfoModel
+import tk.zwander.rootactivitylauncher.util.LocalFavoriteModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -32,6 +36,13 @@ fun AppList(
     modifier: Modifier = Modifier
 ) {
     val layoutDirection = LocalLayoutDirection.current
+    val favoriteModel = LocalFavoriteModel.current
+    val favoriteSize by favoriteModel.totalInitialSize.collectAsState()
+
+    val actualFilteredApps = remember(favoriteSize, filteredApps.toList()) {
+        if (favoriteSize == 0) filteredApps.filterNot { it == favoriteModel }
+        else filteredApps
+    }
 
     LazyVerticalStaggeredGrid(
         columns = StaggeredGridCells.Adaptive(400.dp),
@@ -48,13 +59,12 @@ fun AppList(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         state = appListState
     ) {
-        items(items = filteredApps, key = { if (it is AppModel) it.info.packageName else "favorite_item" }) { info ->
+        items(items = actualFilteredApps, key = { if (it is AppModel) it.info.packageName else "favorite_item" }) { info ->
             AppItem(
                 info = info,
                 isForTasker = isForTasker,
                 selectionCallback = {
                     onItemSelected(it)
-
                 },
                 extractCallback = extractCallback,
                 modifier = Modifier.fillMaxWidth()

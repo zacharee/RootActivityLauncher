@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.model.AppModel
-import tk.zwander.rootactivitylauncher.data.model.MainModel
+import tk.zwander.rootactivitylauncher.util.LocalMainModel
 import tk.zwander.rootactivitylauncher.util.extractApk
 import tk.zwander.rootactivitylauncher.views.components.AppList
 import tk.zwander.rootactivitylauncher.views.components.BottomBar
@@ -46,7 +46,6 @@ import tk.zwander.rootactivitylauncher.views.dialogs.FilterDialog
 @Composable
 fun MainView(
     isForTasker: Boolean,
-    mainModel: MainModel,
     onItemSelected: (BaseComponentInfo) -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier
@@ -55,6 +54,7 @@ fun MainView(
         LazyStaggeredGridState()
     }
     val context = LocalContext.current
+    val mainModel = LocalMainModel.current
     val scope = rememberCoroutineScope()
 
     var showingFilterDialog by remember {
@@ -206,10 +206,12 @@ fun MainView(
         initialEnabledMode = mainModel.enabledFilterMode.collectAsState().value,
         initialExportedMode = mainModel.exportedFilterMode.collectAsState().value,
         initialPermissionMode = mainModel.permissionFilterMode.collectAsState().value,
-        onDismissRequest = { enabled, exported, permission ->
+        initialComponentMode = mainModel.componentFilterMode.collectAsState().value,
+        onDismissRequest = { enabled, exported, permission, component ->
             mainModel.enabledFilterMode.value = enabled
             mainModel.exportedFilterMode.value = exported
             mainModel.permissionFilterMode.value = permission
+            mainModel.componentFilterMode.value = component
             showingFilterDialog = false
         }
     )

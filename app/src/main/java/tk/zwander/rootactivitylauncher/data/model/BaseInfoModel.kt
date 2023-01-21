@@ -34,6 +34,15 @@ abstract class BaseInfoModel {
     abstract val initialServicesSize: StateFlow<Int>
     abstract val initialReceiversSize: StateFlow<Int>
 
+    val totalInitialSize: StateFlow<Int> by lazy {
+        combine(initialActivitiesSize, initialServicesSize, initialReceiversSize) { (a, s, r) -> a + s + r }
+            .stateIn(
+                GlobalScope,
+                SharingStarted.Eagerly,
+                initialActivitiesSize.value + initialServicesSize.value + initialReceiversSize.value
+            )
+    }
+
     protected val hasLoadedActivities = MutableStateFlow(false)
     protected val hasLoadedServices = MutableStateFlow(false)
     protected val hasLoadedReceivers = MutableStateFlow(false)

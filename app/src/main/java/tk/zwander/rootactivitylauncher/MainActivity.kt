@@ -15,6 +15,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.surfaceColorAtElevation
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
@@ -41,6 +42,16 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
     protected open var selectedItem: Pair<ComponentType, ComponentName>? = null
 
     protected val model = MainModel()
+    private val favoriteModel by lazy {
+        FavoriteModel(
+            activityKeys = prefs.favoriteActivities,
+            serviceKeys = prefs.favoriteServices,
+            receiverKeys = prefs.favoriteReceivers,
+            context = this@MainActivity,
+            scope = this@MainActivity,
+            mainModel = model
+        )
+    }
 
     private val packageUpdateReceiver = object : BroadcastReceiver() {
         val filter = IntentFilter().apply {
@@ -152,18 +163,22 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                     }
                 }
 
-                MainView(
-                    modifier = Modifier.fillMaxSize(),
-                    onItemSelected = {
-                        selectedItem = it.type() to it.component
-                    },
-                    isForTasker = isForTasker,
-                    onRefresh = {
-                        currentDataJob?.cancel()
-                        currentDataJob = loadDataAsync()
-                    },
-                    mainModel = model
-                )
+                CompositionLocalProvider(
+                    LocalMainModel provides model,
+                    LocalFavoriteModel provides favoriteModel,
+                ) {
+                    MainView(
+                        modifier = Modifier.fillMaxSize(),
+                        onItemSelected = {
+                            selectedItem = it.type() to it.component
+                        },
+                        isForTasker = isForTasker,
+                        onRefresh = {
+                            currentDataJob?.cancel()
+                            currentDataJob = loadDataAsync()
+                        }
+                    )
+                }
             }
         }
 
@@ -267,16 +282,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
             val max = apps.size - 1
             val loaded = ConcurrentLinkedQueue<BaseInfoModel>()
 
-            loaded.add(
-                FavoriteModel(
-                    activityKeys = prefs.favoriteActivities,
-                    serviceKeys = prefs.favoriteServices,
-                    receiverKeys = prefs.favoriteReceivers,
-                    context = this@MainActivity,
-                    scope = this@MainActivity,
-                    mainModel = model
-                )
-            )
+            loaded.add(favoriteModel)
 
             val progressIndex = atomic(0)
             val lastUpdate = atomic(0L)

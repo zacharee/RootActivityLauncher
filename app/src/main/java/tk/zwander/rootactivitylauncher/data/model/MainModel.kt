@@ -17,6 +17,7 @@ class MainModel {
     val enabledFilterMode = MutableStateFlow<FilterMode.EnabledFilterMode>(FilterMode.EnabledFilterMode.ShowAll)
     val exportedFilterMode = MutableStateFlow<FilterMode.ExportedFilterMode>(FilterMode.ExportedFilterMode.ShowAll)
     val permissionFilterMode = MutableStateFlow<FilterMode.PermissionFilterMode>(FilterMode.PermissionFilterMode.ShowAll)
+    val componentFilterMode = MutableStateFlow<FilterMode.HasComponentsFilterMode>(FilterMode.HasComponentsFilterMode.ShowAll)
 
     val query = MutableStateFlow("")
 
@@ -27,7 +28,7 @@ class MainModel {
 
     val isSearching = MutableStateFlow(false)
 
-    private val hasFilters: Boolean
+    private val hasLoadedFilters: Boolean
         get() = query.value.isNotBlank() ||
                 enabledFilterMode.value != FilterMode.EnabledFilterMode.ShowAll ||
                 exportedFilterMode.value != FilterMode.ExportedFilterMode.ShowAll ||
@@ -35,7 +36,7 @@ class MainModel {
 
     suspend fun update() {
         val apps = apps.value.toList()
-        val hasFilters = hasFilters
+        val hasFilters = hasLoadedFilters
         val isSearching = isSearching.value
         val includeComponents = includeComponents.value
         val query = query.value
@@ -43,7 +44,7 @@ class MainModel {
         withContext(Dispatchers.IO) {
             if ((hasFilters && !isSearching) || (hasFilters && query.isBlank()) || (isSearching && includeComponents)) {
                 val total = apps.sumOf {
-                    it.initialActivitiesSize.value + it.initialServicesSize.value + it.initialReceiversSize.value
+                    it.totalInitialSize.value
                 }
                 val current = atomic(0)
                 val lastUpdateTime = atomic(0L)
@@ -87,6 +88,25 @@ class MainModel {
     private fun matches(data: BaseInfoModel): Boolean {
         val query = query.value
         val useRegex = useRegex.value
+        val componentFilterMode = componentFilterMode.value
+        val componentSize = data.totalInitialSize.value
+
+        if (data is AppModel) {
+            when (componentFilterMode) {
+                FilterMode.HasComponentsFilterMode.ShowHasNoComponents -> {
+                    if (componentSize > 0) {
+                        return false
+                    }
+                }
+                FilterMode.HasComponentsFilterMode.ShowHasComponents -> {
+                    if (componentSize == 0) {
+                        return false
+                    }
+                }
+                else -> {}
+            }
+        }
+
         val isValidRegex = if (useRegex) {
             try {
                 Regex(query)
