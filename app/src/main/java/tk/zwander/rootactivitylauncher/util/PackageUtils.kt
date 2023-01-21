@@ -10,9 +10,7 @@ import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Build
 import android.util.Log
-import android.widget.Toast
 import androidx.documentfile.provider.DocumentFile
-import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.model.AppModel
 import java.io.File
 
@@ -36,8 +34,14 @@ fun PackageManager.getPackageInfoCompat(pkg: String, flags: Int = 0): PackageInf
     }
 }
 
-fun Context.extractApk(result: Uri, info: AppModel) {
-    val dir = DocumentFile.fromTreeUri(this, result) ?: return
+fun Context.extractApk(result: Uri, info: AppModel): List<Throwable> {
+    val errors = ArrayList<Throwable>()
+
+    val dir = DocumentFile.fromTreeUri(this, result)
+
+    if (dir == null) {
+        errors.add(Exception("Unable to get file reference for $result."))
+    }
 
     val baseDir = File(info.info.sourceDir)
 
@@ -50,23 +54,24 @@ fun Context.extractApk(result: Uri, info: AppModel) {
         splitName to s
     }
 
-    val baseFile = dir.createFile(
+    val baseFile = dir?.createFile(
         "application/vnd.android.package-archive",
         info.info.packageName
-    ) ?: return
-    contentResolver.openOutputStream(baseFile.uri).use { writer ->
-        Log.e("RootActivityLauncher", "$baseDir")
-        try {
-            baseDir.inputStream().use { reader ->
-                reader.copyTo(writer!!)
+    )
+
+    if (baseFile == null) {
+        errors.add(Exception("Unable to create file ${info.info.packageName}."))
+    } else {
+        contentResolver.openOutputStream(baseFile.uri).use { writer ->
+            Log.e("RootActivityLauncher", "$baseDir")
+            try {
+                baseDir.inputStream().use { reader ->
+                    reader.copyTo(writer!!)
+                }
+            } catch (e: Exception) {
+                Log.e("RootActivityLauncher", "Extraction failed", e)
+                errors.add(e)
             }
-        } catch (e: Exception) {
-            Log.e("RootActivityLauncher", "Extraction failed", e)
-            Toast.makeText(
-                this,
-                resources.getString(R.string.extraction_failed, e.message),
-                Toast.LENGTH_SHORT
-            ).show()
         }
     }
 
@@ -74,25 +79,28 @@ fun Context.extractApk(result: Uri, info: AppModel) {
         val name = split.first
         val path = File(split.second)
 
-        val file = dir.createFile(
+        val file = dir?.createFile(
             "application/vnd.android.package-archive",
             "${info.info.packageName}_$name"
-        ) ?: return
-        contentResolver.openOutputStream(file.uri).use { writer ->
-            try {
-                path.inputStream().use { reader ->
-                    reader.copyTo(writer!!)
+        )
+
+        if (file == null) {
+            errors.add(Exception("Unable to create file ${info.info.packageName}_$name"))
+        } else {
+            contentResolver.openOutputStream(file.uri).use { writer ->
+                try {
+                    path.inputStream().use { reader ->
+                        reader.copyTo(writer!!)
+                    }
+                } catch (e: Exception) {
+                    Log.e("RootActivityLauncher", "Extraction failed", e)
+                    errors.add(e)
                 }
-            } catch (e: Exception) {
-                Log.e("RootActivityLauncher", "Extraction failed", e)
-                Toast.makeText(
-                    this,
-                    resources.getString(R.string.extraction_failed, e.message),
-                    Toast.LENGTH_SHORT
-                ).show()
             }
         }
     }
+
+    return errors
 }
 
 fun PackageManager.getAllIntentFiltersCompat(packageName: String): List<IntentFilter> {
