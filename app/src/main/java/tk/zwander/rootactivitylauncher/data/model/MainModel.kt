@@ -17,7 +17,7 @@ class MainModel {
     val enabledFilterMode = MutableStateFlow<FilterMode.EnabledFilterMode>(FilterMode.EnabledFilterMode.ShowAll)
     val exportedFilterMode = MutableStateFlow<FilterMode.ExportedFilterMode>(FilterMode.ExportedFilterMode.ShowAll)
     val permissionFilterMode = MutableStateFlow<FilterMode.PermissionFilterMode>(FilterMode.PermissionFilterMode.ShowAll)
-    val componentFilterMode = MutableStateFlow<FilterMode.HasComponentsFilterMode>(FilterMode.HasComponentsFilterMode.ShowAll)
+    val componentFilterMode = MutableStateFlow<FilterMode.HasComponentsFilterMode>(FilterMode.HasComponentsFilterMode.ShowHasComponents)
 
     val query = MutableStateFlow("")
 
@@ -39,6 +39,7 @@ class MainModel {
         val hasFilters = hasLoadedFilters
         val isSearching = isSearching.value
         val includeComponents = includeComponents.value
+        val componentFilterMode = componentFilterMode.value
         val query = query.value
 
         withContext(Dispatchers.IO) {
@@ -63,7 +64,7 @@ class MainModel {
                 }
             }
 
-            val filtered = if (hasFilters) {
+            val filtered = if (hasFilters || (componentFilterMode !is FilterMode.HasComponentsFilterMode.ShowAll)) {
                 apps.filter { app ->
                     matches(app)
                 }
