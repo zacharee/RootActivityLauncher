@@ -21,7 +21,7 @@ fun <T, R, C : MutableCollection<in R>> SparseArray<out T>.mapTo(destination: C,
     return destination
 }
 
-suspend fun <T> Collection<T>.forEachParallel(context: CoroutineContext = EmptyCoroutineContext, scope: CoroutineScope = CoroutineScope(context), block: suspend CoroutineScope.(T) -> Unit) {
+suspend fun <T> Collection<T>.forEachParallel(context: CoroutineContext = EmptyCoroutineContext, scope: CoroutineScope, block: suspend CoroutineScope.(T) -> Unit) {
     val jobs = ArrayList<Deferred<*>>(size)
     forEach {
         jobs.add(
@@ -33,7 +33,7 @@ suspend fun <T> Collection<T>.forEachParallel(context: CoroutineContext = EmptyC
     jobs.awaitAll()
 }
 
-suspend fun <T> Array<T>.forEachParallel(context: CoroutineContext = EmptyCoroutineContext, scope: CoroutineScope = CoroutineScope(context), block: suspend CoroutineScope.(T) -> Unit) {
+suspend fun <T> Array<T>.forEachParallel(context: CoroutineContext = EmptyCoroutineContext, scope: CoroutineScope, block: suspend CoroutineScope.(T) -> Unit) {
     val jobs = ArrayList<Deferred<*>>(size)
     forEach {
         jobs.add(

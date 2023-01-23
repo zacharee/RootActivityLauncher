@@ -35,7 +35,7 @@ class MainModel {
                 permissionFilterMode.value != FilterMode.PermissionFilterMode.ShowAll
 
     suspend fun update() {
-        val apps = apps.value.toList()
+        val apps = apps.value
         val hasFilters = hasLoadedFilters
         val isSearching = isSearching.value
         val includeComponents = includeComponents.value
@@ -65,9 +65,7 @@ class MainModel {
             }
 
             val filtered = if (hasFilters || (componentFilterMode !is FilterMode.HasComponentsFilterMode.ShowAll)) {
-                apps.filter { app ->
-                    matches(app)
-                }
+                apps.filter(::matches)
             } else {
                 apps
             }

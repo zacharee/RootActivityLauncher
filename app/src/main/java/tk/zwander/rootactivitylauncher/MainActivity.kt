@@ -42,7 +42,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
     protected open var selectedItem: Pair<ComponentType, ComponentName>? = null
 
     protected val model = MainModel()
-    protected val modelScope by lazy {
+    private val modelScope by lazy {
         CoroutineScope(Dispatchers.IO + coroutineContext + Job(coroutineContext[Job]))
     }
 
@@ -117,7 +117,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
         }
     }
 
-    private var currentDataJob: Deferred<*>? = null
+    private var currentDataJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -200,8 +200,8 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
         cancel()
     }
 
-    private fun loadDataAsync(silent: Boolean = false): Deferred<*> {
-        return async(Dispatchers.IO) {
+    private fun loadDataAsync(silent: Boolean = false): Job {
+        return launch {
             if (!silent) {
                 model.progress.value = 0f
             }
@@ -215,68 +215,70 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
             //attached. Attempt to retrieve all components at once per-app. If that fails, retrieve
             //each set of components individually and combine them.
             //https://twitter.com/Wander1236/status/1412928863798190083?s=20
-            val apps = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
-                packageManager.getInstalledPackagesCompat(
-                    PackageManager.GET_ACTIVITIES or
-                            PackageManager.GET_SERVICES or
-                            PackageManager.GET_RECEIVERS or
-                            PackageManager.GET_PERMISSIONS or
-                            PackageManager.GET_CONFIGURATIONS or
-                            PackageManager.MATCH_DISABLED_COMPONENTS
-                )
-            } else {
-                @Suppress("DEPRECATION")
-                val packages =
-                    packageManager.getInstalledPackagesCompat(PackageManager.GET_DISABLED_COMPONENTS)
-                packages.map { info ->
-                    try {
-                        //Try to get all the components for this package at once.
-                        packageManager.getPackageInfoCompat(
-                            info.packageName,
-                            PackageManager.GET_ACTIVITIES or
-                                    PackageManager.GET_SERVICES or
-                                    PackageManager.GET_RECEIVERS or
-                                    PackageManager.GET_PERMISSIONS or
-                                    PackageManager.GET_CONFIGURATIONS
-                        )
-                    } catch (e: Exception) {
-                        //The resulting PackageInfo was too large. Retrieve each set
-                        //separately and combine them.
-                        Log.e(
-                            "RootActivityLauncher",
-                            "Unable to get full info, splitting ${info.packageName}",
-                            e
-                        )
-                        val awaits = listOf(
-                            PackageManager.GET_ACTIVITIES,
-                            PackageManager.GET_SERVICES,
-                            PackageManager.GET_RECEIVERS,
-                            PackageManager.GET_PERMISSIONS,
-                            PackageManager.GET_CONFIGURATIONS
-                        ).map { flag ->
-                            async {
-                                try {
-                                    packageManager.getPackageInfoCompat(info.packageName, flag)
-                                } catch (e: Exception) {
-                                    Log.e(
-                                        "RootActivityLauncher",
-                                        "Unable to get split info for ${info.packageName} for flag $flag",
-                                        e
-                                    )
-                                    null
+            val apps = withContext(Dispatchers.IO) {
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+                    packageManager.getInstalledPackagesCompat(
+                        PackageManager.GET_ACTIVITIES or
+                                PackageManager.GET_SERVICES or
+                                PackageManager.GET_RECEIVERS or
+                                PackageManager.GET_PERMISSIONS or
+                                PackageManager.GET_CONFIGURATIONS or
+                                PackageManager.MATCH_DISABLED_COMPONENTS
+                    )
+                } else {
+                    @Suppress("DEPRECATION")
+                    val packages =
+                        packageManager.getInstalledPackagesCompat(PackageManager.GET_DISABLED_COMPONENTS)
+                    packages.map { info ->
+                        try {
+                            //Try to get all the components for this package at once.
+                            packageManager.getPackageInfoCompat(
+                                info.packageName,
+                                PackageManager.GET_ACTIVITIES or
+                                        PackageManager.GET_SERVICES or
+                                        PackageManager.GET_RECEIVERS or
+                                        PackageManager.GET_PERMISSIONS or
+                                        PackageManager.GET_CONFIGURATIONS
+                            )
+                        } catch (e: Exception) {
+                            //The resulting PackageInfo was too large. Retrieve each set
+                            //separately and combine them.
+                            Log.e(
+                                "RootActivityLauncher",
+                                "Unable to get full info, splitting ${info.packageName}",
+                                e
+                            )
+                            val awaits = listOf(
+                                PackageManager.GET_ACTIVITIES,
+                                PackageManager.GET_SERVICES,
+                                PackageManager.GET_RECEIVERS,
+                                PackageManager.GET_PERMISSIONS,
+                                PackageManager.GET_CONFIGURATIONS
+                            ).map { flag ->
+                                async {
+                                    try {
+                                        packageManager.getPackageInfoCompat(info.packageName, flag)
+                                    } catch (e: Exception) {
+                                        Log.e(
+                                            "RootActivityLauncher",
+                                            "Unable to get split info for ${info.packageName} for flag $flag",
+                                            e
+                                        )
+                                        null
+                                    }
                                 }
-                            }
-                        }.awaitAll()
+                            }.awaitAll()
 
-                        info.apply {
-                            awaits.forEach { element ->
-                                element?.activities?.let { this.activities = it }
-                                element?.services?.let { this.services = it }
-                                element?.receivers?.let { this.receivers = it }
-                                element?.permissions?.let { this.permissions = it }
-                                element?.configPreferences?.let { this.configPreferences = it }
-                                element?.reqFeatures?.let { this.reqFeatures = it }
-                                element?.featureGroups?.let { this.featureGroups = it }
+                            info.apply {
+                                awaits.forEach { element ->
+                                    element?.activities?.let { this.activities = it }
+                                    element?.services?.let { this.services = it }
+                                    element?.receivers?.let { this.receivers = it }
+                                    element?.permissions?.let { this.permissions = it }
+                                    element?.configPreferences?.let { this.configPreferences = it }
+                                    element?.reqFeatures?.let { this.reqFeatures = it }
+                                    element?.featureGroups?.let { this.featureGroups = it }
+                                }
                             }
                         }
                     }
@@ -303,8 +305,10 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                 }
             }
 
-            model.apps.value = loaded.toList()
-            model.progress.value = null
+            launch(Dispatchers.IO) {
+                model.apps.value = loaded.toList()
+                model.progress.value = null
+            }
         }
     }
 
