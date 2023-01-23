@@ -42,13 +42,17 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
     protected open var selectedItem: Pair<ComponentType, ComponentName>? = null
 
     protected val model = MainModel()
+    protected val modelScope by lazy {
+        CoroutineScope(Dispatchers.IO + coroutineContext + Job(coroutineContext[Job]))
+    }
+
     private val favoriteModel by lazy {
         FavoriteModel(
             activityKeys = prefs.favoriteActivities,
             serviceKeys = prefs.favoriteServices,
             receiverKeys = prefs.favoriteReceivers,
             context = this@MainActivity,
-            scope = this@MainActivity,
+            scope = modelScope,
             mainModel = model
         )
     }
@@ -325,7 +329,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
             pInfo = app,
             label = appLabel,
             context = this@MainActivity,
-            scope = this@MainActivity,
+            scope = modelScope,
             mainModel = model,
         )
     }

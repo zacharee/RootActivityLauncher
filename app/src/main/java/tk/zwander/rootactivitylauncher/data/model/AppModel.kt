@@ -53,25 +53,22 @@ data class AppModel(
 
     override suspend fun performActivityLoad(progress: (suspend () -> Unit)?): Collection<ActivityInfo> {
         return pInfo.activities.loadItems(
-            pm = context.packageManager,
             progress = progress
-        ) { input, label -> ActivityInfo(input, label) }
+        ) { input, label -> ActivityInfo(input, label.ifBlank { this.label }) }
             .toSortedSet()
     }
 
     override suspend fun performServiceLoad(progress: (suspend () -> Unit)?): Collection<ServiceInfo> {
         return pInfo.services.loadItems(
-            pm = context.packageManager,
             progress = progress
-        ) { input, label -> ServiceInfo(input, label) }
+        ) { input, label -> ServiceInfo(input, label.ifBlank { this.label }) }
             .toSortedSet()
     }
 
     override suspend fun performReceiverLoad(progress: (suspend () -> Unit)?): Collection<ReceiverInfo> {
         return pInfo.receivers.loadItems(
-            pm = context.packageManager,
             progress = progress
-        ) { input, label -> ReceiverInfo(input, label) }
+        ) { input, label -> ReceiverInfo(input, label.ifBlank { this.label }) }
             .toSortedSet()
     }
 }

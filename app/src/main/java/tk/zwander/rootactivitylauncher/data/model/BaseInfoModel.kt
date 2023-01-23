@@ -4,8 +4,6 @@ import android.content.Context
 import android.content.pm.PackageItemInfo
 import android.content.pm.PackageManager
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -34,10 +32,13 @@ abstract class BaseInfoModel {
     abstract val initialServicesSize: StateFlow<Int>
     abstract val initialReceiversSize: StateFlow<Int>
 
+    protected val packageManager: PackageManager
+        get() = context.packageManager
+
     val totalInitialSize: StateFlow<Int> by lazy {
         combine(initialActivitiesSize, initialServicesSize, initialReceiversSize) { (a, s, r) -> a + s + r }
             .stateIn(
-                GlobalScope,
+                scope,
                 SharingStarted.Eagerly,
                 initialActivitiesSize.value + initialServicesSize.value + initialReceiversSize.value
             )
@@ -47,12 +48,18 @@ abstract class BaseInfoModel {
     protected val hasLoadedServices = MutableStateFlow(false)
     protected val hasLoadedReceivers = MutableStateFlow(false)
 
+    @Suppress("PropertyName")
     protected val _loadedActivities = ConcurrentLinkedDeque<ActivityInfo>()
+    @Suppress("PropertyName")
     protected val _loadedServices = ConcurrentLinkedDeque<ServiceInfo>()
+    @Suppress("PropertyName")
     protected val _loadedReceivers = ConcurrentLinkedDeque<ReceiverInfo>()
 
+    @Suppress("PropertyName")
     protected var _hasLoadedActivities = false
+    @Suppress("PropertyName")
     protected var _hasLoadedServices = false
+    @Suppress("PropertyName")
     protected var _hasLoadedReceivers = false
 
     val activitiesExpanded = MutableStateFlow(false)
@@ -76,21 +83,21 @@ abstract class BaseInfoModel {
     val activitiesSize by lazy {
         combine(filteredActivities, hasLoadedActivities, initialActivitiesSize) { f, l, i ->
             if (l) f.size else i
-        }.stateIn(GlobalScope, SharingStarted.Eagerly, initialActivitiesSize.value)
+        }.stateIn(scope, SharingStarted.Eagerly, initialActivitiesSize.value)
     }
     val servicesSize by lazy {
         combine(filteredServices, hasLoadedServices, initialServicesSize) { f, l, i ->
             if (l) f.size else i
-        }.stateIn(GlobalScope, SharingStarted.Eagerly, initialServicesSize.value)
+        }.stateIn(scope, SharingStarted.Eagerly, initialServicesSize.value)
     }
     val receiversSize by lazy {
         combine(filteredReceivers, hasLoadedReceivers, initialReceiversSize) { f, l, i ->
             if (l) f.size else i
-        }.stateIn(GlobalScope, SharingStarted.Eagerly, initialReceiversSize.value)
+        }.stateIn(scope, SharingStarted.Eagerly, initialReceiversSize.value)
     }
 
     protected fun postInit() {
-        scope.launch(Dispatchers.IO) {
+        scope.launch {
             activitiesExpanded.combine(hasLoadedActivities) { e, l ->
                 e && !l
             }.collect {
@@ -103,7 +110,7 @@ abstract class BaseInfoModel {
             }
         }
 
-        scope.launch(Dispatchers.IO) {
+        scope.launch {
             servicesExpanded.combine(hasLoadedServices) { e, l ->
                 e && !l
             }.collect {
@@ -116,7 +123,7 @@ abstract class BaseInfoModel {
             }
         }
 
-        scope.launch(Dispatchers.IO) {
+        scope.launch {
             receiversExpanded.combine(hasLoadedReceivers) { e, l ->
                 e && !l
             }.collect {
@@ -247,14 +254,14 @@ abstract class BaseInfoModel {
     protected abstract suspend fun performReceiverLoad(progress: (suspend () -> Unit)? = null): Collection<ReceiverInfo>
 
     protected suspend fun <Loaded : BaseComponentInfo, Input : PackageItemInfo> Array<Input>?.loadItems(
-        pm: PackageManager,
         progress: (suspend () -> Unit)?,
         constructor: (Input, CharSequence) -> Loaded
     ): Collection<Loaded> {
         val infos = ConcurrentLinkedDeque<Loaded>()
+        val packageManager = packageManager
 
         this?.forEach { input ->
-            infos.add(constructor(input, input.loadLabel(pm)))
+            infos.add(constructor(input, input.loadLabel(packageManager)))
             progress?.invoke()
         }
 

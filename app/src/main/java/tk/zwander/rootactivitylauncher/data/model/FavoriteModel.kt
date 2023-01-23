@@ -7,7 +7,6 @@ import android.content.pm.PackageItemInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.NameNotFoundException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -32,7 +31,7 @@ data class FavoriteModel(
     override val initialReceiversSize = MutableStateFlow(0)
 
     init {
-        scope.launch(Dispatchers.IO) {
+        scope.launch {
             activityKeys.collect {
                 _hasLoadedActivities = false
                 _loadedActivities.clear()
@@ -41,7 +40,7 @@ data class FavoriteModel(
             }
         }
 
-        scope.launch(Dispatchers.IO) {
+        scope.launch {
             serviceKeys.collect {
                 _hasLoadedServices = false
                 _loadedServices.clear()
@@ -50,7 +49,7 @@ data class FavoriteModel(
             }
         }
 
-        scope.launch(Dispatchers.IO) {
+        scope.launch {
             receiverKeys.collect {
                 _hasLoadedReceivers = false
                 _loadedReceivers.clear()
@@ -66,47 +65,54 @@ data class FavoriteModel(
     override suspend fun performActivityLoad(progress: (suspend () -> Unit)?): Collection<ActivityInfo> {
         val activityInfos = activityKeys.first().mapNotNull { key ->
             context.getInfoFromKey(key) {
-                context.packageManager.getActivityInfoCompat(it, PackageManager.MATCH_DISABLED_COMPONENTS)
+                packageManager.getActivityInfoCompat(it, PackageManager.MATCH_DISABLED_COMPONENTS)
             }
-        }.sortedBy {
-            it.loadLabel(context.packageManager).toString().lowercase()
         }.toTypedArray()
 
-        return activityInfos.loadItems(context.packageManager, progress) { input, label -> ActivityInfo(input, label) }
+        return activityInfos.loadItems(progress) { input, label ->
+            ActivityInfo(input, label.ifBlank {
+                packageManager.getApplicationLabel(input.applicationInfo)
+            })
+        }.sortedBy { it.label.toString().lowercase() }
     }
 
     @SuppressLint("InlinedApi")
     override suspend fun performServiceLoad(progress: (suspend () -> Unit)?): Collection<ServiceInfo> {
         val activityInfos = serviceKeys.first().mapNotNull { key ->
             context.getInfoFromKey(key) {
-                context.packageManager.getServiceInfoCompat(it, PackageManager.MATCH_DISABLED_COMPONENTS)
+                packageManager.getServiceInfoCompat(it, PackageManager.MATCH_DISABLED_COMPONENTS)
             }
-        }.sortedBy {
-            it.loadLabel(context.packageManager).toString().lowercase()
         }.toTypedArray()
 
-        return activityInfos.loadItems(context.packageManager, progress) { input, label -> ServiceInfo(input, label) }
+        return activityInfos.loadItems(progress) { input, label ->
+            ServiceInfo(input, label.ifBlank {
+                packageManager.getApplicationLabel(input.applicationInfo)
+            })
+        }.sortedBy { it.label.toString().lowercase() }
     }
 
     @SuppressLint("InlinedApi")
     override suspend fun performReceiverLoad(progress: (suspend () -> Unit)?): Collection<ReceiverInfo> {
         val activityInfos = receiverKeys.first().mapNotNull { key ->
             context.getInfoFromKey(key) {
-                context.packageManager.getReceiverInfoCompat(it, PackageManager.MATCH_DISABLED_COMPONENTS)
+                packageManager.getReceiverInfoCompat(it, PackageManager.MATCH_DISABLED_COMPONENTS)
             }
-        }.sortedBy {
-            it.loadLabel(context.packageManager).toString().lowercase()
         }.toTypedArray()
 
-        return activityInfos.loadItems(context.packageManager, progress) { input, label -> ReceiverInfo(input, label) }
+        return activityInfos.loadItems(progress) { input, label ->
+            ReceiverInfo(input, label.ifBlank {
+                packageManager.getApplicationLabel(input.applicationInfo)
+            })
+        }.sortedBy { it.label.toString().lowercase() }
     }
 
     private fun <T : PackageItemInfo> Context.getInfoFromKey(key: String, getter: Context.(ComponentName) -> T): T? {
+        val componentName = ComponentName.unflattenFromString(key)
+
         return try {
-            getter(ComponentName.unflattenFromString(key))
+            getter(componentName)
         } catch (e: NameNotFoundException) {
-            val comp = key.split("/")[1]
-            if (comp.contains(".")) {
+            if (componentName.className.contains(".")) {
                 val lastIndex = key.lastIndexOf(".")
                 getInfoFromKey(key.replaceRange(lastIndex..lastIndex, "$"), getter)
             } else {
