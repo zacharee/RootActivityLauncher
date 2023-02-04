@@ -84,7 +84,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                             try {
                                 val loaded = loadApp(getPackageInfo(pkg), packageManager)
 
-                                model.apps.value = model.apps.value + loaded
+                                model.apps.value = (model.apps.value + loaded).distinctByPackageName()
                             } catch (e: PackageManager.NameNotFoundException) {
                                 Log.e("RootActivityLauncher", "Error parsing package info for newly-added app.", e)
                             }
@@ -97,7 +97,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                                 removeAll { it is AppModel && it.info.packageName == pkg }
                             }
 
-                            model.apps.value = new
+                            model.apps.value = new.distinctByPackageName()
                         }
                     }
 
@@ -109,7 +109,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
 
                             old[oldIndex] = loadApp(getPackageInfo(pkg), packageManager)
 
-                            model.apps.value = old
+                            model.apps.value = old.distinctByPackageName()
                         }
                     }
                 }
@@ -306,7 +306,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
             }
 
             launch(Dispatchers.IO) {
-                model.apps.value = loaded.toList()
+                model.apps.value = loaded.distinctByPackageName()
                 model.progress.value = null
             }
         }

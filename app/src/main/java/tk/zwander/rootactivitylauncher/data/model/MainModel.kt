@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
 import tk.zwander.rootactivitylauncher.data.FilterMode
 import tk.zwander.rootactivitylauncher.util.AdvancedSearcher
+import tk.zwander.rootactivitylauncher.util.distinctByPackageName
 import tk.zwander.rootactivitylauncher.util.forEachParallel
 import tk.zwander.rootactivitylauncher.util.updateProgress
 import java.util.regex.PatternSyntaxException
@@ -79,7 +80,7 @@ class MainModel {
                 }
             }
 
-            filteredApps.value = sorted
+            filteredApps.value = sorted.distinctByPackageName()
             progress.value = null
         }
     }

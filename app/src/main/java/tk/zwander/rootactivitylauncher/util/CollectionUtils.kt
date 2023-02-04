@@ -6,6 +6,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import tk.zwander.rootactivitylauncher.data.model.AppModel
+import tk.zwander.rootactivitylauncher.data.model.BaseInfoModel
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -43,4 +45,10 @@ suspend fun <T> Array<T>.forEachParallel(context: CoroutineContext = EmptyCorout
         )
     }
     jobs.awaitAll()
+}
+
+fun Collection<BaseInfoModel>.distinctByPackageName(): List<BaseInfoModel> {
+    return distinctBy {
+        if (it is AppModel) it.info.packageName else "favorite"
+    }
 }
