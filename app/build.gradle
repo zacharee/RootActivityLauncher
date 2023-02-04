@@ -76,8 +76,8 @@ dependencies {
     //Crashlytics doesn't seem to work without this added (wtf)
     implementation 'com.google.firebase:firebase-analytics:21.2.0'
 
-    implementation "dev.rikka.shizuku:api:12.2.0"
-    implementation "dev.rikka.shizuku:provider:12.2.0"
+    implementation 'dev.rikka.shizuku:api:13.1.0'
+    implementation 'dev.rikka.shizuku:provider:13.1.0'
     implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:4.3'
     implementation 'com.github.zacharee:PatreonSupportersRetrieval:8436bbdbdc'
     implementation 'com.joaomgcd:taskerpluginlibrary:0.4.7'
