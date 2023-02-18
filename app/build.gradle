@@ -43,7 +43,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.0"
+        kotlinCompilerExtensionVersion = "1.4.2"
     }
 }
 
@@ -54,13 +54,13 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:atomicfu:0.19.0'
 
     implementation 'androidx.core:core-ktx:1.9.0'
-    implementation 'androidx.appcompat:appcompat:1.6.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.preference:preference-ktx:1.2.0'
 
-    implementation "androidx.compose.material3:material3:1.1.0-alpha05"
-    implementation 'androidx.compose.ui:ui-tooling-preview:1.4.0-alpha05'
-    implementation 'androidx.compose.runtime:runtime:1.4.0-alpha05'
-    implementation 'androidx.compose.material:material:1.4.0-alpha05'
+    implementation "androidx.compose.material3:material3:1.1.0-alpha06"
+    implementation 'androidx.compose.ui:ui-tooling-preview:1.4.0-beta01'
+    implementation 'androidx.compose.runtime:runtime:1.4.0-beta01'
+    implementation 'androidx.compose.material:material:1.4.0-beta01'
     implementation 'androidx.activity:activity-compose:1.6.1'
     implementation "com.google.android.material:compose-theme-adapter-3:1.1.1"
     implementation 'com.google.accompanist:accompanist-themeadapter-material3:0.28.0'
@@ -72,9 +72,11 @@ dependencies {
 
     implementation 'com.google.android.material:material:1.8.0'
     implementation 'com.google.code.gson:gson:2.10.1'
-    implementation 'com.google.firebase:firebase-crashlytics:18.3.3'
+
+    implementation platform('com.google.firebase:firebase-bom:31.2.2')
+    implementation 'com.google.firebase:firebase-crashlytics'
     //Crashlytics doesn't seem to work without this added (wtf)
-    implementation 'com.google.firebase:firebase-analytics:21.2.0'
+    implementation 'com.google.firebase:firebase-analytics'
 
     implementation 'dev.rikka.shizuku:api:13.1.0'
     implementation 'dev.rikka.shizuku:provider:13.1.0'
