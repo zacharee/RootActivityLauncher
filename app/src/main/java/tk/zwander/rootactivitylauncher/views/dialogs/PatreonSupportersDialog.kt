@@ -60,7 +60,7 @@ fun PatreonSupportersDialog(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(text = stringResource(id = R.string.supporters_desc))
+                    Text(text = stringResource(id = tk.zwander.patreonsupportersretrieval.R.string.supporters_desc))
 
                     Spacer(modifier = Modifier.size(8.dp))
 

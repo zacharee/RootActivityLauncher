@@ -98,7 +98,7 @@ fun <T : Any> ComponentInfoDialog(
                         )
                     }
                 ) {
-                    Text(text = stringResource(id = R.string.copy))
+                    Text(text = stringResource(id = tk.zwander.patreonsupportersretrieval.R.string.copy))
                 }
             },
             text = {

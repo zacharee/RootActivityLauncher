@@ -2,8 +2,8 @@ package tk.zwander.rootactivitylauncher.data.component
 
 import android.content.ComponentName
 import android.content.pm.ComponentInfo
-import com.google.android.gms.common.internal.Objects
 import tk.zwander.rootactivitylauncher.util.constructComponentKey
+import java.util.Objects
 
 sealed class BaseComponentInfo(
     open val info: ComponentInfo,
@@ -33,6 +33,6 @@ sealed class BaseComponentInfo(
     }
 
     override fun hashCode(): Int {
-        return Objects.hashCode(component, label)
+        return Objects.hash(component, label)
     }
 }

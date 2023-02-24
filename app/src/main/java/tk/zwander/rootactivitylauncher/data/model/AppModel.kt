@@ -3,12 +3,12 @@ package tk.zwander.rootactivitylauncher.data.model
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
-import com.google.android.gms.common.internal.Objects
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.component.ReceiverInfo
 import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
+import java.util.Objects
 
 data class AppModel(
     val pInfo: PackageInfo,
@@ -41,7 +41,7 @@ data class AppModel(
     override fun hashCode(): Int {
         return info.packageName.hashCode() +
                 31 * super.hashCode() +
-                Objects.hashCode(
+                Objects.hash(
                     activitiesSize.value,
                     servicesSize.value,
                     receiversSize.value,

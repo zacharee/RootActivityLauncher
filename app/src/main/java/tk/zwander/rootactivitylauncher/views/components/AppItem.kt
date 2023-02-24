@@ -84,7 +84,7 @@ fun AppItem(
         ) {
             AppBar(
                 icon = remember(info is AppModel) {
-                    if (info is AppModel) info.info.getCoilData() else R.drawable.ic_baseline_heart_24
+                    if (info is AppModel) info.info.getCoilData() else tk.zwander.patreonsupportersretrieval.R.drawable.ic_baseline_heart_24
                 },
                 name = if (info is AppModel) info.label.toString() else stringResource(id = R.string.favorites),
                 showActions = !isForTasker && info is AppModel,

@@ -98,5 +98,8 @@
             android:value="false" />
         <meta-data android:name="com.samsung.knoxlicense.permissions" android:value="true"
             />
+        <meta-data
+            android:name="com.bugsnag.android.API_KEY"
+            android:value="68c49944c477dc1acc343fafaf359172"/>
     </application>
 </manifest>
