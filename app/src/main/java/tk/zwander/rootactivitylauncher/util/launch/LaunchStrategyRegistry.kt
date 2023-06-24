@@ -71,11 +71,11 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
             }
         }
     }
-    object ShizukuShell : ActivityLaunchStrategy, ShizukuShellLaunchStrategy {
-        override fun makeCommand(args: LaunchArgs): String {
-            return "am start -n ${args.intent.component.flattenToString()}"
-        }
-    }
+//    object ShizukuShell : ActivityLaunchStrategy, ShizukuShellLaunchStrategy {
+//        override fun makeCommand(args: LaunchArgs): String {
+//            return "am start -n ${args.intent.component.flattenToString()}"
+//        }
+//    }
     object KNOX : ActivityLaunchStrategy {
         override suspend fun Context.canRun(args: LaunchArgs): Boolean {
             val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
@@ -140,11 +140,11 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
             }
         }
     }
-    object ShizukuShell : ServiceLaunchStrategy, ShizukuShellLaunchStrategy {
-        override fun makeCommand(args: LaunchArgs): String {
-            return "am startservice ${args.intent.component.flattenToString()}"
-        }
-    }
+//    object ShizukuShell : ServiceLaunchStrategy, ShizukuShellLaunchStrategy {
+//        override fun makeCommand(args: LaunchArgs): String {
+//            return "am startservice ${args.intent.component.flattenToString()}"
+//        }
+//    }
     object Root : ServiceLaunchStrategy, RootLaunchStrategy {
         override fun makeCommand(args: LaunchArgs): String {
             return "am startservice ${args.intent.component.flattenToString()}"
@@ -180,11 +180,11 @@ sealed interface ReceiverLaunchStrategy : LaunchStrategy {
             }
         }
     }
-    object ShizukuShell : ReceiverLaunchStrategy, ShizukuShellLaunchStrategy {
-        override fun makeCommand(args: LaunchArgs): String {
-            return "am broadcast -n ${args.intent.component.flattenToString()}"
-        }
-    }
+//    object ShizukuShell : ReceiverLaunchStrategy, ShizukuShellLaunchStrategy {
+//        override fun makeCommand(args: LaunchArgs): String {
+//            return "am broadcast -n ${args.intent.component.flattenToString()}"
+//        }
+//    }
     object Root : ReceiverLaunchStrategy, RootLaunchStrategy {
         override fun makeCommand(args: LaunchArgs): String {
             return "am broadcast -n ${args.intent.component.flattenToString()}"

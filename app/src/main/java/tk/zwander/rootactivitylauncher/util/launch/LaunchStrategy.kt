@@ -17,7 +17,6 @@ import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
 import tk.zwander.rootactivitylauncher.util.hasShizukuPermission
 import tk.zwander.rootactivitylauncher.util.requestShizukuPermission
-import java.util.concurrent.TimeUnit
 
 interface LaunchStrategy {
     suspend fun Context.canRun(args: LaunchArgs): Boolean = true
@@ -147,39 +146,39 @@ interface ShizukuReceiverLaunchStrategy : ShizukuLaunchStrategy {
     }
 }
 
-interface ShizukuShellLaunchStrategy : ShizukuLaunchStrategy, CommandLaunchStrategy {
-    override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
-        return try {
-            val command = StringBuilder(makeEscapedCommand(args))
-
-            args.addToCommand(command)
-
-            @Suppress("DEPRECATION")
-            Shizuku.newProcess(arrayOf("sh", "-c", command.toString()), null, null).run {
-                waitForTimeout(1000, TimeUnit.MILLISECONDS)
-
-                val inputText = inputStream.bufferedReader().use { it.readText() }
-                val errorText = errorStream.bufferedReader().use { it.readText() }
-
-                Log.e("RootActivityLauncher", "Shizuku Command Output\n${inputText}")
-                Log.e("RootActivityLauncher", "Shizuku Error Output\n${errorText}")
-
-                if (exitValue() == 0 && errorText.isEmpty()) {
-                    listOf()
-                } else {
-                    listOf(Exception(errorText))
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("RootActivityLauncher", "Failure to launch through Shizuku process.", e)
-            listOf(e)
-        }
-    }
-
-    override suspend fun Context.callLaunch(intent: Intent) {
-        throw IllegalAccessException("Not supported!")
-    }
-}
+//interface ShizukuShellLaunchStrategy : ShizukuLaunchStrategy, CommandLaunchStrategy {
+//    override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
+//        return try {
+//            val command = StringBuilder(makeEscapedCommand(args))
+//
+//            args.addToCommand(command)
+//
+//            @Suppress("DEPRECATION")
+//            Shizuku.newProcess(arrayOf("sh", "-c", command.toString()), null, null).run {
+//                waitForTimeout(1000, TimeUnit.MILLISECONDS)
+//
+//                val inputText = inputStream.bufferedReader().use { it.readText() }
+//                val errorText = errorStream.bufferedReader().use { it.readText() }
+//
+//                Log.e("RootActivityLauncher", "Shizuku Command Output\n${inputText}")
+//                Log.e("RootActivityLauncher", "Shizuku Error Output\n${errorText}")
+//
+//                if (exitValue() == 0 && errorText.isEmpty()) {
+//                    listOf()
+//                } else {
+//                    listOf(Exception(errorText))
+//                }
+//            }
+//        } catch (e: Exception) {
+//            Log.e("RootActivityLauncher", "Failure to launch through Shizuku process.", e)
+//            listOf(e)
+//        }
+//    }
+//
+//    override suspend fun Context.callLaunch(intent: Intent) {
+//        throw IllegalAccessException("Not supported!")
+//    }
+//}
 
 interface RootLaunchStrategy : CommandLaunchStrategy {
     override suspend fun Context.canRun(args: LaunchArgs): Boolean {

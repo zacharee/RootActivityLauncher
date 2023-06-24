@@ -55,8 +55,8 @@ fun AppList(
                 bottom = 8.dp + this.calculateBottomPadding()
             )
         },
-        verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalItemSpacing = 8.dp,
         state = appListState
     ) {
         items(items = actualFilteredApps, key = { if (it is AppModel) it.info.packageName else "favorite_item" }) { info ->

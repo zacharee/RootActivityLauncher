@@ -107,7 +107,7 @@ data class FavoriteModel(
     }
 
     private fun <T : PackageItemInfo> Context.getInfoFromKey(key: String, getter: Context.(ComponentName) -> T): T? {
-        val componentName = ComponentName.unflattenFromString(key)
+        val componentName = ComponentName.unflattenFromString(key)!!
 
         return try {
             getter(componentName)
