@@ -68,6 +68,7 @@ fun AppList(
                 },
                 extractCallback = extractCallback,
                 modifier = Modifier.fillMaxWidth()
+                    .animateItemPlacement()
             )
         }
     }
