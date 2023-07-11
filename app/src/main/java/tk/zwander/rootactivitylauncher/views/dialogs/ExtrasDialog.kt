@@ -23,6 +23,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -267,7 +268,7 @@ private fun ExtraItem(
 
     OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = TextFieldDefaults.outlinedShape
+        shape = OutlinedTextFieldDefaults.shape,
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -286,9 +287,10 @@ private fun ExtraItem(
                         Text(text = stringResource(id = R.string.hint_key))
                     },
                     modifier = Modifier.weight(1f),
-                    colors = TextFieldDefaults.textFieldColors(
-                        containerColor = Color.Transparent
-                    )
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                    ),
                 )
 
                 Divider(
@@ -311,9 +313,10 @@ private fun ExtraItem(
                             Text(text = stringResource(id = R.string.type))
                         },
                         readOnly = true,
-                        colors = TextFieldDefaults.textFieldColors(
-                            containerColor = Color.Transparent
-                        )
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                        ),
                     )
 
                     Box(
@@ -340,9 +343,10 @@ private fun ExtraItem(
                     Text(text = stringResource(id = R.string.hint_value))
                 },
                 modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.textFieldColors(
-                    containerColor = Color.Transparent
-                )
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                ),
             )
         }
     }

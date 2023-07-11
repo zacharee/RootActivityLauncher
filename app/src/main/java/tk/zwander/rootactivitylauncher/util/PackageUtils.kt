@@ -103,9 +103,13 @@ fun Context.extractApk(result: Uri, info: AppModel): List<Throwable> {
 }
 
 fun PackageManager.getAllIntentFiltersCompat(packageName: String): List<IntentFilter> {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        getAllIntentFilters(packageName)
-    } else {
+    return try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getAllIntentFilters(packageName)
+        } else {
+            listOf()
+        }
+    } catch (e: Throwable) {
         listOf()
     }
 }
