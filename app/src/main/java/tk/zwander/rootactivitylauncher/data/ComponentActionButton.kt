@@ -2,6 +2,7 @@ package tk.zwander.rootactivitylauncher.data
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -130,6 +131,8 @@ sealed class ComponentActionButton<T>(protected val data: T) {
                     context.findExtrasForComponent(componentKey)
 
             val result = context.launch(data.type(), extras, componentKey)
+
+            Log.e("RootActivityLauncher", "$result")
 
             errorCallback(result)
         }

@@ -38,6 +38,7 @@ interface CommandLaunchStrategy : LaunchStrategy {
 
 interface BinderWrapperLaunchStrategy : LaunchStrategy {
     suspend fun wrapBinder(binder: IBinder): IBinder
+    suspend fun Context.getUidAndPackage(): Pair<Int, String?>
     suspend fun Context.callLaunch(intent: Intent)
 
     override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
@@ -60,6 +61,12 @@ interface ShizukuLaunchStrategy : BinderWrapperLaunchStrategy {
     override suspend fun wrapBinder(binder: IBinder): IBinder {
         return ShizukuBinderWrapper(binder)
     }
+
+    override suspend fun Context.getUidAndPackage(): Pair<Int, String?> {
+        val uid = Shizuku.getUid()
+
+        return UserHandle.getUserId(uid) to packageManager.getPackagesForUid(uid).firstOrNull()
+    }
 }
 
 interface DhizukuLaunchStrategy : BinderWrapperLaunchStrategy {
@@ -71,6 +78,15 @@ interface DhizukuLaunchStrategy : BinderWrapperLaunchStrategy {
     override suspend fun wrapBinder(binder: IBinder): IBinder {
         return Dhizuku.binderWrapper(binder)
     }
+
+    override suspend fun Context.getUidAndPackage(): Pair<Int, String?> {
+        val packageName = "com.rosan.dhizuku"
+
+        @Suppress("DEPRECATION")
+        return UserHandle.getUserId(
+            packageManager.getApplicationInfo(packageName, 0).uid
+        ) to packageName
+    }
 }
 
 interface BinderActivityLaunchStrategy : BinderWrapperLaunchStrategy {
@@ -79,16 +95,18 @@ interface BinderActivityLaunchStrategy : BinderWrapperLaunchStrategy {
             SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)
         ))
 
+        val (_, pkg) = getUidAndPackage()
+
         val result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             iam.startActivityWithFeature(
-                null, "com.android.shell", null, intent,
+                null, pkg, null, intent,
                 null, null, null, 0, 0,
                 null, null
             )
         } else {
             @Suppress("DEPRECATION")
             iam.startActivity(
-                null, "com.android.shell", intent,
+                null, pkg, intent,
                 null, null, null, 0,
                 0, null, null
             )
@@ -105,11 +123,13 @@ interface BinderServiceLaunchStrategy : BinderWrapperLaunchStrategy {
         val iam = IActivityManager.Stub.asInterface(wrapBinder(
             SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)))
 
+        val (uid, pkg) = getUidAndPackage()
+
         val cn = when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
                 iam.startService(
-                    null, intent, null, false, "com.android.shell",
-                    null, UserHandle.USER_CURRENT
+                    null, intent, null, false, pkg,
+                    null, uid,
                 )
             }
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> {
@@ -120,7 +140,7 @@ interface BinderServiceLaunchStrategy : BinderWrapperLaunchStrategy {
                     String::class.java, Int::class.java
                 ).invoke(
                     iam,
-                    null, intent, null, false, "com.android.shell", UserHandle.USER_CURRENT
+                    null, intent, null, false, pkg, uid,
                 ) as? ComponentName
             }
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> {
@@ -130,7 +150,7 @@ interface BinderServiceLaunchStrategy : BinderWrapperLaunchStrategy {
                     String::class.java, String::class.java, Int::class.java
                 ).invoke(
                     iam,
-                    null, intent, null, "com.android.shell", UserHandle.USER_CURRENT
+                    null, intent, null, pkg, uid,
                 ) as? ComponentName
             }
             else -> {
@@ -140,7 +160,7 @@ interface BinderServiceLaunchStrategy : BinderWrapperLaunchStrategy {
                     String::class.java, Int::class.java
                 ).invoke(
                     iam,
-                    null, intent, null, UserHandle.USER_CURRENT
+                    null, intent, null, uid,
                 ) as? ComponentName
             }
         }
@@ -158,7 +178,7 @@ interface BinderReceiverLaunchStrategy : BinderWrapperLaunchStrategy {
         val iam = IActivityManager.Stub.asInterface(wrapBinder(
             SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)))
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        val result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             iam.broadcastIntentWithFeature(
                 null, null, intent, null,
                 null, 0, null, null, null,
@@ -172,6 +192,10 @@ interface BinderReceiverLaunchStrategy : BinderWrapperLaunchStrategy {
                 0, null, null, null,
                 AppOpsManager.OP_NONE, null, false, false, 0
             )
+        }
+
+        if (result != ActivityManager.START_SUCCESS) {
+            throw Exception("Error starting Receiver: $result")
         }
     }
 }

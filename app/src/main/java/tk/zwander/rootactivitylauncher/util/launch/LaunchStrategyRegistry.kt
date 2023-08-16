@@ -116,7 +116,7 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
         }
     }
     object ShizukuJava : ServiceLaunchStrategy, BinderServiceLaunchStrategy, ShizukuLaunchStrategy
-    object DhizukuJava : ActivityLaunchStrategy, BinderServiceLaunchStrategy, DhizukuLaunchStrategy
+    object DhizukuJava : ServiceLaunchStrategy, BinderServiceLaunchStrategy, DhizukuLaunchStrategy
     object Root : ServiceLaunchStrategy, RootLaunchStrategy {
         override fun makeCommand(args: LaunchArgs): String {
             return "am startservice ${args.intent.component.flattenToString()}"
@@ -136,13 +136,8 @@ sealed interface ReceiverLaunchStrategy : LaunchStrategy {
             }
         }
     }
-    object Iterative : ReceiverLaunchStrategy, IterativeLaunchStrategy {
-        override suspend fun Context.performLaunch(args: LaunchArgs, intent: Intent) {
-            sendBroadcast(intent)
-        }
-    }
-    object ShizukuJava : ReceiverLaunchStrategy, BinderServiceLaunchStrategy, ShizukuLaunchStrategy
-    object DhizukuJava : ActivityLaunchStrategy, BinderReceiverLaunchStrategy, DhizukuLaunchStrategy
+    object ShizukuJava : ReceiverLaunchStrategy, BinderReceiverLaunchStrategy, ShizukuLaunchStrategy
+    object DhizukuJava : ReceiverLaunchStrategy, BinderReceiverLaunchStrategy, DhizukuLaunchStrategy
     object Root : ReceiverLaunchStrategy, RootLaunchStrategy {
         override fun makeCommand(args: LaunchArgs): String {
             return "am broadcast -n ${args.intent.component.flattenToString()}"
