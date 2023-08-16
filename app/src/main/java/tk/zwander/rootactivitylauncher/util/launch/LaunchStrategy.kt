@@ -9,12 +9,15 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.IBinder
 import android.os.UserHandle
 import android.util.Log
+import com.rosan.dhizuku.api.Dhizuku
 import eu.chainfire.libsuperuser.Shell
 import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
+import tk.zwander.rootactivitylauncher.util.DhizukuUtils
 import tk.zwander.rootactivitylauncher.util.hasShizukuPermission
 import tk.zwander.rootactivitylauncher.util.requestShizukuPermission
 
@@ -33,21 +36,48 @@ interface CommandLaunchStrategy : LaunchStrategy {
     }
 }
 
-interface ShizukuLaunchStrategy : LaunchStrategy {
+interface BinderWrapperLaunchStrategy : LaunchStrategy {
+    suspend fun wrapBinder(binder: IBinder): IBinder
+    suspend fun Context.callLaunch(intent: Intent)
+
+    override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
+        return try {
+            callLaunch(args.intent)
+            listOf()
+        } catch (e: Exception) {
+            Log.e("RootActivityLauncher", "Failure to launch through ${this::class.java.name}", e)
+            listOf(e)
+        }
+    }
+}
+
+interface ShizukuLaunchStrategy : BinderWrapperLaunchStrategy {
     override suspend fun Context.canRun(args: LaunchArgs): Boolean {
         return Shizuku.pingBinder() &&
                 (hasShizukuPermission || requestShizukuPermission())
     }
 
-    suspend fun Context.callLaunch(intent: Intent)
+    override suspend fun wrapBinder(binder: IBinder): IBinder {
+        return ShizukuBinderWrapper(binder)
+    }
 }
 
-interface ShizukuActivityLaunchStrategy : ShizukuLaunchStrategy {
+interface DhizukuLaunchStrategy : BinderWrapperLaunchStrategy {
+    override suspend fun Context.canRun(args: LaunchArgs): Boolean {
+        return Dhizuku.init(this) &&
+                (Dhizuku.isPermissionGranted() || DhizukuUtils.requestDhizukuPermission())
+    }
+
+    override suspend fun wrapBinder(binder: IBinder): IBinder {
+        return Dhizuku.binderWrapper(binder)
+    }
+}
+
+interface BinderActivityLaunchStrategy : BinderWrapperLaunchStrategy {
     override suspend fun Context.callLaunch(intent: Intent) {
-        val iam = IActivityManager.Stub.asInterface(
-            ShizukuBinderWrapper(
-                SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE))
-        )
+        val iam = IActivityManager.Stub.asInterface(wrapBinder(
+            SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)
+        ))
 
         val result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             iam.startActivityWithFeature(
@@ -70,9 +100,9 @@ interface ShizukuActivityLaunchStrategy : ShizukuLaunchStrategy {
     }
 }
 
-interface ShizukuServiceLaunchStrategy : ShizukuLaunchStrategy {
+interface BinderServiceLaunchStrategy : BinderWrapperLaunchStrategy {
     override suspend fun Context.callLaunch(intent: Intent) {
-        val iam = IActivityManager.Stub.asInterface(ShizukuBinderWrapper(
+        val iam = IActivityManager.Stub.asInterface(wrapBinder(
             SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)))
 
         val cn = when {
@@ -123,9 +153,9 @@ interface ShizukuServiceLaunchStrategy : ShizukuLaunchStrategy {
     }
 }
 
-interface ShizukuReceiverLaunchStrategy : ShizukuLaunchStrategy {
+interface BinderReceiverLaunchStrategy : BinderWrapperLaunchStrategy {
     override suspend fun Context.callLaunch(intent: Intent) {
-        val iam = IActivityManager.Stub.asInterface(ShizukuBinderWrapper(
+        val iam = IActivityManager.Stub.asInterface(wrapBinder(
             SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)))
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {

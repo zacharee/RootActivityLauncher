@@ -82,7 +82,8 @@ dependencies {
     implementation 'com.github.Chainfire:libsuperuser:1.1.1'
     implementation 'com.github.2hamed:ProgressCircula:0.2.1'
 
-    debugImplementation 'androidx.compose.ui:ui-tooling:1.5.0-beta03'
-
     implementation "com.bugsnag:bugsnag-android:5.31.1"
+    implementation "io.github.iamr0s:Dhizuku-API:2.4"
+
+    debugImplementation 'androidx.compose.ui:ui-tooling:1.5.0-beta03'
 }

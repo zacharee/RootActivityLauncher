@@ -17,7 +17,7 @@ import tk.zwander.rootactivitylauncher.util.isTouchWiz
 import tk.zwander.rootactivitylauncher.util.receiver.AdminReceiver
 
 sealed interface ActivityLaunchStrategy : LaunchStrategy {
-    object Normal : ActivityLaunchStrategy {
+    data object Normal : ActivityLaunchStrategy {
         override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
             return try {
                 val i = Intent(args.intent)
@@ -42,7 +42,7 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
             startActivity(intent)
         }
     }
-    object SamsungExploit : ActivityLaunchStrategy {
+    data object SamsungExploit : ActivityLaunchStrategy {
         override suspend fun Context.canRun(args: LaunchArgs): Boolean {
             return Build.VERSION.SDK_INT > Build.VERSION_CODES.P && isTouchWiz
         }
@@ -60,23 +60,9 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
             }
         }
     }
-    object ShizukuJava : ActivityLaunchStrategy, ShizukuActivityLaunchStrategy {
-        override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
-            return try {
-                callLaunch(args.intent)
-                listOf()
-            } catch (e: Exception) {
-                Log.e("RootActivityLauncher", "Failure to launch through Shizuku binder", e)
-                listOf(e)
-            }
-        }
-    }
-//    object ShizukuShell : ActivityLaunchStrategy, ShizukuShellLaunchStrategy {
-//        override fun makeCommand(args: LaunchArgs): String {
-//            return "am start -n ${args.intent.component.flattenToString()}"
-//        }
-//    }
-    object KNOX : ActivityLaunchStrategy {
+    object ShizukuJava : ActivityLaunchStrategy, BinderActivityLaunchStrategy, ShizukuLaunchStrategy
+    object DhizukuJava : ActivityLaunchStrategy, BinderActivityLaunchStrategy, DhizukuLaunchStrategy
+    data object KNOX : ActivityLaunchStrategy {
         override suspend fun Context.canRun(args: LaunchArgs): Boolean {
             val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
 
@@ -113,7 +99,7 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
 }
 
 sealed interface ServiceLaunchStrategy : LaunchStrategy {
-    object Normal : ServiceLaunchStrategy {
+    data object Normal : ServiceLaunchStrategy {
         override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
             return try {
                 ContextCompat.startForegroundService(this, args.intent)
@@ -129,22 +115,8 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
             startService(intent)
         }
     }
-    object ShizukuJava : ServiceLaunchStrategy, ShizukuServiceLaunchStrategy {
-        override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
-            return try {
-                callLaunch(args.intent)
-                listOf()
-            } catch (e: Throwable) {
-                Log.e("RootActivityLauncher", "Failure to launch through Shizuku binder.", e)
-                listOf(e)
-            }
-        }
-    }
-//    object ShizukuShell : ServiceLaunchStrategy, ShizukuShellLaunchStrategy {
-//        override fun makeCommand(args: LaunchArgs): String {
-//            return "am startservice ${args.intent.component.flattenToString()}"
-//        }
-//    }
+    object ShizukuJava : ServiceLaunchStrategy, BinderServiceLaunchStrategy, ShizukuLaunchStrategy
+    object DhizukuJava : ActivityLaunchStrategy, BinderServiceLaunchStrategy, DhizukuLaunchStrategy
     object Root : ServiceLaunchStrategy, RootLaunchStrategy {
         override fun makeCommand(args: LaunchArgs): String {
             return "am startservice ${args.intent.component.flattenToString()}"
@@ -153,7 +125,7 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
 }
 
 sealed interface ReceiverLaunchStrategy : LaunchStrategy {
-    object Normal : ReceiverLaunchStrategy {
+    data object Normal : ReceiverLaunchStrategy {
         override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
             return try {
                 sendBroadcast(args.intent)
@@ -169,22 +141,8 @@ sealed interface ReceiverLaunchStrategy : LaunchStrategy {
             sendBroadcast(intent)
         }
     }
-    object ShizukuJava : ReceiverLaunchStrategy, ShizukuReceiverLaunchStrategy {
-        override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
-            return try {
-                callLaunch(args.intent)
-                listOf()
-            } catch (e: Throwable) {
-                Log.e("RootActivityLauncher", "Failure to launch through Shizuku binder.", e)
-                listOf(e)
-            }
-        }
-    }
-//    object ShizukuShell : ReceiverLaunchStrategy, ShizukuShellLaunchStrategy {
-//        override fun makeCommand(args: LaunchArgs): String {
-//            return "am broadcast -n ${args.intent.component.flattenToString()}"
-//        }
-//    }
+    object ShizukuJava : ReceiverLaunchStrategy, BinderServiceLaunchStrategy, ShizukuLaunchStrategy
+    object DhizukuJava : ActivityLaunchStrategy, BinderReceiverLaunchStrategy, DhizukuLaunchStrategy
     object Root : ReceiverLaunchStrategy, RootLaunchStrategy {
         override fun makeCommand(args: LaunchArgs): String {
             return "am broadcast -n ${args.intent.component.flattenToString()}"
