@@ -4,7 +4,11 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.IPackageManager
 import android.content.pm.PackageManager
+import android.os.IBinder
+import android.os.ServiceManager
 import android.os.UserHandle
+import android.util.Log
+import com.rosan.dhizuku.api.Dhizuku
 import eu.chainfire.libsuperuser.Shell
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -14,16 +18,11 @@ import rikka.shizuku.SystemServiceHelper
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 
-private suspend fun Context.tryShizukuEnable(pkg: String, enabled: Boolean): Throwable? {
-    if (!Shizuku.pingBinder()) return Exception(resources.getString(R.string.shizuku_not_running))
-
-    if (!hasShizukuPermission && !requestShizukuPermission()) {
-        return Exception(resources.getString(R.string.no_shizuku_access))
-    }
-
+private fun tryWrappedBinderEnable(pkg: String, enabled: Boolean, wrap: (IBinder) -> IBinder): Throwable? {
     return try {
-        val ipm = IPackageManager.Stub.asInterface(ShizukuBinderWrapper(
-            SystemServiceHelper.getSystemService("package")))
+        val ipm = IPackageManager.Stub.asInterface(
+            wrap(ServiceManager.getService("package"))
+        )
 
         ipm.setApplicationEnabledSetting(
             pkg,
@@ -38,6 +37,26 @@ private suspend fun Context.tryShizukuEnable(pkg: String, enabled: Boolean): Thr
     } catch (e: Exception) {
         e
     }
+}
+
+private suspend fun Context.tryShizukuEnable(pkg: String, enabled: Boolean): Throwable? {
+    if (!Shizuku.pingBinder()) return Exception(resources.getString(R.string.shizuku_not_running))
+
+    if (!hasShizukuPermission && !requestShizukuPermission()) {
+        return Exception(resources.getString(R.string.no_shizuku_access))
+    }
+
+    return tryWrappedBinderEnable(pkg, enabled) { ShizukuBinderWrapper(it) }
+}
+
+private suspend fun Context.tryDhizukuEnable(pkg: String, enabled: Boolean): Throwable? {
+    if (!Dhizuku.init(this)) return Exception(resources.getString(R.string.dhizuku_not_running))
+
+    if (!Dhizuku.isPermissionGranted() && !DhizukuUtils.requestDhizukuPermission()) {
+        return Exception(resources.getString(R.string.no_dhizuku_access))
+    }
+
+    return tryWrappedBinderEnable(pkg, enabled) { Dhizuku.binderWrapper(it) }
 }
 
 private fun Context.tryRootEnable(pkg: String, enabled: Boolean): Throwable? {
@@ -80,6 +99,13 @@ suspend fun Context.setPackageEnabled(info: ApplicationInfo, enabled: Boolean): 
             }
         }
 
+        val dhizukuResult = tryDhizukuEnable(pkg, enabled)
+        if (dhizukuResult == null) {
+            if (info.isActuallyEnabled(this) == enabled) {
+                return null
+            }
+        }
+
         val rootResult = tryRootEnable(pkg, enabled)
         if (rootResult == null) {
             if (info.isActuallyEnabled(this) == enabled) {
@@ -96,11 +122,44 @@ suspend fun Context.setComponentEnabled(info: BaseComponentInfo, enabled: Boolea
         Shell.SU.available()
     }
 
+    val hasShizuku = Shizuku.pingBinder() && hasShizukuPermission
+    val hasDhizuku = Dhizuku.init(this) && Dhizuku.isPermissionGranted()
+
     if (!hasRoot && Shizuku.pingBinder() && !hasShizukuPermission) {
         requestShizukuPermission()
     }
 
-    return if (hasRoot || (Shizuku.pingBinder() && hasShizukuPermission)) {
+    if (!hasRoot && Dhizuku.init(this) && !Dhizuku.isPermissionGranted()) {
+        DhizukuUtils.requestDhizukuPermission()
+    }
+
+    return if (hasRoot || hasShizuku || hasDhizuku) {
+        fun binderWrapper(wrap: (IBinder) -> IBinder): Throwable? {
+            val binder = SystemServiceHelper.getSystemService("package")
+            val ipm = IPackageManager.Stub.asInterface(wrap(binder))
+
+            return try {
+                ipm.setComponentEnabledSetting(
+                    info.component,
+                    if (enabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                    else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    0,
+                    UserHandle.USER_SYSTEM
+                )
+
+                if (info.info.isActuallyEnabled(this@setComponentEnabled) == enabled) {
+                    null
+                } else {
+                    Exception(
+                        resources.getString(R.string.unknown_state_change_error, info.info.safeComponentName.flattenToString())
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("RootActivityLauncher", "Error changing component state", e)
+                e
+            }
+        }
+
         val result = withContext(Dispatchers.IO) {
             if (hasRoot) {
                 try {
@@ -116,31 +175,19 @@ suspend fun Context.setComponentEnabled(info: BaseComponentInfo, enabled: Boolea
                     e
                 }
             } else {
-                val ipm = IPackageManager.Stub.asInterface(
-                    ShizukuBinderWrapper(
-                        SystemServiceHelper.getSystemService("package")
-                    )
-                )
-
-                try {
-                    ipm.setComponentEnabledSetting(
-                        info.component,
-                        if (enabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-                        else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                        0,
-                        UserHandle.USER_SYSTEM
-                    )
-
-                    if (info.info.isActuallyEnabled(this@setComponentEnabled) == enabled) {
-                        null
-                    } else {
-                        Exception(
-                            resources.getString(R.string.unknown_state_change_error, info.info.safeComponentName.flattenToString())
-                        )
+                if (hasShizuku) {
+                    if (binderWrapper { ShizukuBinderWrapper(it) } == null) {
+                        return@withContext null
                     }
-                } catch (e: Exception) {
-                    e
                 }
+
+                if (hasDhizuku) {
+                    return@withContext binderWrapper { Dhizuku.binderWrapper(it) }
+                }
+
+                Exception(
+                    resources.getString(R.string.unknown_state_change_error, info.info.safeComponentName.flattenToString())
+                )
             }
         }
 

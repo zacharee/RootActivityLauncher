@@ -113,5 +113,7 @@
     <string name="self_disable_error">You can\'t disable Root Activity Launcher from Root Activity Launcher!</string>
     <string name="no_root_access">No root access!</string>
     <string name="no_shizuku_access">No Shizuku permissions!</string>
+    <string name="no_dhizuku_access">No Dhizuku permissions!</string>
     <string name="shizuku_not_running">Shizuku is not running!</string>
+    <string name="dhizuku_not_running">Dhizuku is not running!</string>
 </resources>
