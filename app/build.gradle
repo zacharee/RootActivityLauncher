@@ -41,7 +41,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.7"
+        kotlinCompilerExtensionVersion = "1.5.0"
     }
 }
 
@@ -53,7 +53,7 @@ dependencies {
 
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'androidx.preference:preference-ktx:1.2.0'
+    implementation 'androidx.preference:preference-ktx:1.2.1'
 
     implementation 'androidx.compose.material3:material3:1.1.1'
     implementation 'androidx.compose.ui:ui-tooling-preview:1.5.0-beta03'
@@ -77,12 +77,12 @@ dependencies {
     implementation 'com.github.zacharee:PatreonSupportersRetrieval:8436bbdbdc'
     implementation 'com.joaomgcd:taskerpluginlibrary:0.4.7'
 
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
     implementation 'com.github.Chainfire:libsuperuser:1.1.1'
     implementation 'com.github.2hamed:ProgressCircula:0.2.1'
 
-    debugImplementation 'androidx.compose.ui:ui-tooling:1.4.3'
+    debugImplementation 'androidx.compose.ui:ui-tooling:1.5.0-beta03'
 
-    implementation "com.bugsnag:bugsnag-android:5.30.0"
+    implementation "com.bugsnag:bugsnag-android:5.31.1"
 }
