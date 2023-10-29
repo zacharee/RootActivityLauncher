@@ -261,7 +261,9 @@ abstract class BaseInfoModel {
         val packageManager = packageManager
 
         this?.forEach { input ->
-            infos.add(constructor(input, input.loadLabel(packageManager)))
+            try {
+                infos.add(constructor(input, input.loadLabel(packageManager)))
+            } catch (_: SecurityException) {}
             progress?.invoke()
         }
 

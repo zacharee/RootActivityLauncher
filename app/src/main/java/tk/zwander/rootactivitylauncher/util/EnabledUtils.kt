@@ -1,9 +1,11 @@
 package tk.zwander.rootactivitylauncher.util
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.IPackageManager
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.IBinder
 import android.os.ServiceManager
 import android.os.UserHandle
@@ -17,6 +19,7 @@ import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
+import tk.zwander.rootactivitylauncher.util.launch.ReceiverLaunchStrategy.ShizukuJava.getUidAndPackage
 
 private fun tryWrappedBinderEnable(pkg: String, enabled: Boolean, wrap: (IBinder) -> IBinder): Throwable? {
     return try {
@@ -133,19 +136,39 @@ suspend fun Context.setComponentEnabled(info: BaseComponentInfo, enabled: Boolea
         DhizukuUtils.requestDhizukuPermission()
     }
 
+    val (_, pkg) = getUidAndPackage()
+
     return if (hasRoot || hasShizuku || hasDhizuku) {
         fun binderWrapper(wrap: (IBinder) -> IBinder): Throwable? {
             val binder = SystemServiceHelper.getSystemService("package")
             val ipm = IPackageManager.Stub.asInterface(wrap(binder))
 
             return try {
-                ipm.setComponentEnabledSetting(
-                    info.component,
-                    if (enabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-                    else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                    0,
-                    UserHandle.USER_SYSTEM
-                )
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    IPackageManager::class.java
+                        .getDeclaredMethod(
+                            "setComponentEnabledSetting",
+                            ComponentName::class.java, Int::class.java,
+                            Int::class.java, Int::class.java,
+                        )
+                        .invoke(
+                            ipm,
+                            info.component,
+                            if (enabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                            else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                            0,
+                            UserHandle.USER_SYSTEM,
+                        )
+                } else {
+                    ipm.setComponentEnabledSetting(
+                        info.component,
+                        if (enabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                        else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                        0,
+                        UserHandle.USER_SYSTEM,
+                        pkg,
+                    )
+                }
 
                 if (info.info.isActuallyEnabled(this@setComponentEnabled) == enabled) {
                     null

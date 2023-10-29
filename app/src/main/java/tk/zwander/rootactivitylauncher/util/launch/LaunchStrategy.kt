@@ -45,7 +45,7 @@ interface BinderWrapperLaunchStrategy : LaunchStrategy {
         return try {
             callLaunch(args.intent)
             listOf()
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.e("RootActivityLauncher", "Failure to launch through ${this::class.java.name}", e)
             listOf(e)
         }
@@ -82,7 +82,6 @@ interface DhizukuLaunchStrategy : BinderWrapperLaunchStrategy {
     override suspend fun Context.getUidAndPackage(): Pair<Int, String?> {
         val packageName = "com.rosan.dhizuku"
 
-        @Suppress("DEPRECATION")
         return UserHandle.getUserId(
             packageManager.getApplicationInfo(packageName, 0).uid
         ) to packageName
