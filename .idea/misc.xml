@@ -1,0 +1,35 @@
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="../../.gradle/caches/transforms-3/391925c1bc35ad5f5727b1fd257565bd/transformed/appcompat-1.4.1/res/layout/abc_search_view.xml" value="0.22916666666666666" />
+        <entry key="../../.gradle/caches/transforms-3/dabbb6349c4b0cfea3c1699d3b3aceb0/transformed/material-1.6.0/res/drawable-v23/mtrl_popupmenu_background_overlay.xml" value="0.1515" />
+        <entry key="../../.gradle/caches/transforms-3/dabbb6349c4b0cfea3c1699d3b3aceb0/transformed/material-1.6.0/res/drawable/mtrl_popupmenu_background_overlay.xml" value="0.1515" />
+        <entry key="../../Library/Android/sdk/platforms/android-31/data/res/drawable/popup_background_material.xml" value="0.1515" />
+        <entry key="app/src/main/res/drawable/ic_launcher_foreground.xml" value="0.1515" />
+        <entry key="app/src/main/res/drawable/popup_menu_background.xml" value="0.1515" />
+        <entry key="app/src/main/res/drawable/rounded_background.xml" value="0.1515" />
+        <entry key="app/src/main/res/drawable/save.xml" value="0.1515" />
+        <entry key="app/src/main/res/drawable/scroll_thumb.xml" value="0.1515" />
+        <entry key="app/src/main/res/drawable/tune.xml" value="0.1515" />
+        <entry key="app/src/main/res/layout/activity_main.xml" value="0.22916666666666666" />
+        <entry key="app/src/main/res/layout/advanced_search_dialog.xml" value="0.21979166666666666" />
+        <entry key="app/src/main/res/layout/app_item.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/component_group.xml" value="0.2898089171974522" />
+        <entry key="app/src/main/res/layout/component_info_dialog.xml" value="0.13994565217391305" />
+        <entry key="app/src/main/res/layout/component_item.xml" value="0.21979166666666666" />
+        <entry key="app/src/main/res/layout/extra_add_item.xml" value="0.21979166666666666" />
+        <entry key="app/src/main/res/layout/extra_item.xml" value="0.21979166666666666" />
+        <entry key="app/src/main/res/layout/extras_dialog.xml" value="0.22916666666666666" />
+        <entry key="app/src/main/res/layout/filter_dialog.xml" value="0.22916666666666666" />
+        <entry key="app/src/main/res/menu/search.xml" value="0.22916666666666666" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_17" default="true" project-jdk-name="jbr-17" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>
