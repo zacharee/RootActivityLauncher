@@ -41,7 +41,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.0"
+        kotlinCompilerExtensionVersion = "1.5.8"
     }
 }
 
@@ -49,41 +49,41 @@ dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
-    implementation 'org.jetbrains.kotlinx:atomicfu:0.21.0'
+    implementation 'org.jetbrains.kotlinx:atomicfu:0.23.1'
 
-    implementation 'androidx.core:core-ktx:1.10.1'
+    implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.preference:preference-ktx:1.2.1'
 
-    implementation 'androidx.compose.material3:material3:1.1.1'
-    implementation 'androidx.compose.ui:ui-tooling-preview:1.5.0-beta03'
-    implementation 'androidx.compose.runtime:runtime:1.5.0-beta03'
-    implementation 'androidx.compose.material:material:1.5.0-beta03'
-    implementation 'androidx.activity:activity-compose:1.7.2'
+    implementation 'androidx.compose.material3:material3:1.1.2'
+    implementation 'androidx.compose.ui:ui-tooling-preview:1.6.0'
+    implementation 'androidx.compose.runtime:runtime:1.6.0'
+    implementation 'androidx.compose.material:material:1.6.0'
+    implementation 'androidx.activity:activity-compose:1.8.2'
     implementation "com.google.android.material:compose-theme-adapter-3:1.1.1"
-    implementation 'com.google.accompanist:accompanist-themeadapter-material3:0.30.1'
-    implementation "androidx.datastore:datastore-preferences:1.1.0-alpha04"
+    implementation 'com.google.accompanist:accompanist-themeadapter-material3:0.34.0'
+    implementation "androidx.datastore:datastore-preferences:1.1.0-beta01"
 
     implementation('io.coil-kt:coil:2.4.0')
     implementation('io.coil-kt:coil-compose:2.4.0')
     implementation "com.github.skgmn:composetooltip:0.2.0"
 
-    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'com.google.android.material:material:1.11.0'
     implementation 'com.google.code.gson:gson:2.10.1'
 
-    implementation 'dev.rikka.shizuku:api:13.1.4'
-    implementation 'dev.rikka.shizuku:provider:13.1.4'
+    implementation 'dev.rikka.shizuku:api:13.1.5'
+    implementation 'dev.rikka.shizuku:provider:13.1.5'
     implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:4.3'
     implementation 'com.github.zacharee:PatreonSupportersRetrieval:8436bbdbdc'
-    implementation 'com.joaomgcd:taskerpluginlibrary:0.4.7'
+    implementation 'com.joaomgcd:taskerpluginlibrary:0.4.10'
 
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0-RC2'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
     implementation 'com.github.Chainfire:libsuperuser:1.1.1'
     implementation 'com.github.2hamed:ProgressCircula:0.2.1'
 
-    implementation "com.bugsnag:bugsnag-android:5.31.1"
+    implementation "com.bugsnag:bugsnag-android:6.1.0"
     implementation "io.github.iamr0s:Dhizuku-API:2.4"
 
-    debugImplementation 'androidx.compose.ui:ui-tooling:1.5.0-beta03'
+    debugImplementation 'androidx.compose.ui:ui-tooling:1.6.0'
 }
