@@ -1,7 +1,11 @@
 package tk.zwander.rootactivitylauncher
 
 import android.annotation.SuppressLint
-import android.content.*
+import android.content.BroadcastReceiver
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
@@ -22,18 +26,35 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import kotlinx.atomicfu.atomic
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import rikka.shizuku.Shizuku
-import tk.zwander.rootactivitylauncher.data.component.*
+import tk.zwander.rootactivitylauncher.data.component.ComponentType
 import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.data.model.BaseInfoModel
 import tk.zwander.rootactivitylauncher.data.model.FavoriteModel
 import tk.zwander.rootactivitylauncher.data.model.MainModel
 import tk.zwander.rootactivitylauncher.data.prefs
-import tk.zwander.rootactivitylauncher.util.*
+import tk.zwander.rootactivitylauncher.util.LocalFavoriteModel
+import tk.zwander.rootactivitylauncher.util.LocalMainModel
+import tk.zwander.rootactivitylauncher.util.PermissionResultListener
+import tk.zwander.rootactivitylauncher.util.distinctByPackageName
+import tk.zwander.rootactivitylauncher.util.forEachParallel
+import tk.zwander.rootactivitylauncher.util.getInstalledPackagesCompat
+import tk.zwander.rootactivitylauncher.util.getPackageInfoCompat
+import tk.zwander.rootactivitylauncher.util.hasShizukuPermission
+import tk.zwander.rootactivitylauncher.util.requestShizukuPermission
+import tk.zwander.rootactivitylauncher.util.updateProgress
 import tk.zwander.rootactivitylauncher.views.MainView
 import tk.zwander.rootactivitylauncher.views.theme.Theme
-import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
 @SuppressLint("RestrictedApi")
@@ -331,7 +352,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
 
         return@coroutineScope AppModel(
             pInfo = app,
-            label = appLabel,
+            label = appLabel.ifEmpty { app.packageName },
             context = this@MainActivity,
             scope = modelScope,
             mainModel = model,
