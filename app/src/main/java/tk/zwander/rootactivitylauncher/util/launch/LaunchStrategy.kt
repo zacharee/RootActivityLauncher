@@ -65,7 +65,7 @@ interface ShizukuLaunchStrategy : BinderWrapperLaunchStrategy {
     override suspend fun Context.getUidAndPackage(): Pair<Int, String?> {
         val uid = Shizuku.getUid()
 
-        return UserHandle.getUserId(uid) to packageManager.getPackagesForUid(uid).firstOrNull()
+        return UserHandle.getUserId(uid) to packageManager.getPackagesForUid(uid)?.firstOrNull()
     }
 }
 
