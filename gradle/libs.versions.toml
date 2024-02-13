@@ -1,0 +1,66 @@
+[versions]
+androidGradlePlugin = "8.4.0-alpha09"
+accompanistThemeadapterMaterial3 = "0.34.0"
+activityCompose = "1.8.2"
+shizuku = "13.1.5"
+appcompat = "1.6.1"
+atomicfu = "0.23.2"
+bugsnagAndroid = "6.2.0"
+bugsnagAndroidGradle = "8.1.0"
+coil = "2.5.0"
+composeThemeAdapter3 = "1.1.1"
+composetooltip = "0.2.0"
+coreKtx = "1.12.0"
+datastorePreferences = "1.1.0-beta01"
+dhizukuApi = "2.4"
+gson = "2.10.1"
+hiddenapibypass = "4.3"
+kotlin = "1.9.22"
+kotlinxCoroutines = "1.8.0-RC2"
+libsuperuser = "1.1.1"
+material3 = "1.2.0"
+materialVersion = "1.11.0"
+patreonsupportersretrieval = "8436bbdbdc"
+preferenceKtx = "1.2.1"
+progresscircula = "0.2.1"
+compose = "1.6.1"
+taskerpluginlibrary = "0.4.10"
+
+[libraries]
+accompanist-themeadapter-material3 = { module = "com.google.accompanist:accompanist-themeadapter-material3", version.ref = "accompanistThemeadapterMaterial3" }
+activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "shizuku" }
+appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "atomicfu" }
+bugsnag-android = { module = "com.bugsnag:bugsnag-android", version.ref = "bugsnagAndroid" }
+coil = { module = "io.coil-kt:coil", version.ref = "coil" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+compose-theme-adapter3 = { module = "com.google.android.material:compose-theme-adapter-3", version.ref = "composeThemeAdapter3" }
+composetooltip = { module = "com.github.skgmn:composetooltip", version.ref = "composetooltip" }
+core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
+datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
+dhizuku-api = { module = "io.github.iamr0s:Dhizuku-API", version.ref = "dhizukuApi" }
+google-material = { module = "com.google.android.material:material", version.ref = "materialVersion" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+hiddenapibypass = { module = "org.lsposed.hiddenapibypass:hiddenapibypass", version.ref = "hiddenapibypass" }
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+libsuperuser = { module = "com.github.Chainfire:libsuperuser", version.ref = "libsuperuser" }
+compose-material = { module = "androidx.compose.material:material", version.ref = "compose" }
+compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
+patreonSupportersRetrieval = { module = "com.github.zacharee:PatreonSupportersRetrieval", version.ref = "patreonsupportersretrieval" }
+preference-ktx = { module = "androidx.preference:preference-ktx", version.ref = "preferenceKtx" }
+progressCircula = { module = "com.github.2hamed:ProgressCircula", version.ref = "progresscircula" }
+shizuku-provider = { module = "dev.rikka.shizuku:provider", version.ref = "shizuku" }
+compose-runtime = { module = "androidx.compose.runtime:runtime", version.ref = "compose" }
+taskerpluginlibrary = { module = "com.joaomgcd:taskerpluginlibrary", version.ref = "taskerpluginlibrary" }
+compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
+kotlin-atomicfu = { id = "org.jetbrains.kotlin.plugin.atomicfu", version.ref = "kotlin" }
+bugsnag-android = { id = "com.bugsnag.android.gradle", version.ref = "bugsnagAndroidGradle" }

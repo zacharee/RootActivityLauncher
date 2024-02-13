@@ -18,8 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
@@ -104,7 +103,6 @@ fun ExtrasDialog(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExtrasDialogContents(
     model: ExtrasDialogModel,
@@ -240,7 +238,6 @@ fun ExtrasDialogContents(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CategoryField(
     value: String,
@@ -256,7 +253,6 @@ private fun CategoryField(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ExtraItem(
     extraInfo: ExtraInfo,
@@ -293,7 +289,7 @@ private fun ExtraItem(
                     ),
                 )
 
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .width(1.dp)
                         .fillMaxHeight(),
