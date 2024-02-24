@@ -14,7 +14,7 @@ android {
         namespace = "tk.zwander.rootactivitylauncher"
         minSdk = 21
         targetSdk = 34
-        versionCode = 30
+        versionCode = 31
         versionName = versionCode.toString()
 
         extensions.getByType(BasePluginExtension::class.java).archivesName.set("RootActivityLauncher_${versionCode}")
