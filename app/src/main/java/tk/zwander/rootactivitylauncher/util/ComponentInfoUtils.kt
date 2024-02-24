@@ -25,6 +25,12 @@ fun processServiceInfo(info: ServiceInfo): List<CharSequence> {
     val pWriter = PrintWriter(sWriter)
     val printer = PrintWriterPrinter(pWriter)
 
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        try {
+            printer.println("type=${ServiceInfo.foregroundServiceTypeToLabel(info.foregroundServiceType)}")
+        } catch (_: Exception) {}
+    }
+
     info.dump(printer, "")
 
     sWriter.close()
