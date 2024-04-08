@@ -28,7 +28,7 @@ fun processServiceInfo(info: ServiceInfo): List<CharSequence> {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         try {
             printer.println("type=${ServiceInfo.foregroundServiceTypeToLabel(info.foregroundServiceType)}")
-        } catch (_: Exception) {}
+        } catch (_: Throwable) {}
     }
 
     info.dump(printer, "")
