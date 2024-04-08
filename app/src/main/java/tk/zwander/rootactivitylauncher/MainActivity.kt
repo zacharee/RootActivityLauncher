@@ -10,7 +10,6 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -58,7 +57,8 @@ import tk.zwander.rootactivitylauncher.views.theme.Theme
 import java.util.concurrent.ConcurrentLinkedQueue
 
 @SuppressLint("RestrictedApi")
-open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), PermissionResultListener {
+open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
+    PermissionResultListener {
     protected open val isForTasker = false
     protected open var selectedItem: Pair<ComponentType, ComponentName>? = null
 
@@ -107,7 +107,8 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                             if (pkgInfo != null) {
                                 val loaded = loadApp(pkgInfo, packageManager)
 
-                                model.apps.value = (model.apps.value + loaded).distinctByPackageName()
+                                model.apps.value =
+                                    (model.apps.value + loaded).distinctByPackageName()
                             }
                         }
                     }
@@ -125,8 +126,9 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                     Intent.ACTION_PACKAGE_CHANGED, Intent.ACTION_PACKAGE_REPLACED -> {
                         if (pkg != null) {
                             val old = ArrayList(model.apps.value)
-                            val oldIndex = old.indexOfFirst { it is AppModel && it.info.packageName == pkg }
-                                .takeIf { it != -1 } ?: return@launch
+                            val oldIndex =
+                                old.indexOfFirst { it is AppModel && it.info.packageName == pkg }
+                                    .takeIf { it != -1 } ?: return@launch
                             val pkgInfo = getPackageInfo(pkg)
 
                             if (pkgInfo != null) {
@@ -224,6 +226,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
         cancel()
     }
 
+    @SuppressLint("InlinedApi")
     private fun loadDataAsync(silent: Boolean = false): Job {
         return launch {
             if (!silent) {
@@ -247,14 +250,11 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                                 PackageManager.GET_RECEIVERS or
                                 PackageManager.GET_PERMISSIONS or
                                 PackageManager.GET_CONFIGURATIONS or
-                                PackageManager.MATCH_DISABLED_COMPONENTS
+                                PackageManager.MATCH_DISABLED_COMPONENTS,
                     )
                 } else {
-                    @Suppress("DEPRECATION")
-                    val packages =
-                        packageManager.getInstalledPackagesCompat(PackageManager.GET_DISABLED_COMPONENTS)
-                    packages.map { info ->
-                        try {
+                    packageManager.getInstalledPackagesCompat(PackageManager.MATCH_DISABLED_COMPONENTS)
+                        .map { info ->
                             //Try to get all the components for this package at once.
                             packageManager.getPackageInfoCompat(
                                 info.packageName,
@@ -262,50 +262,35 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                                         PackageManager.GET_SERVICES or
                                         PackageManager.GET_RECEIVERS or
                                         PackageManager.GET_PERMISSIONS or
-                                        PackageManager.GET_CONFIGURATIONS
-                            )
-                        } catch (e: Exception) {
-                            //The resulting PackageInfo was too large. Retrieve each set
-                            //separately and combine them.
-                            Log.e(
-                                "RootActivityLauncher",
-                                "Unable to get full info, splitting ${info.packageName}",
-                                e
-                            )
-                            val awaits = listOf(
-                                PackageManager.GET_ACTIVITIES,
-                                PackageManager.GET_SERVICES,
-                                PackageManager.GET_RECEIVERS,
-                                PackageManager.GET_PERMISSIONS,
-                                PackageManager.GET_CONFIGURATIONS
-                            ).map { flag ->
-                                async {
-                                    try {
-                                        packageManager.getPackageInfoCompat(info.packageName, flag)
-                                    } catch (e: Exception) {
-                                        Log.e(
-                                            "RootActivityLauncher",
-                                            "Unable to get split info for ${info.packageName} for flag $flag",
-                                            e
+                                        PackageManager.GET_CONFIGURATIONS,
+                            ) ?: run {
+                                listOf(
+                                    PackageManager.GET_ACTIVITIES,
+                                    PackageManager.GET_SERVICES,
+                                    PackageManager.GET_RECEIVERS,
+                                    PackageManager.GET_PERMISSIONS,
+                                    PackageManager.GET_CONFIGURATIONS,
+                                ).map { flag ->
+                                    async {
+                                        val element = packageManager.getPackageInfoCompat(
+                                            info.packageName,
+                                            flag,
                                         )
-                                        null
+                                        element?.activities?.let { info.activities = it }
+                                        element?.services?.let { info.services = it }
+                                        element?.receivers?.let { info.receivers = it }
+                                        element?.permissions?.let { info.permissions = it }
+                                        element?.configPreferences?.let {
+                                            info.configPreferences = it
+                                        }
+                                        element?.reqFeatures?.let { info.reqFeatures = it }
+                                        element?.featureGroups?.let { info.featureGroups = it }
                                     }
-                                }
-                            }.awaitAll()
+                                }.awaitAll()
 
-                            info.apply {
-                                awaits.forEach { element ->
-                                    element?.activities?.let { this.activities = it }
-                                    element?.services?.let { this.services = it }
-                                    element?.receivers?.let { this.receivers = it }
-                                    element?.permissions?.let { this.permissions = it }
-                                    element?.configPreferences?.let { this.configPreferences = it }
-                                    element?.reqFeatures?.let { this.reqFeatures = it }
-                                    element?.featureGroups?.let { this.featureGroups = it }
-                                }
+                                info
                             }
                         }
-                    }
                 }
             }
 
@@ -336,22 +321,17 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
         }
     }
 
+    @SuppressLint("InlinedApi")
     private fun getPackageInfo(packageName: String): PackageInfo? {
-        @Suppress("DEPRECATION")
-        return try {
-            packageManager.getPackageInfo(
-                packageName,
-                PackageManager.GET_ACTIVITIES or
-                        PackageManager.GET_SERVICES or
-                        PackageManager.GET_RECEIVERS or
-                        PackageManager.GET_PERMISSIONS or
-                        PackageManager.GET_CONFIGURATIONS or
-                        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
-                        else PackageManager.GET_DISABLED_COMPONENTS,
-            )
-        } catch (_: PackageManager.NameNotFoundException) {
-            null
-        }
+        return packageManager.getPackageInfoCompat(
+            packageName,
+            PackageManager.GET_ACTIVITIES or
+                    PackageManager.GET_SERVICES or
+                    PackageManager.GET_RECEIVERS or
+                    PackageManager.GET_PERMISSIONS or
+                    PackageManager.GET_CONFIGURATIONS or
+                    PackageManager.MATCH_DISABLED_COMPONENTS,
+        )
     }
 
     private suspend fun loadApp(app: PackageInfo, pm: PackageManager): AppModel = coroutineScope {

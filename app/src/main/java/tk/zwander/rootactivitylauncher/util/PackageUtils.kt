@@ -20,17 +20,19 @@ fun PackageManager.getInstalledPackagesCompat(flags: Int = 0): List<PackageInfo>
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         getInstalledPackages(PackageManager.PackageInfoFlags.of(flags.toLong()))
     } else {
-        @Suppress("DEPRECATION")
         getInstalledPackages(flags)
     } ?: listOf()
 }
 
-fun PackageManager.getPackageInfoCompat(pkg: String, flags: Int = 0): PackageInfo {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        getPackageInfo(pkg, PackageManager.PackageInfoFlags.of(flags.toLong()))
-    } else {
-        @Suppress("DEPRECATION")
-        getPackageInfo(pkg, flags)
+fun PackageManager.getPackageInfoCompat(pkg: String, flags: Int = 0): PackageInfo? {
+    return try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            getPackageInfo(pkg, PackageManager.PackageInfoFlags.of(flags.toLong()))
+        } else {
+            getPackageInfo(pkg, flags)
+        }
+    } catch (_: PackageManager.NameNotFoundException) {
+        null
     }
 }
 
@@ -114,7 +116,6 @@ fun PackageManager.getAllIntentFiltersCompat(packageName: String): List<IntentFi
     }
 }
 
-@Suppress("DEPRECATION")
 fun PackageManager.getActivityInfoCompat(componentName: ComponentName, flags: Int = 0): ActivityInfo {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         getActivityInfo(componentName, PackageManager.ComponentInfoFlags.of(flags.toLong()))
@@ -123,7 +124,6 @@ fun PackageManager.getActivityInfoCompat(componentName: ComponentName, flags: In
     }
 }
 
-@Suppress("DEPRECATION")
 fun PackageManager.getServiceInfoCompat(componentName: ComponentName, flags: Int = 0): ServiceInfo {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         getServiceInfo(componentName, PackageManager.ComponentInfoFlags.of(flags.toLong()))
@@ -132,7 +132,6 @@ fun PackageManager.getServiceInfoCompat(componentName: ComponentName, flags: Int
     }
 }
 
-@Suppress("DEPRECATION")
 fun PackageManager.getReceiverInfoCompat(componentName: ComponentName, flags: Int = 0): ActivityInfo {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         getReceiverInfo(componentName, PackageManager.ComponentInfoFlags.of(flags.toLong()))
