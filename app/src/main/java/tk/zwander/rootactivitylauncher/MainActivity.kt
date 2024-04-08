@@ -102,12 +102,12 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                 when (intent?.action) {
                     Intent.ACTION_PACKAGE_ADDED -> {
                         if (pkg != null) {
-                            try {
-                                val loaded = loadApp(getPackageInfo(pkg), packageManager)
+                            val pkgInfo = getPackageInfo(pkg)
+
+                            if (pkgInfo != null) {
+                                val loaded = loadApp(pkgInfo, packageManager)
 
                                 model.apps.value = (model.apps.value + loaded).distinctByPackageName()
-                            } catch (e: PackageManager.NameNotFoundException) {
-                                Log.e("RootActivityLauncher", "Error parsing package info for newly-added app.", e)
                             }
                         }
                     }
@@ -127,10 +127,13 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
                             val old = ArrayList(model.apps.value)
                             val oldIndex = old.indexOfFirst { it is AppModel && it.info.packageName == pkg }
                                 .takeIf { it != -1 } ?: return@launch
+                            val pkgInfo = getPackageInfo(pkg)
 
-                            old[oldIndex] = loadApp(getPackageInfo(pkg), packageManager)
+                            if (pkgInfo != null) {
+                                old[oldIndex] = loadApp(pkgInfo, packageManager)
 
-                            model.apps.value = old.distinctByPackageName()
+                                model.apps.value = old.distinctByPackageName()
+                            }
                         }
                     }
                 }
@@ -333,18 +336,22 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(), Pe
         }
     }
 
-    private fun getPackageInfo(packageName: String): PackageInfo {
+    private fun getPackageInfo(packageName: String): PackageInfo? {
         @Suppress("DEPRECATION")
-        return packageManager.getPackageInfo(
-            packageName,
-            PackageManager.GET_ACTIVITIES or
-                    PackageManager.GET_SERVICES or
-                    PackageManager.GET_RECEIVERS or
-                    PackageManager.GET_PERMISSIONS or
-                    PackageManager.GET_CONFIGURATIONS or
-                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
-                    else PackageManager.GET_DISABLED_COMPONENTS
-        )
+        return try {
+            packageManager.getPackageInfo(
+                packageName,
+                PackageManager.GET_ACTIVITIES or
+                        PackageManager.GET_SERVICES or
+                        PackageManager.GET_RECEIVERS or
+                        PackageManager.GET_PERMISSIONS or
+                        PackageManager.GET_CONFIGURATIONS or
+                        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) PackageManager.MATCH_DISABLED_COMPONENTS
+                        else PackageManager.GET_DISABLED_COMPONENTS,
+            )
+        } catch (_: PackageManager.NameNotFoundException) {
+            null
+        }
     }
 
     private suspend fun loadApp(app: PackageInfo, pm: PackageManager): AppModel = coroutineScope {
