@@ -1,6 +1,5 @@
 package tk.zwander.rootactivitylauncher.views.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -25,7 +24,6 @@ import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.data.model.BaseInfoModel
 import tk.zwander.rootactivitylauncher.util.LocalFavoriteModel
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AppList(
     appListState: LazyStaggeredGridState,
@@ -57,7 +55,7 @@ fun AppList(
         },
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalItemSpacing = 8.dp,
-        state = appListState
+        state = appListState,
     ) {
         items(items = actualFilteredApps, key = { if (it is AppModel) it.info.packageName else "favorite_item" }) { info ->
             AppItem(
@@ -68,7 +66,7 @@ fun AppList(
                 },
                 extractCallback = extractCallback,
                 modifier = Modifier.fillMaxWidth()
-                    .animateItemPlacement()
+                    .animateItem(),
             )
         }
     }

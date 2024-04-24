@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -24,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -337,7 +337,7 @@ private fun ComponentButton(
                         MutableInteractionSource()
                     },
                     indication = if (enabled) {
-                        rememberRipple(bounded = false)
+                        ripple(bounded = false)
                     } else {
                         null
                     },
@@ -367,8 +367,8 @@ private fun ComponentButton(
                     tooltipStyle = rememberTooltipStyle(
                         color = MaterialTheme.colorScheme.surface,
                         tipHeight = 0.dp,
-                        tipWidth = 0.dp
-                    )
+                        tipWidth = 0.dp,
+                    ),
                 ) {
                     Text(text = stringResource(id = button.getLabelRes()))
                 }
