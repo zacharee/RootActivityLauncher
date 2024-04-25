@@ -51,7 +51,7 @@ fun ExtrasTypeDialog(
                 TextButton(onClick = { onDismissRequest() }) {
                     Text(text = stringResource(id = android.R.string.cancel))
                 }
-            }
+            },
         )
     }
 }
@@ -64,7 +64,7 @@ fun ExtrasTypeDialogContents(
 ) {
     val context = LocalContext.current
     val sortedTypes = remember {
-        ExtraType.values().sortedBy {
+        ExtraType.entries.sortedBy {
             context.resources.getString(it.nameRes)
         }
     }
@@ -85,13 +85,13 @@ fun ExtrasTypeDialogContents(
                 selected = initial == type,
                 onClick = {
                     onTypeSelected(type)
-                }
+                },
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 56.dp),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(text = stringResource(id = type.nameRes))
                 }

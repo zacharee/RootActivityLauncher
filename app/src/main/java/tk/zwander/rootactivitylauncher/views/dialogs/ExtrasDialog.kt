@@ -1,6 +1,7 @@
 package tk.zwander.rootactivitylauncher.views.dialogs
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +18,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
@@ -262,9 +265,18 @@ private fun ExtraItem(
         mutableStateOf(false)
     }
 
+    val outlineColor = MaterialTheme.colorScheme.outline
+
     OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
         shape = OutlinedTextFieldDefaults.shape,
+        colors = CardDefaults.outlinedCardColors(
+            containerColor = Color.Transparent,
+            contentColor = LocalContentColor.current,
+        ),
+        border = remember {
+            BorderStroke(1.dp, outlineColor)
+        },
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -293,7 +305,7 @@ private fun ExtraItem(
                     modifier = Modifier
                         .width(1.dp)
                         .fillMaxHeight(),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = outlineColor,
                 )
 
                 Box(
