@@ -37,30 +37,42 @@ private fun Context.createLaunchArgs(extras: List<ExtraInfo>, componentKey: Stri
 private suspend inline fun <reified T : LaunchStrategy> Context.performLaunch(args: LaunchArgs): List<Pair<String, Throwable>> {
     val errors = mutableListOf<Pair<String, Throwable>>()
 
-    T::class.sealedSubclasses.forEach {
-        with (it.objectInstance!!) {
-            if (canRun(args)) {
-                val latestResult = tryLaunch(args)
+    T::class.sealedSubclasses
+        .mapNotNull { it.objectInstance?.let { obj -> obj to it } }
+        .sortedByDescending { (obj, _) -> obj.priority }
+        .forEach { (obj, clazz) ->
+            with (obj) {
+                if (canRun(args)) {
+                    val latestResult = tryLaunch(args)
 
-                Log.e("RootActivityLauncher", "$it $latestResult")
+                    Log.e("RootActivityLauncher", "$clazz $latestResult")
 
-                if (latestResult.isEmpty()) {
-                    return listOf()
-                } else {
-                    errors.addAll(latestResult.map { r -> it.simpleName!! to r })
+                    if (latestResult.isEmpty()) {
+                        return listOf()
+                    } else {
+                        errors.addAll(latestResult.map { r -> clazz.simpleName!! to r })
+                    }
                 }
             }
         }
-    }
 
     return errors.ifEmpty {
         listOf(
-            "Unknown" to Exception(resources.getString(R.string.unknown_launch_error, args.intent.component?.flattenToString()))
+            "Unknown" to Exception(
+                resources.getString(
+                    R.string.unknown_launch_error,
+                    args.intent.component?.flattenToString()
+                )
+            )
         )
     }
 }
 
-suspend fun Context.launch(type: ComponentType, extras: List<ExtraInfo>, componentKey: String): List<Pair<String, Throwable>> {
+suspend fun Context.launch(
+    type: ComponentType,
+    extras: List<ExtraInfo>,
+    componentKey: String
+): List<Pair<String, Throwable>> {
     val args = createLaunchArgs(extras, componentKey)
 
     return when (type) {

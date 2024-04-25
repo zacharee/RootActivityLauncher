@@ -2,22 +2,34 @@
 
 package tk.zwander.rootactivitylauncher.util.launch
 
+import android.app.SearchManager
 import android.app.admin.DevicePolicyManager
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.IPackageManager
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.IBinder
 import android.os.Process
+import android.os.UserHandle
+import android.provider.Settings
 import android.util.Log
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
+import kotlinx.coroutines.delay
+import rikka.shizuku.Shizuku
 import rikka.shizuku.SystemServiceHelper
+import tk.zwander.rootactivitylauncher.util.hasShizukuPermission
 import tk.zwander.rootactivitylauncher.util.isTouchWiz
 import tk.zwander.rootactivitylauncher.util.receiver.AdminReceiver
+import tk.zwander.rootactivitylauncher.util.requestShizukuPermission
 
 sealed interface ActivityLaunchStrategy : LaunchStrategy {
     data object Normal : ActivityLaunchStrategy {
+        override val priority: Int = 100
+
         override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
             return try {
                 val i = Intent(args.intent)
@@ -33,7 +45,9 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
             }
         }
     }
-    object Iterative : ActivityLaunchStrategy, IterativeLaunchStrategy {
+    data object Iterative : ActivityLaunchStrategy, IterativeLaunchStrategy {
+        override val priority: Int = 10
+
         override fun extraFlags(): Int {
             return Intent.FLAG_ACTIVITY_NEW_TASK
         }
@@ -43,6 +57,8 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
         }
     }
     data object SamsungExploit : ActivityLaunchStrategy {
+        override val priority: Int = 1
+
         override suspend fun Context.canRun(args: LaunchArgs): Boolean {
             return Build.VERSION.SDK_INT > Build.VERSION_CODES.P && isTouchWiz
         }
@@ -60,8 +76,42 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
             }
         }
     }
-    object ShizukuJava : ActivityLaunchStrategy, BinderActivityLaunchStrategy, ShizukuLaunchStrategy
-    object DhizukuJava : ActivityLaunchStrategy, BinderActivityLaunchStrategy, DhizukuLaunchStrategy
+    data object ShizukuJava : ActivityLaunchStrategy, BinderActivityLaunchStrategy, ShizukuLaunchStrategy
+    data object DhizukuJava : ActivityLaunchStrategy, BinderActivityLaunchStrategy, DhizukuLaunchStrategy
+    data object AssistantJava : ActivityLaunchStrategy, ShizukuLaunchStrategy {
+        override val priority: Int = 0
+
+        private fun Context.hasWss(): Boolean = checkCallingOrSelfPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED
+
+        override suspend fun Context.canRun(args: LaunchArgs): Boolean {
+            return hasWss() || (Shizuku.pingBinder() && (hasShizukuPermission || requestShizukuPermission()))
+        }
+
+        override suspend fun Context.callLaunch(intent: Intent) {
+            if (!hasWss()) {
+                val pm = IPackageManager.Stub.asInterface(wrapBinder(SystemServiceHelper.getSystemService("package")))
+
+                pm.grantRuntimePermission(packageName, android.Manifest.permission.WRITE_SECURE_SETTINGS, UserHandle.USER_SYSTEM)
+            }
+
+            val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
+
+            val currentAssistant = Settings.Secure.getString(contentResolver, Settings.Secure.ASSISTANT)
+            val replacedAssistant = intent.component.flattenToString()
+
+            try {
+                Settings.Secure.putString(contentResolver, Settings.Secure.ASSISTANT, replacedAssistant)
+                delay(500)
+                searchManager.launchAssist(intent.extras ?: bundleOf())
+            } finally {
+                try {
+                    Settings.Secure.putString(contentResolver, Settings.Secure.ASSISTANT, currentAssistant)
+                } catch (e: Throwable) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
     data object KNOX : ActivityLaunchStrategy {
         override suspend fun Context.canRun(args: LaunchArgs): Boolean {
             val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
@@ -91,7 +141,9 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
             }
         }
     }
-    object Root : ActivityLaunchStrategy, RootLaunchStrategy {
+    data object Root : ActivityLaunchStrategy, RootLaunchStrategy {
+        override val priority: Int = 1
+
         override fun makeCommand(args: LaunchArgs): String {
             return "am start -n ${args.intent.component.flattenToString()}"
         }
@@ -100,6 +152,8 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
 
 sealed interface ServiceLaunchStrategy : LaunchStrategy {
     data object Normal : ServiceLaunchStrategy {
+        override val priority: Int = 100
+
         override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
             return try {
                 ContextCompat.startForegroundService(this, args.intent)
@@ -110,14 +164,18 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
             }
         }
     }
-    object Iterative : ServiceLaunchStrategy, IterativeLaunchStrategy {
+    data object Iterative : ServiceLaunchStrategy, IterativeLaunchStrategy {
+        override val priority: Int = 20
+
         override suspend fun Context.performLaunch(args: LaunchArgs, intent: Intent) {
             startService(intent)
         }
     }
-    object ShizukuJava : ServiceLaunchStrategy, BinderServiceLaunchStrategy, ShizukuLaunchStrategy
-    object DhizukuJava : ServiceLaunchStrategy, BinderServiceLaunchStrategy, DhizukuLaunchStrategy
-    object Root : ServiceLaunchStrategy, RootLaunchStrategy {
+    data object ShizukuJava : ServiceLaunchStrategy, BinderServiceLaunchStrategy, ShizukuLaunchStrategy
+    data object DhizukuJava : ServiceLaunchStrategy, BinderServiceLaunchStrategy, DhizukuLaunchStrategy
+    data object Root : ServiceLaunchStrategy, RootLaunchStrategy {
+        override val priority: Int = 1
+
         override fun makeCommand(args: LaunchArgs): String {
             return "am startservice ${args.intent.component.flattenToString()}"
         }
@@ -126,6 +184,8 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
 
 sealed interface ReceiverLaunchStrategy : LaunchStrategy {
     data object Normal : ReceiverLaunchStrategy {
+        override val priority: Int = 100
+
         override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
             return try {
                 sendBroadcast(args.intent)
@@ -136,9 +196,11 @@ sealed interface ReceiverLaunchStrategy : LaunchStrategy {
             }
         }
     }
-    object ShizukuJava : ReceiverLaunchStrategy, BinderReceiverLaunchStrategy, ShizukuLaunchStrategy
-    object DhizukuJava : ReceiverLaunchStrategy, BinderReceiverLaunchStrategy, DhizukuLaunchStrategy
-    object Root : ReceiverLaunchStrategy, RootLaunchStrategy {
+    data object ShizukuJava : ReceiverLaunchStrategy, BinderReceiverLaunchStrategy, ShizukuLaunchStrategy
+    data object DhizukuJava : ReceiverLaunchStrategy, BinderReceiverLaunchStrategy, DhizukuLaunchStrategy
+    data object Root : ReceiverLaunchStrategy, RootLaunchStrategy {
+        override val priority: Int = 1
+
         override fun makeCommand(args: LaunchArgs): String {
             return "am broadcast -n ${args.intent.component.flattenToString()}"
         }

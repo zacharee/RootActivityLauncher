@@ -65,8 +65,7 @@ fun AppList(
                     onItemSelected(it)
                 },
                 extractCallback = extractCallback,
-                modifier = Modifier.fillMaxWidth()
-                    .animateItem(),
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }

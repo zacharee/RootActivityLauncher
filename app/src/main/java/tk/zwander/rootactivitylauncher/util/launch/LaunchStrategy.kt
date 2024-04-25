@@ -22,6 +22,9 @@ import tk.zwander.rootactivitylauncher.util.hasShizukuPermission
 import tk.zwander.rootactivitylauncher.util.requestShizukuPermission
 
 interface LaunchStrategy {
+    val priority: Int
+        get() = 0
+
     suspend fun Context.canRun(args: LaunchArgs): Boolean = true
     suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable>
 }
@@ -89,6 +92,9 @@ interface DhizukuLaunchStrategy : BinderWrapperLaunchStrategy {
 }
 
 interface BinderActivityLaunchStrategy : BinderWrapperLaunchStrategy {
+    override val priority: Int
+        get() = 2
+
     override suspend fun Context.callLaunch(intent: Intent) {
         val iam = IActivityManager.Stub.asInterface(wrapBinder(
             SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)
@@ -118,6 +124,9 @@ interface BinderActivityLaunchStrategy : BinderWrapperLaunchStrategy {
 }
 
 interface BinderServiceLaunchStrategy : BinderWrapperLaunchStrategy {
+    override val priority: Int
+        get() = 2
+
     override suspend fun Context.callLaunch(intent: Intent) {
         val iam = IActivityManager.Stub.asInterface(wrapBinder(
             SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)))
@@ -173,6 +182,9 @@ interface BinderServiceLaunchStrategy : BinderWrapperLaunchStrategy {
 }
 
 interface BinderReceiverLaunchStrategy : BinderWrapperLaunchStrategy {
+    override val priority: Int
+        get() = 2
+
     override suspend fun Context.callLaunch(intent: Intent) {
         val iam = IActivityManager.Stub.asInterface(wrapBinder(
             SystemServiceHelper.getSystemService(Context.ACTIVITY_SERVICE)))
