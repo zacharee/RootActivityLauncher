@@ -101,7 +101,6 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
 
             try {
                 Settings.Secure.putString(contentResolver, Settings.Secure.ASSISTANT, replacedAssistant)
-                delay(500)
                 searchManager.launchAssist(intent.extras ?: bundleOf())
                 delay(500)
             } finally {
