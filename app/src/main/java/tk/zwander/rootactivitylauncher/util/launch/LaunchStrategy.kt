@@ -9,14 +9,13 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
-import android.os.IBinder
-import android.os.UserHandle
 import android.util.Log
 import com.rosan.dhizuku.api.Dhizuku
 import eu.chainfire.libsuperuser.Shell
 import rikka.shizuku.Shizuku
-import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
+import tk.zwander.rootactivitylauncher.util.BinderWrapper
+import tk.zwander.rootactivitylauncher.util.DhizukuBinderWrapper
 import tk.zwander.rootactivitylauncher.util.DhizukuUtils
 import tk.zwander.rootactivitylauncher.util.hasShizukuPermission
 import tk.zwander.rootactivitylauncher.util.requestShizukuPermission
@@ -39,9 +38,7 @@ interface CommandLaunchStrategy : LaunchStrategy {
     }
 }
 
-interface BinderWrapperLaunchStrategy : LaunchStrategy {
-    suspend fun wrapBinder(binder: IBinder): IBinder
-    suspend fun Context.getUidAndPackage(): Pair<Int, String?>
+interface BinderWrapperLaunchStrategy : LaunchStrategy, BinderWrapper {
     suspend fun Context.callLaunch(intent: Intent)
 
     override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
@@ -55,39 +52,18 @@ interface BinderWrapperLaunchStrategy : LaunchStrategy {
     }
 }
 
-interface ShizukuLaunchStrategy : BinderWrapperLaunchStrategy {
+interface ShizukuLaunchStrategy : BinderWrapperLaunchStrategy,
+    tk.zwander.rootactivitylauncher.util.ShizukuBinderWrapper {
     override suspend fun Context.canRun(args: LaunchArgs): Boolean {
         return Shizuku.pingBinder() &&
                 (hasShizukuPermission || requestShizukuPermission())
     }
-
-    override suspend fun wrapBinder(binder: IBinder): IBinder {
-        return ShizukuBinderWrapper(binder)
-    }
-
-    override suspend fun Context.getUidAndPackage(): Pair<Int, String?> {
-        val uid = Shizuku.getUid()
-
-        return UserHandle.getUserId(uid) to packageManager.getPackagesForUid(uid)?.firstOrNull()
-    }
 }
 
-interface DhizukuLaunchStrategy : BinderWrapperLaunchStrategy {
+interface DhizukuLaunchStrategy : BinderWrapperLaunchStrategy, DhizukuBinderWrapper {
     override suspend fun Context.canRun(args: LaunchArgs): Boolean {
         return Dhizuku.init(this) &&
                 (Dhizuku.isPermissionGranted() || DhizukuUtils.requestDhizukuPermission())
-    }
-
-    override suspend fun wrapBinder(binder: IBinder): IBinder {
-        return Dhizuku.binderWrapper(binder)
-    }
-
-    override suspend fun Context.getUidAndPackage(): Pair<Int, String?> {
-        val packageName = "com.rosan.dhizuku"
-
-        return UserHandle.getUserId(
-            packageManager.getApplicationInfo(packageName, 0).uid
-        ) to packageName
     }
 }
 

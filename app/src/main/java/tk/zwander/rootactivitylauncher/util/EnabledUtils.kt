@@ -19,7 +19,6 @@ import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
-import tk.zwander.rootactivitylauncher.util.launch.ReceiverLaunchStrategy.ShizukuJava.getUidAndPackage
 
 private fun tryWrappedBinderEnable(pkg: String, enabled: Boolean, wrap: (IBinder) -> IBinder): Throwable? {
     return try {
@@ -125,8 +124,8 @@ suspend fun Context.setComponentEnabled(info: BaseComponentInfo, enabled: Boolea
         Shell.SU.available()
     }
 
-    val hasShizuku = Shizuku.pingBinder() && hasShizukuPermission
-    val hasDhizuku = Dhizuku.init(this) && Dhizuku.isPermissionGranted()
+    val hasShizuku = { Shizuku.pingBinder() && hasShizukuPermission }
+    val hasDhizuku = { Dhizuku.init(this) && Dhizuku.isPermissionGranted() }
 
     if (!hasRoot && Shizuku.pingBinder() && !hasShizukuPermission) {
         requestShizukuPermission()
@@ -136,14 +135,13 @@ suspend fun Context.setComponentEnabled(info: BaseComponentInfo, enabled: Boolea
         DhizukuUtils.requestDhizukuPermission()
     }
 
-    val (_, pkg) = getUidAndPackage()
-
-    return if (hasRoot || hasShizuku || hasDhizuku) {
-        fun binderWrapper(wrap: (IBinder) -> IBinder): Throwable? {
+    return if (hasRoot || hasShizuku() || hasDhizuku()) {
+        suspend fun BinderWrapper.binderWrapper(): Throwable? {
             val binder = SystemServiceHelper.getSystemService("package")
-            val ipm = IPackageManager.Stub.asInterface(wrap(binder))
+            val ipm = IPackageManager.Stub.asInterface(wrapBinder(binder))
 
             return try {
+                val (_, pkg) = getUidAndPackage()
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     IPackageManager::class.java
                         .getDeclaredMethod(
@@ -198,19 +196,18 @@ suspend fun Context.setComponentEnabled(info: BaseComponentInfo, enabled: Boolea
                     e
                 }
             } else {
-                if (hasShizuku) {
-                    if (binderWrapper { ShizukuBinderWrapper(it) } == null) {
-                        return@withContext null
+                val launchStrategy = when {
+                    hasShizuku() -> object :
+                        tk.zwander.rootactivitylauncher.util.ShizukuBinderWrapper {}
+                    hasDhizuku() -> object : DhizukuBinderWrapper {}
+                    else -> {
+                        return@withContext Exception(
+                            resources.getString(R.string.unknown_state_change_error, info.info.safeComponentName.flattenToString())
+                        )
                     }
                 }
 
-                if (hasDhizuku) {
-                    return@withContext binderWrapper { Dhizuku.binderWrapper(it) }
-                }
-
-                Exception(
-                    resources.getString(R.string.unknown_state_change_error, info.info.safeComponentName.flattenToString())
-                )
+                launchStrategy.binderWrapper()
             }
         }
 
