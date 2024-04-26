@@ -4,7 +4,6 @@ package tk.zwander.rootactivitylauncher.util.launch
 
 import android.app.SearchManager
 import android.app.admin.DevicePolicyManager
-import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -36,10 +35,7 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(i)
                 listOf()
-            } catch (e: SecurityException) {
-                Log.e("RootActivityLauncher", "Failure to normally start Activity", e)
-                listOf(e)
-            } catch (e: ActivityNotFoundException) {
+            } catch (e: Throwable) {
                 Log.e("RootActivityLauncher", "Failure to normally start Activity", e)
                 listOf(e)
             }
@@ -158,7 +154,7 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
             return try {
                 ContextCompat.startForegroundService(this, args.intent)
                 listOf()
-            } catch (e: SecurityException) {
+            } catch (e: Throwable) {
                 Log.e("RootActivityLauncher", "Failure to normally start Service", e)
                 listOf(e)
             }
@@ -190,7 +186,7 @@ sealed interface ReceiverLaunchStrategy : LaunchStrategy {
             return try {
                 sendBroadcast(args.intent)
                 listOf()
-            } catch (e: SecurityException) {
+            } catch (e: Throwable) {
                 Log.e("RootActivityLauncher", "Failure to normally send broadcast.", e)
                 listOf(e)
             }
