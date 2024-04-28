@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,7 +40,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -58,9 +56,7 @@ import tk.zwander.rootactivitylauncher.views.components.AppList
 import tk.zwander.rootactivitylauncher.views.components.BottomBar
 import tk.zwander.rootactivitylauncher.views.dialogs.FilterDialog
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class,
-    ExperimentalComposeUiApi::class
-)
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MainView(
     isForTasker: Boolean,
@@ -244,12 +240,12 @@ fun MainView(
                 extractErrors.clear()
             },
             title = {
-                Text(text = stringResource(id = R.string.launch_error))
+                Text(text = stringResource(id = R.string.extraction_failed_title))
             },
             text = {
                 Column {
                     Text(
-                        text = stringResource(id = R.string.unable_to_launch_template)
+                        text = stringResource(id = R.string.extraction_failed_desc)
                     )
 
                     Spacer(modifier = Modifier.size(16.dp))

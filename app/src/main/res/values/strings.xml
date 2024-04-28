@@ -89,7 +89,9 @@
     <string name="usage_advanced_search">Advanced Search</string>
     <string name="search">Search</string>
 
-    <string name="extraction_failed">Extraction failed: %s</string>
+    <string name="extraction_failed_title">Extraction Failed</string>
+    <string name="extraction_failed_desc">Unable to extract APKs. Errors are listed below.</string>
+
     <string name="unable_to_launch_template">Unable to launch this component. You may need to use Shizuku or root. Attempted methods along with their respective errors are shown below.</string>
     <string name="unable_to_change_component_state">Unable to change the state of this component. You may need to use Shizuku or root. Error below:\n\n%s</string>
     <string name="launch_error">Launch Error</string>
