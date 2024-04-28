@@ -64,15 +64,15 @@ fun Context.extractApk(result: Uri, info: AppModel): List<Throwable> {
     if (baseFile == null) {
         errors.add(Exception("Unable to create file ${info.info.packageName}."))
     } else {
-        contentResolver.openOutputStream(baseFile.uri).use { writer ->
-            try {
+        try {
+            contentResolver.openOutputStream(baseFile.uri).use { writer ->
                 baseDir.inputStream().use { reader ->
                     reader.copyTo(writer!!)
                 }
-            } catch (e: Exception) {
-                Log.e("RootActivityLauncher", "Extraction failed", e)
-                errors.add(e)
             }
+        } catch (e: Exception) {
+            Log.e("RootActivityLauncher", "Extraction failed", e)
+            errors.add(e)
         }
     }
 
@@ -116,7 +116,10 @@ fun PackageManager.getAllIntentFiltersCompat(packageName: String): List<IntentFi
     }
 }
 
-fun PackageManager.getActivityInfoCompat(componentName: ComponentName, flags: Int = 0): ActivityInfo {
+fun PackageManager.getActivityInfoCompat(
+    componentName: ComponentName,
+    flags: Int = 0
+): ActivityInfo {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         getActivityInfo(componentName, PackageManager.ComponentInfoFlags.of(flags.toLong()))
     } else {
@@ -132,7 +135,10 @@ fun PackageManager.getServiceInfoCompat(componentName: ComponentName, flags: Int
     }
 }
 
-fun PackageManager.getReceiverInfoCompat(componentName: ComponentName, flags: Int = 0): ActivityInfo {
+fun PackageManager.getReceiverInfoCompat(
+    componentName: ComponentName,
+    flags: Int = 0
+): ActivityInfo {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         getReceiverInfo(componentName, PackageManager.ComponentInfoFlags.of(flags.toLong()))
     } else {
