@@ -1,13 +1,14 @@
 package tk.zwander.rootactivitylauncher.views.components
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
@@ -31,7 +32,6 @@ import kotlinx.coroutines.launch
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.model.BaseInfoModel
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BottomBar(
     isSearching: Boolean,
@@ -54,10 +54,12 @@ fun BottomBar(
         modifier = modifier,
         color = MaterialTheme.colorScheme.surface,
         shadowElevation = 3.0.dp,
-        tonalElevation = 3.0.dp
+        tonalElevation = 3.0.dp,
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
+                .navigationBarsPadding()
+                .imePadding(),
         ) {
             AnimatedVisibility(
                 visible = isSearching,

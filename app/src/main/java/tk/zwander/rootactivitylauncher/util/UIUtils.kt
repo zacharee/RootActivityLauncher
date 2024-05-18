@@ -2,6 +2,10 @@ package tk.zwander.rootactivitylauncher.util
 
 import android.content.pm.ApplicationInfo
 import android.net.Uri
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.ui.unit.LayoutDirection
 import com.android.internal.R
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 
@@ -36,3 +40,12 @@ fun ApplicationInfo.getCoilData(): Uri {
 
     return Uri.parse("android.resource://${id.first}/${id.second}")
 }
+
+operator fun PaddingValues.plus(other: PaddingValues): PaddingValues = PaddingValues(
+    start = this.calculateStartPadding(LayoutDirection.Ltr) +
+            other.calculateStartPadding(LayoutDirection.Ltr),
+    top = this.calculateTopPadding() + other.calculateTopPadding(),
+    end = this.calculateEndPadding(LayoutDirection.Ltr) +
+            other.calculateEndPadding(LayoutDirection.Ltr),
+    bottom = this.calculateBottomPadding() + other.calculateBottomPadding(),
+)

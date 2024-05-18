@@ -8,23 +8,17 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.BadParcelableException
 import android.os.Build
 import android.os.Bundle
-import android.view.View
-import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.unit.dp
-import androidx.core.view.WindowCompat
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -147,6 +141,12 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
     private var currentDataJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge(
+            navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
         super.onCreate(savedInstanceState)
 
         //Maybe if we ever get a KNOX license key...
@@ -169,31 +169,8 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
             }
         }
 
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
         setContent {
             Theme {
-                val darkTheme = isSystemInDarkTheme()
-                val variant = MaterialTheme.colorScheme.surfaceColorAtElevation(3.0.dp)
-
-                LaunchedEffect(variant) {
-                    window.navigationBarColor = variant.toArgb()
-                }
-
-                LaunchedEffect(darkTheme) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        window.decorView.apply {
-                            @Suppress("DEPRECATION")
-                            systemUiVisibility = if (darkTheme) {
-                                systemUiVisibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
-                            } else {
-                                systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-                            }
-                        }
-                    }
-                }
-
                 CompositionLocalProvider(
                     LocalMainModel provides model,
                     LocalFavoriteModel provides favoriteModel,

@@ -9,27 +9,22 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.captionBarPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -56,7 +51,7 @@ import tk.zwander.rootactivitylauncher.views.components.AppList
 import tk.zwander.rootactivitylauncher.views.components.BottomBar
 import tk.zwander.rootactivitylauncher.views.dialogs.FilterDialog
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainView(
     isForTasker: Boolean,
@@ -114,11 +109,18 @@ fun MainView(
     val isSearching by mainModel.isSearching.collectAsState()
     val useRegex by mainModel.useRegex.collectAsState()
     val includeComponents by mainModel.includeComponents.collectAsState()
+    var refreshing by remember {
+        mutableStateOf(false)
+    }
 
     LaunchedEffect(extractInfo) {
         if (extractInfo != null) {
             extractLauncher.launch(null)
         }
+    }
+
+    LaunchedEffect(refreshing) {
+        refreshing = false
     }
 
     LaunchedEffect(
@@ -141,75 +143,63 @@ fun MainView(
         mainModel.update()
     }
 
-    val refreshState = rememberPullRefreshState(
-        refreshing = false,
-        onRefresh = onRefresh
-    )
 
     Surface(
-        modifier = modifier
+        modifier = modifier,
     ) {
-        Box(
+        PullToRefreshBox(
             modifier = Modifier
-                .fillMaxSize()
-                .pullRefresh(
-                    state = refreshState
-                )
+                .fillMaxSize(),
+            isRefreshing = refreshing,
+            onRefresh = {
+                refreshing = true
+                onRefresh()
+            },
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .navigationBarsPadding()
-                    .captionBarPadding()
-                    .imePadding()
-            ) {
-                AppList(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    appListState = appListState,
-                    isForTasker = isForTasker,
-                    onItemSelected = onItemSelected,
-                    extractCallback = {
-                        extractInfo = it
-                    },
-                    filteredApps = filteredApps
-                )
-
-                BottomBar(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    isSearching = isSearching,
-                    useRegex = useRegex,
-                    includeComponents = includeComponents,
-                    query = query,
-                    progress = progress,
-                    apps = filteredApps,
-                    appListState = appListState,
-                    onShowFilterDialog = {
-                        showingFilterDialog = true
-                    },
-                    onQueryChanged = {
-                        mainModel.query.value = it
-                    },
-                    onIncludeComponentsChanged = {
-                        mainModel.includeComponents.value = it
-                    },
-                    onIsSearchingChanged = {
-                        mainModel.isSearching.value = it
-                    },
-                    onUseRegexChanged = {
-                        mainModel.useRegex.value = it
-                    }
-                )
-            }
-
-            PullRefreshIndicator(
-                refreshing = false,
-                state = refreshState,
-                backgroundColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.align(Alignment.TopCenter)
+            Scaffold(
+                bottomBar = {
+                    BottomBar(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        isSearching = isSearching,
+                        useRegex = useRegex,
+                        includeComponents = includeComponents,
+                        query = query,
+                        progress = progress,
+                        apps = filteredApps,
+                        appListState = appListState,
+                        onShowFilterDialog = {
+                            showingFilterDialog = true
+                        },
+                        onQueryChanged = {
+                            mainModel.query.value = it
+                        },
+                        onIncludeComponentsChanged = {
+                            mainModel.includeComponents.value = it
+                        },
+                        onIsSearchingChanged = {
+                            mainModel.isSearching.value = it
+                        },
+                        onUseRegexChanged = {
+                            mainModel.useRegex.value = it
+                        }
+                    )
+                },
+                content = { contentPadding ->
+                    AppList(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        appListState = appListState,
+                        isForTasker = isForTasker,
+                        onItemSelected = onItemSelected,
+                        extractCallback = {
+                            extractInfo = it
+                        },
+                        filteredApps = filteredApps,
+                        contentPaddingValues = contentPadding,
+                    )
+                },
+                modifier = Modifier.fillMaxSize(),
             )
 
             ScrimView(
