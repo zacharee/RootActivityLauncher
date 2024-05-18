@@ -227,6 +227,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
         cancel()
     }
 
+    @SuppressLint("InlinedApi")
     private suspend fun loadAppsSeparately(): List<PackageInfo> {
         return packageManager.getInstalledPackagesCompat(PackageManager.MATCH_DISABLED_COMPONENTS)
             .map { info ->
