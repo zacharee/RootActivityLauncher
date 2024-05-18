@@ -40,6 +40,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.pm.PackageInfoCompat
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.github.skgmn.composetooltip.AnchorEdge
@@ -77,6 +78,8 @@ fun AppBar(
         icon = icon,
         name = name,
         subLabel = if (app is AppModel) app.info.packageName else null,
+        versionName = if (app is AppModel) app.pInfo.versionName else null,
+        versionCode = if (app is AppModel) PackageInfoCompat.getLongVersionCode(app.pInfo) else null,
         enabled = enabled,
         availability = Availability.NA,
         onEnabledChanged = {
@@ -89,7 +92,7 @@ fun AppBar(
         },
         whichButtons = whichButtons,
         modifier = modifier,
-        showActions = showActions
+        showActions = showActions,
     )
 
     ErrorDialog(error = appStateError) {
@@ -177,6 +180,8 @@ private fun BarGuts(
     whichButtons: List<ComponentActionButton<*>>,
     modifier: Modifier = Modifier,
     showActions: Boolean = true,
+    versionCode: Long? = null,
+    versionName: String? = null,
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -255,21 +260,47 @@ private fun BarGuts(
             Column(
                 modifier = Modifier.weight(1f),
             ) {
-                Text(
-                    text = name,
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    lineHeight = 16.sp
-                )
-
-                subLabel?.let {
-                    SelectionContainer {
+                SelectionContainer {
+                    Column {
                         Text(
-                            text = subLabel,
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                            lineHeight = 12.sp
+                            text = name,
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            lineHeight = 16.sp
                         )
+
+                        subLabel?.let {
+                            Text(
+                                text = subLabel,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                                lineHeight = 12.sp
+                            )
+                        }
+
+                        if (versionName != null || versionCode != null) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                versionName?.let {
+                                    Text(
+                                        text = versionName,
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                                        lineHeight = 12.sp
+                                    )
+                                }
+
+                                versionCode?.let {
+                                    Text(
+                                        text = "($versionCode)",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                                        lineHeight = 12.sp
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
