@@ -1,29 +1,29 @@
 [versions]
-androidGradlePlugin = "8.5.0-alpha06"
+androidGradlePlugin = "8.6.0-alpha02"
 accompanistThemeadapterMaterial3 = "0.34.0"
 activityCompose = "1.9.0"
 shizuku = "13.1.5"
 appcompat = "1.6.1"
-atomicfu = "0.23.2"
-bugsnagAndroid = "6.4.0"
+atomicfu = "0.24.0"
+bugsnagAndroid = "6.5.0"
 bugsnagAndroidGradle = "8.1.0"
 coil = "2.6.0"
 composeThemeAdapter3 = "1.1.1"
 composetooltip = "0.2.0"
-coreKtx = "1.13.0"
-datastorePreferences = "1.1.0"
+coreKtx = "1.13.1"
+datastorePreferences = "1.1.1"
 dhizukuApi = "2.4"
 gson = "2.10.1"
 hiddenapibypass = "4.3"
-kotlin = "1.9.23"
-kotlinxCoroutines = "1.8.1-Beta"
+kotlin = "2.0.0-RC3"
+kotlinxCoroutines = "1.8.1"
 libsuperuser = "1.1.1"
-material3 = "1.3.0-alpha05"
-materialVersion = "1.11.0"
+material3 = "1.3.0-beta01"
+materialVersion = "1.12.0"
 patreonsupportersretrieval = "8436bbdbdc"
 preferenceKtx = "1.2.1"
 progresscircula = "0.2.1"
-compose = "1.7.0-alpha07"
+compose = "1.7.0-beta01"
 taskerpluginlibrary = "0.4.10"
 
 [libraries]
@@ -63,4 +63,5 @@ android-application = { id = "com.android.application", version.ref = "androidGr
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 kotlin-atomicfu = { id = "org.jetbrains.kotlin.plugin.atomicfu", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 bugsnag-android = { id = "com.bugsnag.android.gradle", version.ref = "bugsnagAndroidGradle" }
