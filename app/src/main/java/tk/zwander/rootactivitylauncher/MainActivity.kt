@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.os.BadParcelableException
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -226,6 +227,47 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
         cancel()
     }
 
+    private suspend fun loadAppsSeparately(): List<PackageInfo> {
+        return packageManager.getInstalledPackagesCompat(PackageManager.MATCH_DISABLED_COMPONENTS)
+            .map { info ->
+                //Try to get all the components for this package at once.
+                packageManager.getPackageInfoCompat(
+                    info.packageName,
+                    PackageManager.GET_ACTIVITIES or
+                            PackageManager.GET_SERVICES or
+                            PackageManager.GET_RECEIVERS or
+                            PackageManager.GET_PERMISSIONS or
+                            PackageManager.GET_CONFIGURATIONS,
+                ) ?: run {
+                    listOf(
+                        PackageManager.GET_ACTIVITIES,
+                        PackageManager.GET_SERVICES,
+                        PackageManager.GET_RECEIVERS,
+                        PackageManager.GET_PERMISSIONS,
+                        PackageManager.GET_CONFIGURATIONS,
+                    ).map { flag ->
+                        async {
+                            val element = packageManager.getPackageInfoCompat(
+                                info.packageName,
+                                flag,
+                            )
+                            element?.activities?.let { info.activities = it }
+                            element?.services?.let { info.services = it }
+                            element?.receivers?.let { info.receivers = it }
+                            element?.permissions?.let { info.permissions = it }
+                            element?.configPreferences?.let {
+                                info.configPreferences = it
+                            }
+                            element?.reqFeatures?.let { info.reqFeatures = it }
+                            element?.featureGroups?.let { info.featureGroups = it }
+                        }
+                    }.awaitAll()
+
+                    info
+                }
+            }
+    }
+
     @SuppressLint("InlinedApi")
     private fun loadDataAsync(silent: Boolean = false): Job {
         return launch {
@@ -244,53 +286,20 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
             //https://twitter.com/Wander1236/status/1412928863798190083?s=20
             val apps = withContext(Dispatchers.IO) {
                 if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
-                    packageManager.getInstalledPackagesCompat(
-                        PackageManager.GET_ACTIVITIES or
-                                PackageManager.GET_SERVICES or
-                                PackageManager.GET_RECEIVERS or
-                                PackageManager.GET_PERMISSIONS or
-                                PackageManager.GET_CONFIGURATIONS or
-                                PackageManager.MATCH_DISABLED_COMPONENTS,
-                    )
+                    try {
+                        packageManager.getInstalledPackagesCompat(
+                            PackageManager.GET_ACTIVITIES or
+                                    PackageManager.GET_SERVICES or
+                                    PackageManager.GET_RECEIVERS or
+                                    PackageManager.GET_PERMISSIONS or
+                                    PackageManager.GET_CONFIGURATIONS or
+                                    PackageManager.MATCH_DISABLED_COMPONENTS,
+                        )
+                    } catch (e: BadParcelableException) {
+                        loadAppsSeparately()
+                    }
                 } else {
-                    packageManager.getInstalledPackagesCompat(PackageManager.MATCH_DISABLED_COMPONENTS)
-                        .map { info ->
-                            //Try to get all the components for this package at once.
-                            packageManager.getPackageInfoCompat(
-                                info.packageName,
-                                PackageManager.GET_ACTIVITIES or
-                                        PackageManager.GET_SERVICES or
-                                        PackageManager.GET_RECEIVERS or
-                                        PackageManager.GET_PERMISSIONS or
-                                        PackageManager.GET_CONFIGURATIONS,
-                            ) ?: run {
-                                listOf(
-                                    PackageManager.GET_ACTIVITIES,
-                                    PackageManager.GET_SERVICES,
-                                    PackageManager.GET_RECEIVERS,
-                                    PackageManager.GET_PERMISSIONS,
-                                    PackageManager.GET_CONFIGURATIONS,
-                                ).map { flag ->
-                                    async {
-                                        val element = packageManager.getPackageInfoCompat(
-                                            info.packageName,
-                                            flag,
-                                        )
-                                        element?.activities?.let { info.activities = it }
-                                        element?.services?.let { info.services = it }
-                                        element?.receivers?.let { info.receivers = it }
-                                        element?.permissions?.let { info.permissions = it }
-                                        element?.configPreferences?.let {
-                                            info.configPreferences = it
-                                        }
-                                        element?.reqFeatures?.let { info.reqFeatures = it }
-                                        element?.featureGroups?.let { info.featureGroups = it }
-                                    }
-                                }.awaitAll()
-
-                                info
-                            }
-                        }
+                    loadAppsSeparately()
                 }
             }
 
