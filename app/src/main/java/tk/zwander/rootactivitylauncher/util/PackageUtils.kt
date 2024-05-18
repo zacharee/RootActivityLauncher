@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Build
+import android.os.DeadObjectException
 import android.util.Log
 import androidx.documentfile.provider.DocumentFile
 import tk.zwander.rootactivitylauncher.data.model.AppModel
@@ -33,6 +34,12 @@ fun PackageManager.getPackageInfoCompat(pkg: String, flags: Int = 0): PackageInf
         }
     } catch (_: PackageManager.NameNotFoundException) {
         null
+    } catch (e: RuntimeException) {
+        if (e.cause is DeadObjectException) {
+            null
+        } else {
+            throw e
+        }
     }
 }
 
