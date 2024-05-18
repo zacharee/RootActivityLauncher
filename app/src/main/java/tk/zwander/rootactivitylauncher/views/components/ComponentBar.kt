@@ -352,8 +352,8 @@ private fun ComponentButton(
 ) {
     val context = LocalContext.current
     val animatedAlpha by animateFloatAsState(
-        if (!enabled) 0.5f
-        else 1.0f
+        targetValue = if (!enabled) 0.5f else 1.0f,
+        label = "ComponentButtonAnimation_${stringResource(button.getLabelRes())}",
     )
     val scope = rememberCoroutineScope()
 
