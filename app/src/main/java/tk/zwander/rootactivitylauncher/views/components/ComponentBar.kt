@@ -36,7 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -353,7 +352,7 @@ private fun ComponentButton(
     val context = LocalContext.current
     val animatedAlpha by animateFloatAsState(
         targetValue = if (!enabled) 0.5f else 1.0f,
-        label = "ComponentButtonAnimation_${stringResource(button.getLabelRes())}",
+        label = "ComponentButtonAnimation_${button.getLabel()}",
     )
     val scope = rememberCoroutineScope()
 
@@ -386,8 +385,8 @@ private fun ComponentButton(
                 )
         ) {
             Icon(
-                painter = painterResource(id = button.getIconRes()),
-                contentDescription = stringResource(id = button.getLabelRes()),
+                painter = button.getIcon(),
+                contentDescription = button.getLabel(),
                 tint = LocalContentColor.current.copy(alpha = animatedAlpha)
             )
 
@@ -401,7 +400,7 @@ private fun ComponentButton(
                         tipWidth = 0.dp,
                     ),
                 ) {
-                    Text(text = stringResource(id = button.getLabelRes()))
+                    Text(text = button.getLabel())
                 }
             }
         }

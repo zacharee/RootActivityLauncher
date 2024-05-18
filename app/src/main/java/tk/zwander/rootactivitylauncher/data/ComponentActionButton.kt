@@ -3,10 +3,18 @@ package tk.zwander.rootactivitylauncher.data
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.drawable.toBitmap
 import coil.imageLoader
@@ -29,9 +37,10 @@ import tk.zwander.rootactivitylauncher.util.openAppInfo
 
 sealed class ComponentActionButton<T>(protected val data: T) {
     @Composable
-    abstract fun getIconRes(): Int
+    abstract fun getIcon(): Painter
+
     @Composable
-    abstract fun getLabelRes(): Int
+    abstract fun getLabel(): String
 
     abstract suspend fun onClick(context: Context)
 
@@ -49,20 +58,23 @@ sealed class ComponentActionButton<T>(protected val data: T) {
     class ComponentInfoButton(data: Any, private val onClick: (info: Any) -> Unit) :
         ComponentActionButton<Any>(data) {
         @Composable
-        override fun getIconRes() = R.drawable.ic_baseline_help_outline_24
+        override fun getIcon() = painterResource(R.drawable.ic_baseline_help_outline_24)
+
         @Composable
-        override fun getLabelRes() = R.string.component_info
+        override fun getLabel() = stringResource(R.string.component_info)
 
         override suspend fun onClick(context: Context) {
             onClick(data)
         }
     }
 
-    class IntentDialogButton(data: String, private val onClick: () -> Unit) : ComponentActionButton<String>(data) {
+    class IntentDialogButton(data: String, private val onClick: () -> Unit) :
+        ComponentActionButton<String>(data) {
         @Composable
-        override fun getIconRes() = R.drawable.tune
+        override fun getIcon() = painterResource(R.drawable.tune)
+
         @Composable
-        override fun getLabelRes() = R.string.intent
+        override fun getLabel() = stringResource(R.string.intent)
 
         override suspend fun onClick(context: Context) {
             onClick()
@@ -71,9 +83,10 @@ sealed class ComponentActionButton<T>(protected val data: T) {
 
     class AppInfoButton(data: String) : ComponentActionButton<String>(data) {
         @Composable
-        override fun getIconRes() = R.drawable.about_outline
+        override fun getIcon() = rememberVectorPainter(Icons.Outlined.Info)
+
         @Composable
-        override fun getLabelRes() = R.string.app_info
+        override fun getLabel() = stringResource(R.string.app_info)
 
         override suspend fun onClick(context: Context) {
             context.openAppInfo(data)
@@ -83,20 +96,23 @@ sealed class ComponentActionButton<T>(protected val data: T) {
     class SaveApkButton(data: AppModel, private val onClick: (AppModel) -> Unit) :
         ComponentActionButton<AppModel>(data) {
         @Composable
-        override fun getIconRes() = R.drawable.save
+        override fun getIcon() = painterResource(R.drawable.save)
+
         @Composable
-        override fun getLabelRes() = R.string.extract_apk
+        override fun getLabel() = stringResource(R.string.extract_apk)
 
         override suspend fun onClick(context: Context) {
             onClick(data)
         }
     }
 
-    class CreateShortcutButton(data: BaseComponentInfo) : ComponentActionButton<BaseComponentInfo>(data) {
+    class CreateShortcutButton(data: BaseComponentInfo) :
+        ComponentActionButton<BaseComponentInfo>(data) {
         @Composable
-        override fun getIconRes() = R.drawable.ic_baseline_link_24
+        override fun getIcon() = painterResource(R.drawable.ic_baseline_link_24)
+
         @Composable
-        override fun getLabelRes() = R.string.create_shortcut
+        override fun getLabel() = stringResource(R.string.create_shortcut)
 
         @SuppressLint("RestrictedApi")
         override suspend fun onClick(context: Context) {
@@ -120,9 +136,10 @@ sealed class ComponentActionButton<T>(protected val data: T) {
         private val errorCallback: (error: List<Pair<String, Throwable>>) -> Unit
     ) : ComponentActionButton<BaseComponentInfo>(data) {
         @Composable
-        override fun getIconRes() = R.drawable.ic_baseline_open_in_new_24
+        override fun getIcon() = painterResource(R.drawable.ic_baseline_open_in_new_24)
+
         @Composable
-        override fun getLabelRes() = R.string.launch
+        override fun getLabel() = stringResource(R.string.launch)
 
         override suspend fun onClick(context: Context) {
             val componentKey = data.component.flattenToString()
@@ -142,28 +159,33 @@ sealed class ComponentActionButton<T>(protected val data: T) {
         data: BaseComponentInfo
     ) : ComponentActionButton<BaseComponentInfo>(data) {
         @Composable
-        override fun getIconRes(): Int {
+        override fun getIcon(): Painter {
             val context = LocalContext.current
             val flow = context.flowForType()
             val state by flow.collectAsState(initial = listOf())
 
-            return if (state.contains(data.component.flattenToString())) {
-                R.drawable.baseline_favorite_24
-            } else {
-                R.drawable.outline_favorite_border_24
-            }
+            return rememberVectorPainter(
+                if (state.contains(data.component.flattenToString())) {
+                    Icons.Default.Favorite
+                } else {
+                    Icons.Default.FavoriteBorder
+                },
+            )
         }
+
         @Composable
-        override fun getLabelRes(): Int {
+        override fun getLabel(): String {
             val context = LocalContext.current
             val flow = context.flowForType()
             val state by flow.collectAsState(initial = listOf())
 
-            return if (state.contains(data.component.flattenToString())) {
-                R.string.unfavorite
-            } else {
-                R.string.favorite
-            }
+            return stringResource(
+                if (state.contains(data.component.flattenToString())) {
+                    R.string.unfavorite
+                } else {
+                    R.string.favorite
+                },
+            )
         }
 
         override suspend fun onClick(context: Context) {
