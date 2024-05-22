@@ -13,7 +13,13 @@ interface BinderWrapper {
 
 interface ShizukuBinderWrapper : BinderWrapper {
     override suspend fun Context.getUidAndPackage(): Pair<Int, String?> {
-        val uid = Shizuku.getUid()
+        val uid = try {
+            Shizuku.getUid()
+        } catch (e: IllegalStateException) {
+            // It shouldn't be possible for the Shizuku Binder not to exist at this point, but sometimes it doesn't.
+            // If that happens, just assume user 2000 (shell).
+            2000
+        }
 
         return UserHandle.getUserId(uid) to packageManager.getPackagesForUid(uid)?.firstOrNull()
     }
