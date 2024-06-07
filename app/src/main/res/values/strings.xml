@@ -118,4 +118,5 @@
     <string name="no_dhizuku_access">No Dhizuku permissions!</string>
     <string name="shizuku_not_running">Shizuku is not running!</string>
     <string name="dhizuku_not_running">Dhizuku is not running!</string>
+    <string name="supporters_desc">These people (and more) help keep development of this app going.</string>
 </resources>

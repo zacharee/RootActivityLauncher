@@ -79,6 +79,7 @@
     <string name="email">Эл.почта</string>
     <string name="patreon">Patreon</string>
     <string name="supporters">Спонсоры</string>
+    <string name="supporters_desc">Эти люди (и не только) помогают поддерживать развитие этого приложения.</string>
     <string name="telegram">Telegram</string>
     <string name="discord">Discord</string>
 
