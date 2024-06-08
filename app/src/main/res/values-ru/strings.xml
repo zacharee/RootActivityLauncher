@@ -95,7 +95,7 @@
     <string name="unable_to_launch_template">Невозможно запустить этот компонент. Возможно, вам потребуется использовать Shizuku или root. Попытки запустить этот компонент с соответствующими ошибками приведены ниже.</string>
     <string name="unable_to_change_component_state">Невозможно изменить состояние этого компонента. Возможно, вам нужно использовать Shizuku или root. Ошибка ниже:  %s</string>
     <string name="launch_error">Ошибка запуска</string>
-    <string name="state_change_error">%s</string>
+    <string name="state_change_error">Ошибка изменения состояния</string>
 
     <string name="usage_advanced_search_has_permission">Имеет разрешение</string>
     <string name="usage_advanced_search_has_permission_desc">Вы можете использовать Root Activity Launcher для поиска приложений, запрашивающих различные разрешения. Основной формат: \"has-permission:[AND/OR;]list,of,permissions\". Если вы используете \"AND\", приложения должны запрашивать все разрешения в списке, чтобы отобразиться в результатах. Если вы используете \"OR\", приложения должны запросить хотя бы одно разрешение из списка. По умолчанию используется режим \"И\".</string>
