@@ -1,13 +1,13 @@
 [versions]
-androidGradlePlugin = "8.6.0-alpha07"
 accompanistThemeadapterMaterial3 = "0.34.0"
 activityCompose = "1.9.0"
-shizuku = "13.1.5"
+androidGradlePlugin = "8.6.0-alpha07"
 appcompat = "1.7.0"
 atomicfu = "0.24.0"
 bugsnagAndroid = "6.6.0"
 bugsnagAndroidGradle = "8.1.0"
 coil = "2.6.0"
+compose = "1.7.0-beta03"
 composeThemeAdapter3 = "1.1.1"
 composetooltip = "0.2.0"
 coreKtx = "1.13.1"
@@ -23,19 +23,22 @@ materialVersion = "1.12.0"
 patreonsupportersretrieval = "8436bbdbdc"
 preferenceKtx = "1.2.1"
 progresscircula = "0.2.1"
-compose = "1.7.0-beta03"
+shizuku = "13.1.5"
 taskerpluginlibrary = "0.4.10"
 
 [libraries]
 accompanist-themeadapter-material3 = { module = "com.google.accompanist:accompanist-themeadapter-material3", version.ref = "accompanistThemeadapterMaterial3" }
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
-shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "shizuku" }
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "atomicfu" }
 bugsnag-android = { module = "com.bugsnag:bugsnag-android", version.ref = "bugsnagAndroid" }
 coil = { module = "io.coil-kt:coil", version.ref = "coil" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+compose-material = { module = "androidx.compose.material:material", version.ref = "compose" }
+compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
+compose-runtime = { module = "androidx.compose.runtime:runtime", version.ref = "compose" }
 compose-theme-adapter3 = { module = "com.google.android.material:compose-theme-adapter-3", version.ref = "composeThemeAdapter3" }
+compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose" }
 composetooltip = { module = "com.github.skgmn:composetooltip", version.ref = "composetooltip" }
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
@@ -48,20 +51,17 @@ kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 libsuperuser = { module = "com.github.Chainfire:libsuperuser", version.ref = "libsuperuser" }
-compose-material = { module = "androidx.compose.material:material", version.ref = "compose" }
-compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 patreonSupportersRetrieval = { module = "com.github.zacharee:PatreonSupportersRetrieval", version.ref = "patreonsupportersretrieval" }
 preference-ktx = { module = "androidx.preference:preference-ktx", version.ref = "preferenceKtx" }
 progressCircula = { module = "com.github.2hamed:ProgressCircula", version.ref = "progresscircula" }
+shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "shizuku" }
 shizuku-provider = { module = "dev.rikka.shizuku:provider", version.ref = "shizuku" }
-compose-runtime = { module = "androidx.compose.runtime:runtime", version.ref = "compose" }
 taskerpluginlibrary = { module = "com.joaomgcd:taskerpluginlibrary", version.ref = "taskerpluginlibrary" }
-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
+bugsnag-android = { id = "com.bugsnag.android.gradle", version.ref = "bugsnagAndroidGradle" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 kotlin-atomicfu = { id = "org.jetbrains.kotlin.plugin.atomicfu", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-bugsnag-android = { id = "com.bugsnag.android.gradle", version.ref = "bugsnagAndroidGradle" }
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
