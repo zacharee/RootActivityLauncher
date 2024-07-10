@@ -76,15 +76,15 @@ fun AppItem(
     }
     
     ElevatedCard(
-        modifier = modifier
+        modifier = modifier,
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             AppBar(
                 icon = remember(info is AppModel) {
-                    if (info is AppModel) info.info.getCoilData() else tk.zwander.patreonsupportersretrieval.R.drawable.ic_baseline_heart_24
+                    if (info is AppModel) info.info.getCoilData() else R.drawable.baseline_favorite_24
                 },
                 name = if (info is AppModel) info.label.toString() else stringResource(id = R.string.favorites),
                 showActions = !isForTasker && info is AppModel,

@@ -52,7 +52,7 @@ fun ComponentGroup(
 ) {
     val rotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,
-        label = "Expanded_${stringResource(titleRes)}",
+        label = "Expanded_${stringResource(titleRes, count)}",
     )
 
     AnimatedVisibility(visible = count > 0) {
