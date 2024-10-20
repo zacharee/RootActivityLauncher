@@ -42,6 +42,7 @@ fun BottomBar(
     apps: List<BaseInfoModel>,
     appListState: LazyStaggeredGridState,
     onShowFilterDialog: () -> Unit,
+    onShowSortDialog: () -> Unit,
     onUseRegexChanged: (Boolean) -> Unit,
     onIncludeComponentsChanged: (Boolean) -> Unit,
     onIsSearchingChanged: (Boolean) -> Unit,
@@ -128,15 +129,28 @@ fun BottomBar(
                     modifier = Modifier.weight(1f)
                 )
 
-                AnimatedVisibility(visible = progress == null) {
+                AnimatedVisibility(visible = progress == null && !isSearching) {
                     IconButton(
                         onClick = {
                             onShowFilterDialog()
-                        }
+                        },
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_baseline_filter_list_24),
-                            contentDescription = stringResource(id = R.string.filter)
+                            contentDescription = stringResource(id = R.string.filter),
+                        )
+                    }
+                }
+
+                AnimatedVisibility(visible = progress == null && !isSearching) {
+                    IconButton(
+                        onClick = {
+                            onShowSortDialog()
+                        },
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.sort),
+                            contentDescription = stringResource(id = R.string.sort_apps),
                         )
                     }
                 }
@@ -151,7 +165,7 @@ fun BottomBar(
                 }
 
                 AnimatedVisibility(
-                    visible = progress == null && firstIndex > 0
+                    visible = progress == null && firstIndex > 0 && !isSearching,
                 ) {
                     IconButton(
                         onClick = {
@@ -172,7 +186,7 @@ fun BottomBar(
                 }
 
                 AnimatedVisibility(
-                    visible = progress == null && lastIndex < apps.size - 1
+                    visible = progress == null && lastIndex < apps.size - 1 && !isSearching,
                 ) {
                     IconButton(
                         onClick = {
@@ -192,7 +206,9 @@ fun BottomBar(
                     }
                 }
 
-                Menu()
+                AnimatedVisibility(visible = !isSearching) {
+                    Menu()
+                }
             }
         }
     }

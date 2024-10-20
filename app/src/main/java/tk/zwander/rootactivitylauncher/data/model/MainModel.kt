@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.withContext
 import tk.zwander.rootactivitylauncher.data.FilterMode
+import tk.zwander.rootactivitylauncher.data.SortMode
+import tk.zwander.rootactivitylauncher.data.SortOrder
 import tk.zwander.rootactivitylauncher.util.AdvancedSearcher
 import tk.zwander.rootactivitylauncher.util.distinctByPackageName
 import tk.zwander.rootactivitylauncher.util.forEachParallel
@@ -20,6 +22,9 @@ class MainModel {
     val permissionFilterMode = MutableStateFlow<FilterMode.PermissionFilterMode>(FilterMode.PermissionFilterMode.ShowAll)
     val componentFilterMode = MutableStateFlow<FilterMode.HasComponentsFilterMode>(FilterMode.HasComponentsFilterMode.ShowHasComponents)
 
+    val sortAppsBy = MutableStateFlow<SortMode>(SortMode.SortByName)
+    val sortOrder = MutableStateFlow<SortOrder>(SortOrder.Ascending)
+
     val query = MutableStateFlow("")
 
     val progress = MutableStateFlow<Float?>(null)
@@ -33,6 +38,7 @@ class MainModel {
         isSearching, useRegex, includeComponents,
         apps, enabledFilterMode, exportedFilterMode,
         permissionFilterMode, componentFilterMode, query,
+        sortAppsBy, sortOrder,
     ) { flowValues ->
         val isSearching = flowValues[0] as Boolean
         val includeComponents = flowValues[2] as Boolean
@@ -43,6 +49,8 @@ class MainModel {
         val permissionFilterMode = flowValues[6] as FilterMode.PermissionFilterMode
         val componentFilterMode = flowValues[7] as FilterMode.HasComponentsFilterMode
         val query = flowValues[8] as String
+        val sortAppsBy = flowValues[9] as SortMode
+        val sortOrder = flowValues[10] as SortOrder
 
         val hasFilters = query.isNotBlank() ||
                 enabledFilterMode != FilterMode.EnabledFilterMode.ShowAll ||
@@ -81,7 +89,15 @@ class MainModel {
                 when {
                     o1 is FavoriteModel && o2 !is FavoriteModel -> -1
                     o1 !is FavoriteModel && o2 is FavoriteModel -> 1
-                    o1 is AppModel && o2 is AppModel -> o1.label.toString().lowercase().compareTo(o2.label.toString().lowercase())
+                    o1 is AppModel && o2 is AppModel -> {
+                        sortOrder.applyOrder(
+                            when (sortAppsBy) {
+                                SortMode.SortByName -> o1.label.toString().lowercase().compareTo(o2.label.toString().lowercase())
+                                SortMode.SortByInstalledDate -> o1.pInfo.firstInstallTime.compareTo(o2.pInfo.firstInstallTime)
+                                SortMode.SortByUpdatedDate -> o1.pInfo.lastUpdateTime.compareTo(o2.pInfo.lastUpdateTime)
+                            }
+                        )
+                    }
                     else -> 0
                 }
             }

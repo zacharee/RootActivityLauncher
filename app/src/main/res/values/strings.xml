@@ -118,4 +118,14 @@
     <string name="no_dhizuku_access">No Dhizuku permissions!</string>
     <string name="shizuku_not_running">Shizuku is not running!</string>
     <string name="dhizuku_not_running">Dhizuku is not running!</string>
+    
+    <string name="sort_apps">Sort Apps</string>
+    <string name="sort_by">Sort By</string>
+    <string name="sort_by_name">Sort By Name</string>
+    <string name="sort_by_installed">Sort By First Installed</string>
+    <string name="sort_by_updated">Sort By Last Updated</string>
+
+    <string name="sort_order">Sort Order</string>
+    <string name="sort_descending">Descending</string>
+    <string name="sort_ascending">Ascending</string>
 </resources>

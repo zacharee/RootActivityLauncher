@@ -1,10 +1,8 @@
 package tk.zwander.rootactivitylauncher.views.dialogs
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -14,14 +12,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.FilterMode
-import tk.zwander.rootactivitylauncher.views.components.SelectableCard
+import tk.zwander.rootactivitylauncher.views.components.OptionGroup
 
 @Composable
 fun FilterDialog(
@@ -53,7 +49,12 @@ fun FilterDialog(
 
         BaseAlertDialog(
             onDismissRequest = {
-                onDismissRequest(enabledMode, exportedMode, permissionMode, componentMode)
+                onDismissRequest(
+                    initialEnabledMode,
+                    initialExportedMode,
+                    initialPermissionMode,
+                    initialComponentMode,
+                )
             },
             title = {
                 Text(text = stringResource(id = R.string.filter))
@@ -88,7 +89,7 @@ fun FilterDialog(
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
                 ) {
-                    FilterGroup(
+                    OptionGroup(
                         name = stringResource(id = R.string.enabled_filter),
                         modes = arrayOf(
                             FilterMode.EnabledFilterMode.ShowAll,
@@ -101,7 +102,7 @@ fun FilterDialog(
                         selectedMode = enabledMode
                     )
 
-                    FilterGroup(
+                    OptionGroup(
                         name = stringResource(id = R.string.exported_filter),
                         modes = arrayOf(
                             FilterMode.ExportedFilterMode.ShowAll,
@@ -114,7 +115,7 @@ fun FilterDialog(
                         selectedMode = exportedMode
                     )
 
-                    FilterGroup(
+                    OptionGroup(
                         name = stringResource(id = R.string.permission_filter),
                         modes = arrayOf(
                             FilterMode.PermissionFilterMode.ShowAll,
@@ -127,7 +128,7 @@ fun FilterDialog(
                         selectedMode = permissionMode
                     )
 
-                    FilterGroup(
+                    OptionGroup(
                         name = stringResource(id = R.string.component_filter),
                         modes = arrayOf(
                             FilterMode.HasComponentsFilterMode.ShowAll,
@@ -142,44 +143,5 @@ fun FilterDialog(
                 }
             },
         )
-    }
-}
-
-@Composable
-private fun <T : FilterMode> FilterGroup(
-    name: String,
-    modes: Array<T>,
-    selectedMode: T,
-    onModeSelected: (T) -> Unit
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = name,
-            fontSize = 18.sp
-        )
-
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            modes.forEach { mode ->
-                SelectableCard(
-                    selected = mode.id == selectedMode.id,
-                    onClick = { onModeSelected(mode) }
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 48.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = stringResource(id = mode.id))
-                    }
-                }
-            }
-        }
     }
 }

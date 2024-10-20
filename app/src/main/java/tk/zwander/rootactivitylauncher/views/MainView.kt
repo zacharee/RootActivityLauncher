@@ -50,6 +50,7 @@ import tk.zwander.rootactivitylauncher.util.extractApk
 import tk.zwander.rootactivitylauncher.views.components.AppList
 import tk.zwander.rootactivitylauncher.views.components.BottomBar
 import tk.zwander.rootactivitylauncher.views.dialogs.FilterDialog
+import tk.zwander.rootactivitylauncher.views.dialogs.SortDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,6 +68,9 @@ fun MainView(
     val scope = rememberCoroutineScope()
 
     var showingFilterDialog by remember {
+        mutableStateOf(false)
+    }
+    var showingSortDialog by remember {
         mutableStateOf(false)
     }
     var extractInfo: AppModel? by remember {
@@ -147,6 +151,9 @@ fun MainView(
                         onShowFilterDialog = {
                             showingFilterDialog = true
                         },
+                        onShowSortDialog = {
+                            showingSortDialog = true
+                        },
                         onQueryChanged = {
                             mainModel.query.value = it
                         },
@@ -198,6 +205,17 @@ fun MainView(
             mainModel.componentFilterMode.value = component
             showingFilterDialog = false
         }
+    )
+
+    SortDialog(
+        showing = showingSortDialog,
+        initialSortBy = mainModel.sortAppsBy.collectAsState().value,
+        initialSortOrder = mainModel.sortOrder.collectAsState().value,
+        onDismissRequest = { sortBy, sortOrder ->
+            mainModel.sortAppsBy.value = sortBy
+            mainModel.sortOrder.value = sortOrder
+            showingSortDialog = false
+        },
     )
 
     if (extractErrors.isNotEmpty()) {
