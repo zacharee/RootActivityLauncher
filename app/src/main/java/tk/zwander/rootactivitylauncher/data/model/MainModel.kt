@@ -3,6 +3,7 @@ package tk.zwander.rootactivitylauncher.data.model
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.withContext
 import tk.zwander.rootactivitylauncher.data.FilterMode
 import tk.zwander.rootactivitylauncher.util.AdvancedSearcher
@@ -13,7 +14,6 @@ import java.util.regex.PatternSyntaxException
 
 class MainModel {
     val apps = MutableStateFlow<List<BaseInfoModel>>(listOf())
-    val filteredApps = MutableStateFlow<List<BaseInfoModel>>(listOf())
 
     val enabledFilterMode = MutableStateFlow<FilterMode.EnabledFilterMode>(FilterMode.EnabledFilterMode.ShowAll)
     val exportedFilterMode = MutableStateFlow<FilterMode.ExportedFilterMode>(FilterMode.ExportedFilterMode.ShowAll)
@@ -29,19 +29,25 @@ class MainModel {
 
     val isSearching = MutableStateFlow(false)
 
-    private val hasLoadedFilters: Boolean
-        get() = query.value.isNotBlank() ||
-                enabledFilterMode.value != FilterMode.EnabledFilterMode.ShowAll ||
-                exportedFilterMode.value != FilterMode.ExportedFilterMode.ShowAll ||
-                permissionFilterMode.value != FilterMode.PermissionFilterMode.ShowAll
+    val filteredApps = combine(
+        isSearching, useRegex, includeComponents,
+        apps, enabledFilterMode, exportedFilterMode,
+        permissionFilterMode, componentFilterMode, query,
+    ) { flowValues ->
+        val isSearching = flowValues[0] as Boolean
+        val includeComponents = flowValues[2] as Boolean
+        @Suppress("UNCHECKED_CAST")
+        val apps = flowValues[3] as List<BaseInfoModel>
+        val enabledFilterMode = flowValues[4] as FilterMode.EnabledFilterMode
+        val exportedFilterMode = flowValues[5] as FilterMode.ExportedFilterMode
+        val permissionFilterMode = flowValues[6] as FilterMode.PermissionFilterMode
+        val componentFilterMode = flowValues[7] as FilterMode.HasComponentsFilterMode
+        val query = flowValues[8] as String
 
-    suspend fun update() {
-        val apps = apps.value
-        val hasFilters = hasLoadedFilters
-        val isSearching = isSearching.value
-        val includeComponents = includeComponents.value
-        val componentFilterMode = componentFilterMode.value
-        val query = query.value
+        val hasFilters = query.isNotBlank() ||
+                enabledFilterMode != FilterMode.EnabledFilterMode.ShowAll ||
+                exportedFilterMode != FilterMode.ExportedFilterMode.ShowAll ||
+                permissionFilterMode != FilterMode.PermissionFilterMode.ShowAll
 
         withContext(Dispatchers.IO) {
             if ((hasFilters && !isSearching) || (hasFilters && query.isBlank()) || (isSearching && includeComponents)) {
@@ -80,8 +86,9 @@ class MainModel {
                 }
             }
 
-            filteredApps.value = sorted.distinctByPackageName()
-            progress.value = null
+            sorted.distinctByPackageName().also {
+                progress.value = null
+            }
         }
     }
 

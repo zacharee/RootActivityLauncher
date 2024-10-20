@@ -99,12 +99,8 @@ fun MainView(
         }
     }
 
-    val enabledFilterMode by mainModel.enabledFilterMode.collectAsState()
-    val exportedFilterMode by mainModel.exportedFilterMode.collectAsState()
-    val permissionFilterMode by mainModel.permissionFilterMode.collectAsState()
     val query by mainModel.query.collectAsState()
-    val apps by mainModel.apps.collectAsState()
-    val filteredApps by mainModel.filteredApps.collectAsState()
+    val filteredApps by mainModel.filteredApps.collectAsState(listOf())
     val progress by mainModel.progress.collectAsState()
     val isSearching by mainModel.isSearching.collectAsState()
     val useRegex by mainModel.useRegex.collectAsState()
@@ -121,26 +117,6 @@ fun MainView(
 
     LaunchedEffect(refreshing) {
         refreshing = false
-    }
-
-    LaunchedEffect(
-        isSearching,
-        useRegex,
-        includeComponents
-    ) {
-        if (isSearching) {
-            mainModel.update()
-        }
-    }
-
-    LaunchedEffect(
-        apps,
-        enabledFilterMode,
-        exportedFilterMode,
-        permissionFilterMode,
-        query
-    ) {
-        mainModel.update()
     }
 
 
