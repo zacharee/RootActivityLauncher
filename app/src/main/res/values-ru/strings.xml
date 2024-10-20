@@ -1,0 +1,122 @@
+<resources>
+
+    <string name="extras">Доп. информация</string>
+    <string name="action">Действие</string>
+    <string name="hint_key">Ключ</string>
+    <string name="hint_value">Значение</string>
+    <string name="filter">Фильтры</string>
+    <string name="scroll_top">Прокрутить к верху</string>
+    <string name="scroll_bottom">Прокрутить к низу</string>
+    <string name="regex">Рег.выражения</string>
+    <string name="app_info">Информация о приложении</string>
+    <string name="include_components">Компоненты</string>
+    <string name="data">Данные</string>
+    <string name="category">Категория</string>
+
+    <string name="launch">Запуск</string>
+    <string name="create_shortcut">Создать ярлык</string>
+    <string name="component_info">Информация о компонентах</string>
+    <string name="extract_apk">Извлечь APK(s)</string>
+    <string name="type">Тип</string>
+
+    <string name="integer">Int</string>
+    <string name="bool">Bool</string>
+    <string name="str">String</string>
+    <string name="byte_name">Byte</string>
+    <string name="char_name">Char</string>
+    <string name="long_name">Long</string>
+    <string name="float_name">Float</string>
+    <string name="double_name">Double</string>
+    <string name="short_name">Short</string>
+    <string name="int_al">Int List</string>
+    <string name="string_al">String List</string>
+    <string name="float_al">Float List</string>
+    <string name="double_al">Double List</string>
+    <string name="byte_a">Byte Array</string>
+    <string name="short_a">Short Array</string>
+    <string name="char_a">Char Array</string>
+    <string name="int_a">Int Array</string>
+    <string name="long_a">Long Array</string>
+    <string name="float_a">Float Array</string>
+    <string name="double_a">Double Array</string>
+    <string name="string_a">String Array</string>
+    <string name="component">Component</string>
+    <string name="uri">Uri</string>
+    <string name="intent">Intent</string>
+    <string name="exported">Экспортировано</string>
+    <string name="unexported">Неэкспортировано</string>
+    <string name="permission_required">Требуется разрешение</string>
+    <string name="clear">Очистить</string>
+    <string name="close">Закрыть</string>
+    <string name="menu">Меню</string>
+    <string name="favorites">Избранное</string>
+    <string name="favorite">В избранное</string>
+    <string name="unfavorite">Удалить из избранного</string>
+
+    <string name="activities">Активити (%d)</string>
+    <string name="services">Сервисы (%d)</string>
+    <string name="receivers">Приемники (%d)</string>
+
+    <string name="enabled_filter">Фильтр включенных</string>
+    <string name="exported_filter">Фильтр экспротированных</string>
+    <string name="permission_filter">Фильтр разрешений</string>
+    <string name="component_filter">Фильтр компонентов</string>
+
+    <string name="filter_disabled">Показать только отключенные</string>
+    <string name="filter_enabled">Показать только включенные</string>
+    <string name="filter_all">Показать все</string>
+    <string name="filter_requires_permission">Требует разрешений</string>
+    <string name="filter_requires_no_permission">Не требует разрешений</string>
+    <string name="filter_has_components">Имеет компоненты</string>
+    <string name="filter_has_no_components">Не имеет компонентов</string>
+
+    <string name="filter_exported">Только экспортированные</string>
+    <string name="filter_unexported">Только неэкспортированные</string>
+
+    <string name="mastodon">Mastodon</string>
+    <string name="website">Сайт</string>
+    <string name="github">GitHub</string>
+    <string name="email">Эл.почта</string>
+    <string name="patreon">Patreon</string>
+    <string name="supporters">Спонсоры</string>
+    <string name="supporters_desc">Эти люди (и не только) помогают поддерживать развитие этого приложения.</string>
+    <string name="telegram">Telegram</string>
+    <string name="discord">Discord</string>
+
+    <string name="device_admin_desc">Device Admin можно использовать на устройствах Samsung One UI для запуска компонентов, которые иначе не запустить.</string>
+    <string name="choose_extract_folder_msg">Выберите папку для извлечения APK (s).</string>
+    
+    <string name="usage_advanced_search">Расширенный поиск</string>
+    <string name="search">Поиск</string>
+
+    <string name="extraction_failed_title">Извлечение не удалось</string>
+    <string name="extraction_failed_desc">Невозможно извлечь APK. Ошибки перечислены ниже.</string>
+
+    <string name="unable_to_launch_template">Невозможно запустить этот компонент. Возможно, вам потребуется использовать Shizuku или root. Попытки запустить этот компонент с соответствующими ошибками приведены ниже.</string>
+    <string name="unable_to_change_component_state">Невозможно изменить состояние этого компонента. Возможно, вам нужно использовать Shizuku или root. Ошибка ниже:  %s</string>
+    <string name="launch_error">Ошибка запуска</string>
+    <string name="state_change_error">Ошибка изменения состояния</string>
+
+    <string name="usage_advanced_search_has_permission">Имеет разрешение</string>
+    <string name="usage_advanced_search_has_permission_desc">Вы можете использовать Root Activity Launcher для поиска приложений, запрашивающих различные разрешения. Основной формат: \"has-permission:[AND/OR;]list,of,permissions\". Если вы используете \"AND\", приложения должны запрашивать все разрешения в списке, чтобы отобразиться в результатах. Если вы используете \"OR\", приложения должны запросить хотя бы одно разрешение из списка. По умолчанию используется режим \"И\".</string>
+
+    <string name="usage_advanced_search_declares_permission">Объявляет разрешение</string>
+    <string name="usage_advanced_search_declares_permission_desc">Вы можете использовать Root Activity Launcher для поиска приложений, которые объявляют различные разрешения. Основной формат: \"declares-permission:[AND/OR;]list,of,permissions\". Если вы используете \"AND\", приложения должны объявить все разрешения в списке, чтобы отобразиться в результатах. Если вы используете \"OR\", приложения должны объявить хотя бы одно разрешение из списка. По умолчанию используется режим \"И\".</string>
+
+    <string name="usage_advanced_search_requires_permission">Требуется разрешение</string>
+    <string name="usage_advanced_search_requires_permission_desc">Вы можете использовать Root Activity Launcher для поиска приложений и компонентов, требующих различных разрешений. Основной формат: \"requires-permission:list,of,permissions\". Единственный поддерживаемый режим для этого - \"ИЛИ\".</string>
+
+    <string name="usage_advanced_search_requires_feature">Требуется функция</string>
+    <string name="usage_advanced_search_requires_feature_desc">Вы можете использовать Root Activity Launcher для поиска приложений, которым требуются различные функции. Основной формат: \"requires-feature:[AND/OR;]list,of,features\". Если вы используете \"AND\", приложения должны требовать все функции из списка, чтобы отобразиться в результатах. Если вы используете \"OR\", приложения должны требовать хотя бы одну функцию из списка. По умолчанию используется режим \"И\".</string>
+
+    <string name="unknown_launch_error">Неизвестная ошибка при запуске %s</string>
+    <string name="unknown_state_change_error">Неизвестная ошибка при изменении состояния для %s</string>
+    <string name="root_or_shizuku_required">Необходимы Root, Shizuku, или Dhizuku.</string>
+    <string name="self_disable_error">Вы не можете отключить Root Activity Launcher из Root Activity Launcher!</string>
+    <string name="no_root_access">Нет root-доступа!</string>
+    <string name="no_shizuku_access">Нет разрешений Shizuku!</string>
+    <string name="no_dhizuku_access">Нет разрешений Dhizuku!!</string>
+    <string name="shizuku_not_running">Сервис Shizuku не запущен!</string>
+    <string name="dhizuku_not_running">Сервис Dhizuku не запущен!</string>
+    <string name="app_name">Root Activity Launcher</string>
+</resources>
