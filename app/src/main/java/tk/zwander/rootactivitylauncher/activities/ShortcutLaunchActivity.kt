@@ -34,7 +34,7 @@ class ShortcutLaunchActivity : AppCompatActivity() {
 
                 val info = ShortcutInfoCompat.Builder(this, componentKey)
                     .setIcon(icon)
-                    .setShortLabel(label)
+                    .setShortLabel(label.takeIf { it.isNotBlank() } ?: componentKey)
                     .setLongLabel("$label: $componentKey")
                     .setIntent(shortcut)
                     .build()
