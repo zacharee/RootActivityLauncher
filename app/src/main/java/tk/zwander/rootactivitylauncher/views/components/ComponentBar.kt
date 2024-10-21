@@ -1,6 +1,7 @@
 package tk.zwander.rootactivitylauncher.views.components
 
 import android.content.pm.ActivityInfo
+import android.content.pm.ApplicationInfo
 import android.content.pm.ServiceInfo
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -79,6 +80,7 @@ fun AppBar(
         subLabel = if (app is AppModel) app.info.packageName else null,
         versionName = if (app is AppModel) app.pInfo.versionName else null,
         versionCode = if (app is AppModel) PackageInfoCompat.getLongVersionCode(app.pInfo) else null,
+        systemApp = app is AppModel && ((app.info.flags and ApplicationInfo.FLAG_SYSTEM) != 0),
         enabled = enabled,
         availability = Availability.NA,
         onEnabledChanged = {
@@ -181,6 +183,7 @@ private fun BarGuts(
     showActions: Boolean = true,
     versionCode: Long? = null,
     versionName: String? = null,
+    systemApp: Boolean = false,
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -214,7 +217,7 @@ private fun BarGuts(
                         .size(if (availability == Availability.NA) 48.dp else 32.dp)
                         .align(Alignment.Center)
                         .then(
-                            if (availability != Availability.NA) {
+                            if (availability != Availability.NA || systemApp) {
                                 Modifier.combinedClickable(
                                     interactionSource = remember {
                                         MutableInteractionSource()
@@ -231,13 +234,15 @@ private fun BarGuts(
                         )
                 )
 
-                if (availability != Availability.NA) {
+                if (availability != Availability.NA || systemApp) {
                     Box(
                         modifier = Modifier
                             .size(10.dp)
                             .clip(CircleShape)
                             .align(Alignment.BottomEnd)
-                            .background(colorResource(id = availability.tintRes))
+                            .background(colorResource(
+                                id = if (availability != Availability.NA) availability.tintRes else R.color.colorNeedsPermission,
+                            )),
                     )
                 }
 
@@ -251,7 +256,11 @@ private fun BarGuts(
                             tipWidth = 0.dp
                         )
                     ) {
-                        Text(text = stringResource(id = availability.labelRes))
+                        Text(
+                            text = stringResource(
+                                id = if (availability != Availability.NA) availability.labelRes else R.string.system_app,
+                            ),
+                        )
                     }
                 }
             }
@@ -286,7 +295,7 @@ private fun BarGuts(
                                         text = versionName,
                                         fontSize = 12.sp,
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                                        lineHeight = 12.sp
+                                        lineHeight = 12.sp,
                                     )
                                 }
 
@@ -295,7 +304,7 @@ private fun BarGuts(
                                         text = "($versionCode)",
                                         fontSize = 12.sp,
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                                        lineHeight = 12.sp
+                                        lineHeight = 12.sp,
                                     )
                                 }
                             }

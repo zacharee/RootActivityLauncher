@@ -128,4 +128,6 @@
     <string name="sort_order">Sort Order</string>
     <string name="sort_descending">Descending</string>
     <string name="sort_ascending">Ascending</string>
+
+    <string name="system_app">System App</string>
 </resources>
