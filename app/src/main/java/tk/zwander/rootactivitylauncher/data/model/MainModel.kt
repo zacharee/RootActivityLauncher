@@ -56,6 +56,7 @@ class MainModel(
         permissionFilterMode, componentFilterMode, query,
         sortAppsBy, sortOrder, totalInitialSize, systemAppsFilterMode,
     ) { flowValues ->
+        val useRegex = flowValues[1] as Boolean
         @Suppress("UNCHECKED_CAST")
         val apps = flowValues[3] as List<BaseInfoModel>
         val enabledFilterMode = flowValues[4] as FilterMode.EnabledFilterMode
@@ -76,7 +77,7 @@ class MainModel(
             val filtered = if (hasFilters ||
                 (componentFilterMode !is FilterMode.HasComponentsFilterMode.ShowAll) ||
                 (systemAppsFilterMode !is FilterMode.SystemAppFilterMode.ShowAll)) {
-                apps.filter(::matches)
+                apps.filter { matches(it, query, useRegex, componentFilterMode, systemAppsFilterMode) }
             } else {
                 apps
             }
@@ -104,11 +105,13 @@ class MainModel(
         }
     }
 
-    private fun matches(data: BaseInfoModel): Boolean {
-        val query = query.value
-        val useRegex = useRegex.value
-        val componentFilterMode = componentFilterMode.value
-        val systemAppsFilterMode = systemAppsFilterMode.value
+    private fun matches(
+        data: BaseInfoModel,
+        query: String,
+        useRegex: Boolean,
+        componentFilterMode: FilterMode.HasComponentsFilterMode,
+        systemAppsFilterMode: FilterMode.SystemAppFilterMode,
+    ): Boolean {
         val componentSize = data.totalInitialSize.value
 
         if (data is AppModel) {
