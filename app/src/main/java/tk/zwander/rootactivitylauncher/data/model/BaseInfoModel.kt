@@ -4,16 +4,15 @@ import android.content.Context
 import android.content.pm.PackageItemInfo
 import android.content.pm.PackageManager
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import tk.zwander.rootactivitylauncher.data.FilterMode
+import tk.zwander.rootactivitylauncher.data.Query
 import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.component.ReceiverInfo
@@ -23,11 +22,11 @@ import tk.zwander.rootactivitylauncher.util.isActuallyEnabled
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.regex.PatternSyntaxException
 
-abstract class BaseInfoModel {
-    protected abstract val context: Context
-    protected abstract val scope: CoroutineScope
-    protected abstract val mainModel: MainModel
-
+abstract class BaseInfoModel(
+    protected open val context: Context,
+    protected open val scope: CoroutineScope,
+    protected open val mainModel: MainModel,
+) {
     abstract val initialActivitiesSize: StateFlow<Int>
     abstract val initialServicesSize: StateFlow<Int>
     abstract val initialReceiversSize: StateFlow<Int>
@@ -55,13 +54,6 @@ abstract class BaseInfoModel {
     @Suppress("PropertyName")
     protected val _loadedReceivers = ConcurrentLinkedDeque<ReceiverInfo>()
 
-    @Suppress("PropertyName")
-    protected var _hasLoadedActivities = false
-    @Suppress("PropertyName")
-    protected var _hasLoadedServices = false
-    @Suppress("PropertyName")
-    protected var _hasLoadedReceivers = false
-
     val activitiesExpanded = MutableStateFlow(false)
     val servicesExpanded = MutableStateFlow(false)
     val receiversExpanded = MutableStateFlow(false)
@@ -69,16 +61,6 @@ abstract class BaseInfoModel {
     val activitiesLoading = MutableStateFlow(false)
     val servicesLoading = MutableStateFlow(false)
     val receiversLoading = MutableStateFlow(false)
-
-    val filteredActivities by lazy {
-        MutableStateFlow<List<ActivityInfo>>(ArrayList(initialActivitiesSize.value))
-    }
-    val filteredServices by lazy {
-        MutableStateFlow<List<ServiceInfo>>(ArrayList(initialServicesSize.value))
-    }
-    val filteredReceivers by lazy {
-        MutableStateFlow<List<ReceiverInfo>>(ArrayList(initialReceiversSize.value))
-    }
 
     val activitiesSize by lazy {
         combine(filteredActivities, hasLoadedActivities, initialActivitiesSize) { f, l, i ->
@@ -96,157 +78,170 @@ abstract class BaseInfoModel {
         }.stateIn(scope, SharingStarted.Eagerly, initialReceiversSize.value)
     }
 
-    protected fun postInit() {
-        scope.launch {
-            activitiesExpanded.combine(hasLoadedActivities) { e, l ->
-                e && !l
-            }.collect {
-                activitiesLoading.value = it
-
-                if (it) {
-                    loadActivities(true)
-                    onFilterChange(true)
-                }
-            }
-        }
-
-        scope.launch {
-            servicesExpanded.combine(hasLoadedServices) { e, l ->
-                e && !l
-            }.collect {
-                servicesLoading.value = it
-
-                if (it) {
-                    loadServices(true)
-                    onFilterChange(true)
-                }
-            }
-        }
-
-        scope.launch {
-            receiversExpanded.combine(hasLoadedReceivers) { e, l ->
-                e && !l
-            }.collect {
-                receiversLoading.value = it
-
-                if (it) {
-                    loadReceivers(true)
-                    onFilterChange(true)
-                }
-            }
-        }
-    }
-
     private val loadActivitiesMutex = Mutex()
     private val loadServicesMutex = Mutex()
     private val loadReceiversMutex = Mutex()
 
-    private suspend fun loadActivities(willBeFiltering: Boolean, progress: (suspend () -> Unit)? = null) {
+    private suspend fun loadActivities() {
         loadActivitiesMutex.withLock {
-            if (!_hasLoadedActivities && _loadedActivities.isEmpty()) {
+            if (!hasLoadedActivities.value && _loadedActivities.isEmpty()) {
                 _loadedActivities.clear()
-                _loadedActivities.addAll(performActivityLoad(progress))
+                _loadedActivities.addAll(performActivityLoad(mainModel::updateProgress))
 
-                _hasLoadedActivities = true
-
-                if (!willBeFiltering) {
-                    hasLoadedActivities.value = true
-                }
+                hasLoadedActivities.value = true
+                mainModel.updateProgress(true)
             }
         }
     }
 
-    private suspend fun loadServices(willBeFiltering: Boolean, progress: (suspend () -> Unit)? = null) {
+    private suspend fun loadServices() {
         loadServicesMutex.withLock {
-            if (!_hasLoadedServices && _loadedServices.isEmpty()) {
+            if (!hasLoadedServices.value && _loadedServices.isEmpty()) {
                 _loadedServices.clear()
-                _loadedServices.addAll(performServiceLoad(progress))
+                _loadedServices.addAll(performServiceLoad(mainModel::updateProgress))
 
-                _hasLoadedServices = true
-
-                if (!willBeFiltering) {
-                    hasLoadedServices.value = true
-                }
+                hasLoadedServices.value = true
+                mainModel.updateProgress(true)
             }
         }
     }
 
-    private suspend fun loadReceivers(willBeFiltering: Boolean, progress: (suspend () -> Unit)? = null) {
+    private suspend fun loadReceivers() {
         loadReceiversMutex.withLock {
-            if (!_hasLoadedReceivers && _loadedReceivers.isEmpty()) {
+            if (!hasLoadedReceivers.value && _loadedReceivers.isEmpty()) {
                 _loadedReceivers.clear()
-                _loadedReceivers.addAll(performReceiverLoad(progress))
+                _loadedReceivers.addAll(performReceiverLoad(mainModel::updateProgress))
 
-                _hasLoadedReceivers = true
-
-                if (!willBeFiltering) {
-                    hasLoadedReceivers.value = true
-                }
+                hasLoadedReceivers.value = true
+                mainModel.updateProgress(true)
             }
         }
     }
 
-    private val filterChangeMutex = Mutex()
-
-    suspend fun onFilterChange(
-        afterLoading: Boolean,
-    ) {
-        filterChangeMutex.withLock {
-            val query = mainModel.query.value
-            val enabledFilterMode = mainModel.enabledFilterMode.value
-            val exportedFilterMode = mainModel.exportedFilterMode.value
-            val permissionFilterMode = mainModel.permissionFilterMode.value
-            val useRegex = mainModel.useRegex.value
-            val includeComponents = mainModel.includeComponents.value
-
-            val validRegex = if (useRegex) {
+    private val realQuery by lazy {
+        mainModel.query.combine(mainModel.useRegex) { query, useRegex ->
+            if (useRegex) {
                 try {
-                    Regex(query)
-                    true
+                    Query.RegexQuery(Regex(query))
                 } catch (e: PatternSyntaxException) {
-                    false
+                    Query.StringQuery(query)
                 }
             } else {
-                false
-            }
-
-            filteredActivities.value = _loadedActivities.filter {
-                matches(it, query, useRegex, validRegex, includeComponents,
-                    enabledFilterMode, exportedFilterMode, permissionFilterMode)
-            }
-            filteredServices.value = _loadedServices.filter {
-                matches(it, query, useRegex, validRegex, includeComponents,
-                    enabledFilterMode, exportedFilterMode, permissionFilterMode)
-            }
-            filteredReceivers.value = _loadedReceivers.filter {
-                matches(it, query, useRegex, validRegex, includeComponents,
-                    enabledFilterMode, exportedFilterMode, permissionFilterMode)
-            }
-
-            if (afterLoading) {
-                hasLoadedActivities.value = _hasLoadedActivities
-                hasLoadedServices.value = _hasLoadedServices
-                hasLoadedReceivers.value = _hasLoadedReceivers
+                Query.StringQuery(query)
             }
         }
     }
 
-    suspend fun loadEverything(willBeFiltering: Boolean, progressCallback: suspend () -> Unit) = coroutineScope {
-        val act = launch {
-            loadActivities(willBeFiltering, progressCallback)
-        }
+    val filteredActivities by lazy {
+        combine(
+            realQuery,
+            mainModel.enabledFilterMode,
+            mainModel.exportedFilterMode,
+            mainModel.permissionFilterMode,
+            mainModel.includeComponents,
+            activitiesExpanded,
+            hasLoadedActivities,
+            mainModel.isSearching,
+        ) { values ->
+            val query = values[0] as Query
+            val enabledFilterMode = values[1] as FilterMode.EnabledFilterMode
+            val exportedFilterMode = values[2] as FilterMode.ExportedFilterMode
+            val permissionFilterMode = values[3] as FilterMode.PermissionFilterMode
+            val includeComponents = values[4] as Boolean
+            val activitiesExpanded = values[5] as Boolean
+            val hasLoadedActivities = values[6] as Boolean
+            val isSearching = values[7] as Boolean
 
-        val ser = launch {
-            loadServices(willBeFiltering, progressCallback)
-        }
+            val hasFilters = query.raw.isNotBlank() ||
+                    enabledFilterMode != FilterMode.EnabledFilterMode.ShowAll ||
+                    exportedFilterMode != FilterMode.ExportedFilterMode.ShowAll ||
+                    permissionFilterMode != FilterMode.PermissionFilterMode.ShowAll
 
-        val rec = launch {
-            loadReceivers(willBeFiltering, progressCallback)
-        }
+            if ((activitiesExpanded && !hasLoadedActivities) ||
+                ((hasFilters && !isSearching) || (hasFilters && query.raw.isBlank()) || (isSearching && includeComponents))) {
+                loadActivities()
+            }
 
-        act.join()
-        ser.join()
-        rec.join()
+            _loadedActivities.filter {
+                matches(
+                    it, query, includeComponents,
+                    enabledFilterMode, exportedFilterMode,
+                    permissionFilterMode,
+                )
+            }
+        }.stateIn(scope, SharingStarted.Eagerly, listOf())
+    }
+
+    val filteredServices by lazy {
+        combine(
+            realQuery,
+            mainModel.enabledFilterMode,
+            mainModel.exportedFilterMode,
+            mainModel.permissionFilterMode,
+            mainModel.includeComponents,
+            servicesExpanded,
+            hasLoadedServices,
+            mainModel.isSearching,
+        ) { values ->
+            val query = values[0] as Query
+            val enabledFilterMode = values[1] as FilterMode.EnabledFilterMode
+            val exportedFilterMode = values[2] as FilterMode.ExportedFilterMode
+            val permissionFilterMode = values[3] as FilterMode.PermissionFilterMode
+            val includeComponents = values[4] as Boolean
+            val servicesExpanded = values[5] as Boolean
+            val hasLoadedServices = values[6] as Boolean
+            val isSearching = values[7] as Boolean
+
+            val hasFilters = query.raw.isNotBlank() ||
+                    enabledFilterMode != FilterMode.EnabledFilterMode.ShowAll ||
+                    exportedFilterMode != FilterMode.ExportedFilterMode.ShowAll ||
+                    permissionFilterMode != FilterMode.PermissionFilterMode.ShowAll
+
+            if ((servicesExpanded && !hasLoadedServices) ||
+                ((hasFilters && !isSearching) || (hasFilters && query.raw.isBlank()) || (isSearching && includeComponents))) {
+                loadServices()
+            }
+
+            _loadedServices.filter {
+                matches(it, query, includeComponents, enabledFilterMode, exportedFilterMode, permissionFilterMode)
+            }
+        }.stateIn(scope, SharingStarted.Eagerly, listOf())
+    }
+
+    val filteredReceivers by lazy {
+        combine(
+            realQuery,
+            mainModel.enabledFilterMode,
+            mainModel.exportedFilterMode,
+            mainModel.permissionFilterMode,
+            mainModel.includeComponents,
+            receiversExpanded,
+            hasLoadedReceivers,
+            mainModel.isSearching,
+        ) { values ->
+            val query = values[0] as Query
+            val enabledFilterMode = values[1] as FilterMode.EnabledFilterMode
+            val exportedFilterMode = values[2] as FilterMode.ExportedFilterMode
+            val permissionFilterMode = values[3] as FilterMode.PermissionFilterMode
+            val includeComponents = values[4] as Boolean
+            val receiversExpanded = values[5] as Boolean
+            val hasLoadedReceivers = values[6] as Boolean
+            val isSearching = values[7] as Boolean
+
+            val hasFilters = query.raw.isNotBlank() ||
+                    enabledFilterMode != FilterMode.EnabledFilterMode.ShowAll ||
+                    exportedFilterMode != FilterMode.ExportedFilterMode.ShowAll ||
+                    permissionFilterMode != FilterMode.PermissionFilterMode.ShowAll
+
+            if ((receiversExpanded && !hasLoadedReceivers) ||
+                ((hasFilters && !isSearching) || (hasFilters && query.raw.isBlank()) || (isSearching && includeComponents))) {
+                loadReceivers()
+            }
+
+            _loadedReceivers.filter {
+                matches(it, query, includeComponents, enabledFilterMode, exportedFilterMode, permissionFilterMode)
+            }
+        }.stateIn(scope, SharingStarted.Eagerly, listOf())
     }
 
     protected abstract suspend fun performActivityLoad(progress: (suspend () -> Unit)? = null): Collection<ActivityInfo>
@@ -272,9 +267,7 @@ abstract class BaseInfoModel {
 
     private fun matches(
         data: BaseComponentInfo,
-        query: String,
-        useRegex: Boolean,
-        validRegex: Boolean,
+        query: Query,
         includeComponents: Boolean,
         enabledFilterMode: FilterMode.EnabledFilterMode,
         exportedFilterMode: FilterMode.ExportedFilterMode,
@@ -310,24 +303,13 @@ abstract class BaseInfoModel {
             }
         }
 
-        if (query.isBlank() || !includeComponents) return true
+        if (query.isBlank || !includeComponents) return true
 
-        val advancedMatch = AdvancedSearcher.matchesRequiresPermission(query, data.info)
+        val advancedMatch = AdvancedSearcher.matchesRequiresPermission(query.raw, data.info)
 
-        if (useRegex && validRegex) {
-            if (Regex(query).run {
-                    containsMatchIn(data.info.name)
-                            || containsMatchIn(data.label)
-                } || advancedMatch) {
-                return true
-            }
-        } else {
-            if (data.info.name.contains(query, true)
-                || (data.label.contains(query, true))
-                || advancedMatch
-            ) {
-                return true
-            }
+        @Suppress("RedundantIf", "RedundantSuppression")
+        if (query.checkMatch(context, data, advancedMatch)) {
+            return true
         }
 
         return false

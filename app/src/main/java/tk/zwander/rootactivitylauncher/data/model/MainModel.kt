@@ -1,21 +1,35 @@
 package tk.zwander.rootactivitylauncher.data.model
 
 import kotlinx.atomicfu.atomic
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.fold
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 import tk.zwander.rootactivitylauncher.data.FilterMode
 import tk.zwander.rootactivitylauncher.data.SortMode
 import tk.zwander.rootactivitylauncher.data.SortOrder
 import tk.zwander.rootactivitylauncher.util.AdvancedSearcher
 import tk.zwander.rootactivitylauncher.util.distinctByPackageName
-import tk.zwander.rootactivitylauncher.util.forEachParallel
-import tk.zwander.rootactivitylauncher.util.updateProgress
 import java.util.regex.PatternSyntaxException
 
-class MainModel {
+class MainModel(
+    @Suppress("CanBeParameter", "RedundantSuppression")
+    private val scope: CoroutineScope,
+) {
     val apps = MutableStateFlow<List<BaseInfoModel>>(listOf())
+    private val totalInitialSize = apps.map { apps ->
+        combine(apps.map { it.totalInitialSize }) { sizes ->
+            sizes.sum()
+        }.fold(0) { accumulator, value -> accumulator + value }
+    }.stateIn(scope, SharingStarted.Eagerly, 0)
+
+    private val currentProgress = atomic(0)
+    private val lastUpdateTime = atomic(0L)
 
     val enabledFilterMode = MutableStateFlow<FilterMode.EnabledFilterMode>(FilterMode.EnabledFilterMode.ShowAll)
     val exportedFilterMode = MutableStateFlow<FilterMode.ExportedFilterMode>(FilterMode.ExportedFilterMode.ShowAll)
@@ -38,10 +52,8 @@ class MainModel {
         isSearching, useRegex, includeComponents,
         apps, enabledFilterMode, exportedFilterMode,
         permissionFilterMode, componentFilterMode, query,
-        sortAppsBy, sortOrder,
+        sortAppsBy, sortOrder, totalInitialSize,
     ) { flowValues ->
-        val isSearching = flowValues[0] as Boolean
-        val includeComponents = flowValues[2] as Boolean
         @Suppress("UNCHECKED_CAST")
         val apps = flowValues[3] as List<BaseInfoModel>
         val enabledFilterMode = flowValues[4] as FilterMode.EnabledFilterMode
@@ -58,27 +70,6 @@ class MainModel {
                 permissionFilterMode != FilterMode.PermissionFilterMode.ShowAll
 
         withContext(Dispatchers.IO) {
-            if ((hasFilters && !isSearching) || (hasFilters && query.isBlank()) || (isSearching && includeComponents)) {
-                val total = apps.sumOf {
-                    it.totalInitialSize.value
-                }
-                val current = atomic(0)
-                val lastUpdateTime = atomic(0L)
-
-                apps.forEachParallel(context = Dispatchers.IO, scope = this) {
-                    it.loadEverything(true) {
-                        updateProgress(current, lastUpdateTime, total) { newProgress ->
-                            progress.value = newProgress
-                        }
-                    }
-                    it.onFilterChange(true)
-                }
-            } else {
-                apps.forEachParallel(context = Dispatchers.IO, scope = this) {
-                    it.onFilterChange(false)
-                }
-            }
-
             val filtered = if (hasFilters || (componentFilterMode !is FilterMode.HasComponentsFilterMode.ShowAll)) {
                 apps.filter(::matches)
             } else {
@@ -173,5 +164,27 @@ class MainModel {
         }
 
         return false
+    }
+
+    fun updateProgress(checkProgress: Boolean = false) {
+        if (checkProgress) {
+            if (progress.value.run { this != null && this >= 100 }) {
+                resetProgress()
+            }
+        } else {
+            tk.zwander.rootactivitylauncher.util.updateProgress(
+                currentProgress,
+                lastUpdateTime,
+                totalInitialSize.value
+            ) { newProgress ->
+                progress.value = newProgress
+            }
+        }
+    }
+
+    fun resetProgress() {
+        progress.value = null
+        currentProgress.value = 0
+        lastUpdateTime.value = 0
     }
 }

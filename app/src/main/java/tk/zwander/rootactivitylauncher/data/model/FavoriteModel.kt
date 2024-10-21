@@ -25,7 +25,7 @@ data class FavoriteModel(
     override val context: Context,
     override val scope: CoroutineScope,
     override val mainModel: MainModel
-) : BaseInfoModel() {
+) : BaseInfoModel(context, scope, mainModel) {
     override val initialActivitiesSize = MutableStateFlow(0)
     override val initialServicesSize = MutableStateFlow(0)
     override val initialReceiversSize = MutableStateFlow(0)
@@ -33,7 +33,6 @@ data class FavoriteModel(
     init {
         scope.launch {
             activityKeys.collect {
-                _hasLoadedActivities = false
                 _loadedActivities.clear()
                 initialActivitiesSize.value = it.size
                 hasLoadedActivities.value = false
@@ -42,7 +41,6 @@ data class FavoriteModel(
 
         scope.launch {
             serviceKeys.collect {
-                _hasLoadedServices = false
                 _loadedServices.clear()
                 initialServicesSize.value = it.size
                 hasLoadedServices.value = false
@@ -51,14 +49,11 @@ data class FavoriteModel(
 
         scope.launch {
             receiverKeys.collect {
-                _hasLoadedReceivers = false
                 _loadedReceivers.clear()
                 initialReceiversSize.value = it.size
                 hasLoadedReceivers.value = false
             }
         }
-
-        postInit()
     }
 
     @SuppressLint("InlinedApi")

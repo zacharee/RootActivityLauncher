@@ -17,14 +17,10 @@ data class AppModel(
     override val mainModel: MainModel,
     override val scope: CoroutineScope,
     override val context: Context,
-) : BaseInfoModel() {
+) : BaseInfoModel(context, scope, mainModel) {
     override val initialActivitiesSize = MutableStateFlow(pInfo.activities?.size ?: 0)
     override val initialServicesSize = MutableStateFlow(pInfo.services?.size ?: 0)
     override val initialReceiversSize = MutableStateFlow(pInfo.receivers?.size ?: 0)
-
-    init {
-        postInit()
-    }
 
     override fun equals(other: Any?): Boolean {
         return other is AppModel

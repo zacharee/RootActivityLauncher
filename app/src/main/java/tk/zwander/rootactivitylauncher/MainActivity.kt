@@ -57,9 +57,11 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
     protected open val isForTasker = false
     protected open var selectedItem: Pair<ComponentType, ComponentName>? = null
 
-    protected val model = MainModel()
     private val modelScope by lazy {
         CoroutineScope(Dispatchers.IO + coroutineContext + Job(coroutineContext[Job]))
+    }
+    protected val model by lazy {
+        MainModel(scope = modelScope)
     }
 
     private val favoriteModel by lazy {
@@ -303,7 +305,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
 
             launch(Dispatchers.IO) {
                 model.apps.value = loaded.distinctByPackageName()
-                model.progress.value = null
+                model.resetProgress()
             }
         }
     }
