@@ -26,4 +26,10 @@ sealed class FilterMode(labelRes: Int) : BaseOption(labelRes) {
         data object ShowHasComponents : HasComponentsFilterMode(R.string.filter_has_components)
         data object ShowHasNoComponents : HasComponentsFilterMode(R.string.filter_has_no_components)
     }
+
+    sealed class SystemAppFilterMode(id: Int) : FilterMode(id) {
+        data object ShowAll : SystemAppFilterMode(R.string.filter_all)
+        data object ShowSystemApps : SystemAppFilterMode(R.string.filter_system_apps)
+        data object ShowNonSystemApps : SystemAppFilterMode(R.string.filter_non_system_apps)
+    }
 }

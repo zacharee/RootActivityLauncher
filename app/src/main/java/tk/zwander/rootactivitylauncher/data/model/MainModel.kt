@@ -15,6 +15,7 @@ import tk.zwander.rootactivitylauncher.data.SortMode
 import tk.zwander.rootactivitylauncher.data.SortOrder
 import tk.zwander.rootactivitylauncher.util.AdvancedSearcher
 import tk.zwander.rootactivitylauncher.util.distinctByPackageName
+import tk.zwander.rootactivitylauncher.util.isSystemAppCompat
 import java.util.regex.PatternSyntaxException
 
 class MainModel(
@@ -35,6 +36,7 @@ class MainModel(
     val exportedFilterMode = MutableStateFlow<FilterMode.ExportedFilterMode>(FilterMode.ExportedFilterMode.ShowAll)
     val permissionFilterMode = MutableStateFlow<FilterMode.PermissionFilterMode>(FilterMode.PermissionFilterMode.ShowAll)
     val componentFilterMode = MutableStateFlow<FilterMode.HasComponentsFilterMode>(FilterMode.HasComponentsFilterMode.ShowHasComponents)
+    val systemAppsFilterMode = MutableStateFlow<FilterMode.SystemAppFilterMode>(FilterMode.SystemAppFilterMode.ShowAll)
 
     val sortAppsBy = MutableStateFlow<SortMode>(SortMode.SortByName)
     val sortOrder = MutableStateFlow<SortOrder>(SortOrder.Ascending)
@@ -52,7 +54,7 @@ class MainModel(
         isSearching, useRegex, includeComponents,
         apps, enabledFilterMode, exportedFilterMode,
         permissionFilterMode, componentFilterMode, query,
-        sortAppsBy, sortOrder, totalInitialSize,
+        sortAppsBy, sortOrder, totalInitialSize, systemAppsFilterMode,
     ) { flowValues ->
         @Suppress("UNCHECKED_CAST")
         val apps = flowValues[3] as List<BaseInfoModel>
@@ -63,6 +65,7 @@ class MainModel(
         val query = flowValues[8] as String
         val sortAppsBy = flowValues[9] as SortMode
         val sortOrder = flowValues[10] as SortOrder
+        val systemAppsFilterMode = flowValues[12] as FilterMode.SystemAppFilterMode
 
         val hasFilters = query.isNotBlank() ||
                 enabledFilterMode != FilterMode.EnabledFilterMode.ShowAll ||
@@ -70,7 +73,9 @@ class MainModel(
                 permissionFilterMode != FilterMode.PermissionFilterMode.ShowAll
 
         withContext(Dispatchers.IO) {
-            val filtered = if (hasFilters || (componentFilterMode !is FilterMode.HasComponentsFilterMode.ShowAll)) {
+            val filtered = if (hasFilters ||
+                (componentFilterMode !is FilterMode.HasComponentsFilterMode.ShowAll) ||
+                (systemAppsFilterMode !is FilterMode.SystemAppFilterMode.ShowAll)) {
                 apps.filter(::matches)
             } else {
                 apps
@@ -103,6 +108,7 @@ class MainModel(
         val query = query.value
         val useRegex = useRegex.value
         val componentFilterMode = componentFilterMode.value
+        val systemAppsFilterMode = systemAppsFilterMode.value
         val componentSize = data.totalInitialSize.value
 
         if (data is AppModel) {
@@ -114,6 +120,20 @@ class MainModel(
                 }
                 FilterMode.HasComponentsFilterMode.ShowHasComponents -> {
                     if (componentSize == 0) {
+                        return false
+                    }
+                }
+                else -> {}
+            }
+
+            when (systemAppsFilterMode) {
+                FilterMode.SystemAppFilterMode.ShowSystemApps -> {
+                    if (!data.info.isSystemAppCompat()) {
+                        return false
+                    }
+                }
+                FilterMode.SystemAppFilterMode.ShowNonSystemApps -> {
+                    if (data.info.isSystemAppCompat()) {
                         return false
                     }
                 }

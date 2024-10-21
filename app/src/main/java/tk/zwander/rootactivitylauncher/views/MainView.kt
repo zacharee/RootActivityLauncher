@@ -198,11 +198,13 @@ fun MainView(
         initialExportedMode = mainModel.exportedFilterMode.collectAsState().value,
         initialPermissionMode = mainModel.permissionFilterMode.collectAsState().value,
         initialComponentMode = mainModel.componentFilterMode.collectAsState().value,
-        onDismissRequest = { enabled, exported, permission, component ->
+        initialSystemAppsMode = mainModel.systemAppsFilterMode.collectAsState().value,
+        onDismissRequest = { enabled, exported, permission, component, systemApps ->
             mainModel.enabledFilterMode.value = enabled
             mainModel.exportedFilterMode.value = exported
             mainModel.permissionFilterMode.value = permission
             mainModel.componentFilterMode.value = component
+            mainModel.systemAppsFilterMode.value = systemApps
             showingFilterDialog = false
         }
     )

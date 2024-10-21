@@ -26,11 +26,13 @@ fun FilterDialog(
     initialExportedMode: FilterMode.ExportedFilterMode,
     initialPermissionMode: FilterMode.PermissionFilterMode,
     initialComponentMode: FilterMode.HasComponentsFilterMode,
+    initialSystemAppsMode: FilterMode.SystemAppFilterMode,
     onDismissRequest: (
         FilterMode.EnabledFilterMode,
         FilterMode.ExportedFilterMode,
         FilterMode.PermissionFilterMode,
         FilterMode.HasComponentsFilterMode,
+        FilterMode.SystemAppFilterMode,
     ) -> Unit,
 ) {
     if (showing) {
@@ -46,6 +48,9 @@ fun FilterDialog(
         var componentMode by remember {
             mutableStateOf(initialComponentMode)
         }
+        var systemAppsMode by remember {
+            mutableStateOf(initialSystemAppsMode)
+        }
 
         BaseAlertDialog(
             onDismissRequest = {
@@ -54,6 +59,7 @@ fun FilterDialog(
                     initialExportedMode,
                     initialPermissionMode,
                     initialComponentMode,
+                    initialSystemAppsMode,
                 )
             },
             title = {
@@ -62,7 +68,7 @@ fun FilterDialog(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        onDismissRequest(enabledMode, exportedMode, permissionMode, componentMode)
+                        onDismissRequest(enabledMode, exportedMode, permissionMode, componentMode, systemAppsMode)
                     }
                 ) {
                     Text(text = stringResource(id = android.R.string.ok))
@@ -76,6 +82,7 @@ fun FilterDialog(
                             initialExportedMode,
                             initialPermissionMode,
                             initialComponentMode,
+                            initialSystemAppsMode,
                         )
                     }
                 ) {
@@ -87,14 +94,14 @@ fun FilterDialog(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(rememberScrollState()),
                 ) {
                     OptionGroup(
                         name = stringResource(id = R.string.enabled_filter),
                         modes = arrayOf(
                             FilterMode.EnabledFilterMode.ShowAll,
                             FilterMode.EnabledFilterMode.ShowEnabled,
-                            FilterMode.EnabledFilterMode.ShowDisabled
+                            FilterMode.EnabledFilterMode.ShowDisabled,
                         ),
                         onModeSelected = {
                             enabledMode = it
@@ -107,12 +114,12 @@ fun FilterDialog(
                         modes = arrayOf(
                             FilterMode.ExportedFilterMode.ShowAll,
                             FilterMode.ExportedFilterMode.ShowExported,
-                            FilterMode.ExportedFilterMode.ShowUnexported
+                            FilterMode.ExportedFilterMode.ShowUnexported,
                         ),
                         onModeSelected = {
                             exportedMode = it
                         },
-                        selectedMode = exportedMode
+                        selectedMode = exportedMode,
                     )
 
                     OptionGroup(
@@ -120,12 +127,12 @@ fun FilterDialog(
                         modes = arrayOf(
                             FilterMode.PermissionFilterMode.ShowAll,
                             FilterMode.PermissionFilterMode.ShowRequiresPermission,
-                            FilterMode.PermissionFilterMode.ShowNoPermissionRequired
+                            FilterMode.PermissionFilterMode.ShowNoPermissionRequired,
                         ),
                         onModeSelected = {
                             permissionMode = it
                         },
-                        selectedMode = permissionMode
+                        selectedMode = permissionMode,
                     )
 
                     OptionGroup(
@@ -133,12 +140,25 @@ fun FilterDialog(
                         modes = arrayOf(
                             FilterMode.HasComponentsFilterMode.ShowAll,
                             FilterMode.HasComponentsFilterMode.ShowHasComponents,
-                            FilterMode.HasComponentsFilterMode.ShowHasNoComponents
+                            FilterMode.HasComponentsFilterMode.ShowHasNoComponents,
                         ),
                         onModeSelected = {
                             componentMode = it
                         },
-                        selectedMode = componentMode
+                        selectedMode = componentMode,
+                    )
+
+                    OptionGroup(
+                        name = stringResource(R.string.system_app_filter),
+                        modes = arrayOf(
+                            FilterMode.SystemAppFilterMode.ShowAll,
+                            FilterMode.SystemAppFilterMode.ShowSystemApps,
+                            FilterMode.SystemAppFilterMode.ShowNonSystemApps,
+                        ),
+                        onModeSelected = {
+                            systemAppsMode = it
+                        },
+                        selectedMode = systemAppsMode,
                     )
                 }
             },

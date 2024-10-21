@@ -62,6 +62,7 @@
     <string name="exported_filter">Exported Filter</string>
     <string name="permission_filter">Permission Filter</string>
     <string name="component_filter">Component Filter</string>
+    <string name="system_app_filter">System App Filter</string>
 
     <string name="filter_disabled">Show Only Disabled</string>
     <string name="filter_enabled">Show Only Enabled</string>
@@ -70,6 +71,8 @@
     <string name="filter_requires_no_permission">Requires No Permission</string>
     <string name="filter_has_components">Has Components</string>
     <string name="filter_has_no_components">Has No Components</string>
+    <string name="filter_system_apps">System Apps</string>
+    <string name="filter_non_system_apps">Non-System Apps</string>
 
     <string name="filter_exported">Show Only Exported</string>
     <string name="filter_unexported">Show Only Unexported</string>

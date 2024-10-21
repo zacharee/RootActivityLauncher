@@ -1,7 +1,6 @@
 package tk.zwander.rootactivitylauncher.views.components
 
 import android.content.pm.ActivityInfo
-import android.content.pm.ApplicationInfo
 import android.content.pm.ServiceInfo
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -54,6 +53,7 @@ import tk.zwander.rootactivitylauncher.data.component.Availability
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.data.model.BaseInfoModel
+import tk.zwander.rootactivitylauncher.util.isSystemAppCompat
 import tk.zwander.rootactivitylauncher.util.setComponentEnabled
 import tk.zwander.rootactivitylauncher.util.setPackageEnabled
 
@@ -80,7 +80,7 @@ fun AppBar(
         subLabel = if (app is AppModel) app.info.packageName else null,
         versionName = if (app is AppModel) app.pInfo.versionName else null,
         versionCode = if (app is AppModel) PackageInfoCompat.getLongVersionCode(app.pInfo) else null,
-        systemApp = app is AppModel && ((app.info.flags and ApplicationInfo.FLAG_SYSTEM) != 0),
+        systemApp = app is AppModel && app.info.isSystemAppCompat(),
         enabled = enabled,
         availability = Availability.NA,
         onEnabledChanged = {

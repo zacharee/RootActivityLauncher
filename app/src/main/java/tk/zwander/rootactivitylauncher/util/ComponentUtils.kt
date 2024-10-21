@@ -142,6 +142,10 @@ fun ApplicationInfo.isActuallyEnabled(context: Context): Boolean {
     }
 }
 
+fun ApplicationInfo.isSystemAppCompat(): Boolean {
+    return (flags and ApplicationInfo.FLAG_SYSTEM) != 0
+}
+
 private fun checkEnabledSetting(setting: Int, default: Boolean): Boolean {
     return when (setting) {
         PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
