@@ -77,10 +77,10 @@ fun AppBar(
     BarGuts(
         icon = icon,
         name = name,
-        subLabel = if (app is AppModel) app.info.packageName else null,
+        subLabel = if (app is AppModel) app.info?.packageName else null,
         versionName = if (app is AppModel) app.pInfo.versionName else null,
         versionCode = if (app is AppModel) PackageInfoCompat.getLongVersionCode(app.pInfo) else null,
-        systemApp = app is AppModel && app.info.isSystemAppCompat(),
+        systemApp = app is AppModel && app.info?.isSystemAppCompat() == true,
         enabled = enabled,
         availability = Availability.NA,
         onEnabledChanged = {

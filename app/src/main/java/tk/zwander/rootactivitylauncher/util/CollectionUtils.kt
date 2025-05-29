@@ -49,6 +49,6 @@ suspend fun <T> Array<T>.forEachParallel(context: CoroutineContext = EmptyCorout
 
 fun Collection<BaseInfoModel>.distinctByPackageName(): List<BaseInfoModel> {
     return distinctBy {
-        if (it is AppModel) it.info.packageName else "favorite"
+        if (it is AppModel) it.pInfo.packageName else "favorite"
     }
 }

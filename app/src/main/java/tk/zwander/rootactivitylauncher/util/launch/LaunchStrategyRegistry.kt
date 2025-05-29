@@ -93,7 +93,7 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
             val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
 
             val currentAssistant = Settings.Secure.getString(contentResolver, Settings.Secure.ASSISTANT)
-            val replacedAssistant = intent.component.flattenToString()
+            val replacedAssistant = intent.component?.flattenToString()
 
             try {
                 Settings.Secure.putString(contentResolver, Settings.Secure.ASSISTANT, replacedAssistant)
@@ -128,7 +128,7 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
                 val cmp = args.intent.component
 
                 iapClass.getMethod("startApp", cInfoClass, String::class.java, String::class.java)
-                    .invoke(iap, cInfo, cmp.packageName, cmp.className)
+                    .invoke(iap, cInfo, cmp?.packageName, cmp?.className)
 
                 listOf()
             } catch (e: Exception) {
@@ -141,7 +141,7 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
         override val priority: Int = 1
 
         override fun makeCommand(args: LaunchArgs): String {
-            return "am start -n ${args.intent.component.flattenToString()}"
+            return "am start -n ${args.intent.component?.flattenToString()}"
         }
     }
 }
@@ -173,7 +173,7 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
         override val priority: Int = 1
 
         override fun makeCommand(args: LaunchArgs): String {
-            return "am startservice ${args.intent.component.flattenToString()}"
+            return "am startservice ${args.intent.component?.flattenToString()}"
         }
     }
 }
@@ -198,7 +198,7 @@ sealed interface ReceiverLaunchStrategy : LaunchStrategy {
         override val priority: Int = 1
 
         override fun makeCommand(args: LaunchArgs): String {
-            return "am broadcast -n ${args.intent.component.flattenToString()}"
+            return "am broadcast -n ${args.intent.component?.flattenToString()}"
         }
     }
 }

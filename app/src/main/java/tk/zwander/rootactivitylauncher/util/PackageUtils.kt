@@ -12,6 +12,7 @@ import android.os.Build
 import android.os.DeadObjectException
 import android.util.Log
 import androidx.documentfile.provider.DocumentFile
+import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.model.AppModel
 import java.io.File
 
@@ -52,12 +53,17 @@ fun Context.extractApk(result: Uri, info: AppModel): List<Throwable> {
         errors.add(Exception("Unable to get file reference for $result."))
     }
 
+    if (info.info == null) {
+        errors.add(Exception(resources.getString(R.string.no_app_info_error)))
+        return errors
+    }
+
     val baseDir = File(info.info.sourceDir)
 
     val splits = info.info.splitSourceDirs?.mapIndexed { index, s ->
         val splitApk = File(s)
         val splitName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            info.info.splitNames[index]
+            info.info.splitNames?.get(index) ?: splitApk.nameWithoutExtension
         } else splitApk.nameWithoutExtension
 
         splitName to s
@@ -65,11 +71,11 @@ fun Context.extractApk(result: Uri, info: AppModel): List<Throwable> {
 
     val baseFile = dir?.createFile(
         "application/vnd.android.package-archive",
-        info.info.packageName
+        info.pInfo.packageName
     )
 
     if (baseFile == null) {
-        errors.add(Exception("Unable to create file ${info.info.packageName}."))
+        errors.add(Exception("Unable to create file ${info.pInfo.packageName}."))
     } else {
         try {
             contentResolver.openOutputStream(baseFile.uri).use { writer ->
@@ -89,11 +95,11 @@ fun Context.extractApk(result: Uri, info: AppModel): List<Throwable> {
 
         val file = dir?.createFile(
             "application/vnd.android.package-archive",
-            "${info.info.packageName}_$name"
+            "${info.pInfo.packageName}_$name"
         )
 
         if (file == null) {
-            errors.add(Exception("Unable to create file ${info.info.packageName}_$name"))
+            errors.add(Exception("Unable to create file ${info.pInfo.packageName}_$name"))
         } else {
             contentResolver.openOutputStream(file.uri).use { writer ->
                 try {
@@ -111,14 +117,18 @@ fun Context.extractApk(result: Uri, info: AppModel): List<Throwable> {
     return errors
 }
 
-fun PackageManager.getAllIntentFiltersCompat(packageName: String): List<IntentFilter> {
+fun PackageManager.getAllIntentFiltersCompat(packageName: String?): List<IntentFilter> {
+    if (packageName == null) {
+        return listOf()
+    }
+
     return try {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             getAllIntentFilters(packageName)
         } else {
             listOf()
         }
-    } catch (e: Throwable) {
+    } catch (_: Throwable) {
         listOf()
     }
 }

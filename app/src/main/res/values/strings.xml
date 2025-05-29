@@ -121,6 +121,7 @@
     <string name="no_dhizuku_access">No Dhizuku permissions!</string>
     <string name="shizuku_not_running">Shizuku is not running!</string>
     <string name="dhizuku_not_running">Dhizuku is not running!</string>
+    <string name="no_app_info_error">Provided application info was null!</string>
     
     <string name="sort_apps">Sort Apps</string>
     <string name="sort_by">Sort By</string>

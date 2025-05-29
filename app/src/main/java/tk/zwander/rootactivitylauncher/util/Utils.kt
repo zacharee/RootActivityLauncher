@@ -2,7 +2,7 @@ package tk.zwander.rootactivitylauncher.util
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
+import androidx.core.net.toUri
 import kotlinx.atomicfu.AtomicInt
 import kotlinx.atomicfu.AtomicLong
 
@@ -12,7 +12,7 @@ val Int.hexString: String
 fun Context.launchUrl(url: String) {
     try {
         val browserIntent =
-            Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            Intent(Intent.ACTION_VIEW, url.toUri())
         startActivity(browserIntent)
     } catch (_: Exception) {}
 }

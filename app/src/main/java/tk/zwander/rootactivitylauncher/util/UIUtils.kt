@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.core.net.toUri
 import com.android.internal.R
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 
@@ -32,13 +33,13 @@ fun ApplicationInfo.getIconResourceId(): Pair<String, Int> {
 fun BaseComponentInfo.getCoilData(): Uri {
     val id = getIconResourceId()
 
-    return Uri.parse("android.resource://${id.first}/${id.second}")
+    return "android.resource://${id.first}/${id.second}".toUri()
 }
 
 fun ApplicationInfo.getCoilData(): Uri {
     val id = getIconResourceId()
 
-    return Uri.parse("android.resource://${id.first}/${id.second}")
+    return "android.resource://${id.first}/${id.second}".toUri()
 }
 
 operator fun PaddingValues.plus(other: PaddingValues): PaddingValues = PaddingValues(

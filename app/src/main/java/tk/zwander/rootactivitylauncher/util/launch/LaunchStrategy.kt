@@ -7,9 +7,9 @@ import android.app.IApplicationThread
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.util.Log
+import androidx.core.net.toUri
 import com.rosan.dhizuku.api.Dhizuku
 import eu.chainfire.libsuperuser.Shell
 import rikka.shizuku.Shizuku
@@ -262,7 +262,7 @@ interface IterativeLaunchStrategy : LaunchStrategy {
 
                 intent.categories?.clear()
                 intent.action = if (filter.countActions() > 0) filter.getAction(0) else Intent.ACTION_MAIN
-                intent.data = if (filter.countDataSchemes() > 0) Uri.parse("${filter.getDataScheme(0)}://yes") else null
+                intent.data = if (filter.countDataSchemes() > 0) "${filter.getDataScheme(0)}://yes".toUri() else null
                 filter.categoriesIterator()?.forEach { intent.addCategory(it) }
 
                 performLaunch(args, intent)

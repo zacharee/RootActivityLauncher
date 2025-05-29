@@ -131,12 +131,12 @@ class MainModel(
 
             when (systemAppsFilterMode) {
                 FilterMode.SystemAppFilterMode.ShowSystemApps -> {
-                    if (!data.info.isSystemAppCompat()) {
+                    if (data.info?.isSystemAppCompat() == false) {
                         return false
                     }
                 }
                 FilterMode.SystemAppFilterMode.ShowNonSystemApps -> {
-                    if (data.info.isSystemAppCompat()) {
+                    if (data.info?.isSystemAppCompat() == true) {
                         return false
                     }
                 }
@@ -148,7 +148,7 @@ class MainModel(
             try {
                 Regex(query)
                 true
-            } catch (e: PatternSyntaxException) {
+            } catch (_: PatternSyntaxException) {
                 false
             }
         } else {
@@ -173,14 +173,14 @@ class MainModel(
 
             if (useRegex && isValidRegex) {
                 if (Regex(query).run {
-                        containsMatchIn(data.info.packageName)
+                        containsMatchIn(data.pInfo.packageName)
                                 || containsMatchIn(data.label)
                     }) {
                     return true
                 }
             } else {
                 if (data.label.contains(query, true)
-                    || data.info.packageName.contains(query, true)) {
+                    || data.pInfo.packageName.contains(query, true)) {
                     return true
                 }
             }

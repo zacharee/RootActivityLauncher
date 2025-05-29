@@ -45,7 +45,7 @@ fun AppList(
         verticalItemSpacing = 8.dp,
         state = appListState,
     ) {
-        items(items = actualFilteredApps, key = { if (it is AppModel) it.info.packageName else "favorite_item" }) { info ->
+        items(items = actualFilteredApps, key = { if (it is AppModel) it.pInfo.packageName else "favorite_item" }) { info ->
             AppItem(
                 info = info,
                 isForTasker = isForTasker,

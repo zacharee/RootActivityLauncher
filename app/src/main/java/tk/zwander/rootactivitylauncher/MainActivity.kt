@@ -113,7 +113,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
                     Intent.ACTION_PACKAGE_REMOVED -> {
                         if (pkg != null) {
                             val new = model.apps.value.toMutableList().apply {
-                                removeAll { it is AppModel && it.info.packageName == pkg }
+                                removeAll { it is AppModel && it.pInfo.packageName == pkg }
                             }
 
                             model.apps.value = new.distinctByPackageName()
@@ -124,7 +124,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
                         if (pkg != null) {
                             val old = ArrayList(model.apps.value)
                             val oldIndex =
-                                old.indexOfFirst { it is AppModel && it.info.packageName == pkg }
+                                old.indexOfFirst { it is AppModel && it.pInfo.packageName == pkg }
                                     .takeIf { it != -1 } ?: return@launch
                             val pkgInfo = getPackageInfo(pkg)
 
@@ -275,7 +275,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
                                     PackageManager.GET_CONFIGURATIONS or
                                     PackageManager.MATCH_DISABLED_COMPONENTS,
                         )
-                    } catch (e: BadParcelableException) {
+                    } catch (_: BadParcelableException) {
                         loadAppsSeparately()
                     }
                 } else {
@@ -324,11 +324,11 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
     }
 
     private suspend fun loadApp(app: PackageInfo, pm: PackageManager): AppModel = coroutineScope {
-        val appLabel = app.applicationInfo.loadLabel(pm)
+        val appLabel = app.applicationInfo?.loadLabel(pm)
 
         return@coroutineScope AppModel(
             pInfo = app,
-            label = appLabel.ifEmpty { app.packageName },
+            label = appLabel?.ifEmpty { app.packageName } ?: app.packageName,
             context = this@MainActivity,
             scope = modelScope,
             mainModel = model,

@@ -3,8 +3,8 @@ package tk.zwander.rootactivitylauncher.util.launch
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.component.ComponentType
@@ -17,9 +17,9 @@ import tk.zwander.rootactivitylauncher.util.getAllIntentFiltersCompat
 private fun Context.createLaunchArgs(extras: List<ExtraInfo>, componentKey: String): LaunchArgs {
     val intent = Intent(prefs.findActionForComponent(componentKey))
     intent.component = ComponentName.unflattenFromString(componentKey)
-    intent.data = prefs.findDataForComponent(componentKey)?.let { Uri.parse(it) }
+    intent.data = prefs.findDataForComponent(componentKey)?.toUri()
 
-    val filters = packageManager.getAllIntentFiltersCompat(intent.component.packageName)
+    val filters = packageManager.getAllIntentFiltersCompat(intent.component?.packageName)
 
     prefs.findCategoriesForComponent(componentKey).forEach { category ->
         intent.addCategory(category)

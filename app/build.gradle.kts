@@ -8,13 +8,13 @@ plugins {
 }
 
 android {
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "tk.zwander.rootactivitylauncher"
         namespace = "tk.zwander.rootactivitylauncher"
         minSdk = 21
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 33
         versionName = versionCode.toString()
 

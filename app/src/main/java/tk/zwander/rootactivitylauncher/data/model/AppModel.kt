@@ -12,7 +12,7 @@ import java.util.Objects
 
 data class AppModel(
     val pInfo: PackageInfo,
-    val info: ApplicationInfo = pInfo.applicationInfo,
+    val info: ApplicationInfo? = pInfo.applicationInfo,
     val label: CharSequence,
     override val mainModel: MainModel,
     override val scope: CoroutineScope,
@@ -24,7 +24,7 @@ data class AppModel(
 
     override fun equals(other: Any?): Boolean {
         return other is AppModel
-                && info.packageName == other.info.packageName
+                && pInfo.packageName == other.pInfo.packageName
                 && super.equals(other)
                 && activitiesSize.value == other.activitiesSize.value
                 && servicesSize.value == other.servicesSize.value
@@ -35,7 +35,7 @@ data class AppModel(
     }
 
     override fun hashCode(): Int {
-        return info.packageName.hashCode() +
+        return info?.packageName.hashCode() +
                 31 * super.hashCode() +
                 Objects.hash(
                     activitiesSize.value,

@@ -12,7 +12,7 @@ object AdvancedSearcher {
 
         companion object {
             fun fromString(source: String, def: LogicMode): LogicMode {
-                return values().find {
+                return entries.find {
                     it.name.lowercase() == source.lowercase()
                 } ?: def
             }
@@ -52,7 +52,7 @@ object AdvancedSearcher {
             } else {
                 LogicMode.AND to i.split(ITEM_DELIMITER)
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return false
         }
 
@@ -76,7 +76,7 @@ object AdvancedSearcher {
     }
 
     fun matchesRequiresPermission(query: String, data: AppModel): Boolean {
-        return matchesRequiresPermission(query, data.info.permission)
+        return matchesRequiresPermission(query, data.info?.permission)
     }
 
     fun matchesRequiresPermission(query: String, componentInfo: ComponentInfo): Boolean {

@@ -31,9 +31,8 @@ class TaskerLaunchComponentRunner : TaskerPluginRunnerActionNoOutput<TaskerLaunc
 
         val componentObj = ComponentName.unflattenFromString(component)
         val extras =
-            context.findExtrasForComponent(componentObj.packageName) + context.findExtrasForComponent(
-                component
-            )
+            (componentObj?.let { context.findExtrasForComponent(componentObj.packageName) } ?: listOf()) +
+                    context.findExtrasForComponent(component)
         var result: TaskerPluginResult<Unit> = TaskerPluginResultError(
             -1,
             "Unable to launch component: $type, $component. You may need root or Shizuku."
@@ -42,7 +41,7 @@ class TaskerLaunchComponentRunner : TaskerPluginRunnerActionNoOutput<TaskerLaunc
         runBlocking {
             val componentType = try {
                 ComponentType.valueOf(type)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 result = TaskerPluginResultError(12, "Invalid component type $type")
                 null
             }

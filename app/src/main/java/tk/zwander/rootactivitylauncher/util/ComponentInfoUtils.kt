@@ -123,11 +123,11 @@ fun processPackageInfo(info: PackageInfo): List<CharSequence> {
     val pWriter = PrintWriter(sWriter)
     val printer = PrintWriterPrinter(pWriter)
 
-    info.packageName?.let {
+    info.packageName.let {
         printer.println("packageName=$it")
     }
 
-    info.splitNames?.let {
+    info.splitNames.let {
         printer.println("splitNames=${it.contentToString()}")
     }
 
@@ -151,7 +151,7 @@ fun processPackageInfo(info: PackageInfo): List<CharSequence> {
             printer.println("baseRevisionCode=$it")
         }
 
-        info.splitRevisionCodes?.let {
+        info.splitRevisionCodes.let {
             printer.println("splitRevisionCodes=${it.contentToString()}")
         }
     }
@@ -436,8 +436,7 @@ fun processPackageInfo(info: PackageInfo): List<CharSequence> {
                         .get(info).let {
                             printer.println("isStaticOverlay=$it")
                         }
-                } catch (ignored: NoSuchFieldException) {
-                }
+                } catch (_: NoSuchFieldException) {}
             }
         }
     }
@@ -460,7 +459,7 @@ fun processPackageInfo(info: PackageInfo): List<CharSequence> {
 
     info.applicationInfo.let {
         printer.println("applicationInfo:")
-        it.dump(printer, "  ")
+        it?.dump(printer, "  ")
     }
 
     sWriter.close()

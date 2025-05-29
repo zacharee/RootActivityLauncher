@@ -2,8 +2,8 @@ package tk.zwander.rootactivitylauncher.data
 
 import android.content.ComponentName
 import android.content.Intent
-import android.net.Uri
 import android.os.Parcelable
+import androidx.core.net.toUri
 import kotlinx.parcelize.Parcelize
 import tk.zwander.rootactivitylauncher.R
 
@@ -202,7 +202,7 @@ enum class ExtraType(val value: String, val nameRes: Int) {
             get() = "eu"
 
         override fun putExtra(intent: Intent, key: String, value: String) {
-            intent.putExtra(key, Uri.parse(value))
+            intent.putExtra(key, value.toUri())
         }
     };
 

@@ -150,7 +150,7 @@ fun ComponentItem(
                             val rotation by animateFloatAsState(targetValue = if (expanded[it] == true) 180f else 0f)
 
                             Card(
-                                onClick = { expanded[it] = !(expanded[it] ?: false) },
+                                onClick = { expanded[it] = expanded[it] != true },
                                 modifier = Modifier
                                     .fillMaxWidth()
                             ) {
@@ -180,7 +180,7 @@ fun ComponentItem(
                                             )
                                         }
 
-                                        AnimatedVisibility(visible = expanded[it] ?: false) {
+                                        AnimatedVisibility(visible = expanded[it] == true) {
                                             Column {
                                                 Spacer(Modifier.size(8.dp))
 

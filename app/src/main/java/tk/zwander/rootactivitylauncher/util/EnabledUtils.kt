@@ -73,7 +73,9 @@ private fun Context.tryRootEnable(pkg: String, enabled: Boolean): Throwable? {
     }
 }
 
-suspend fun Context.setPackageEnabled(info: ApplicationInfo, enabled: Boolean): Throwable? {
+suspend fun Context.setPackageEnabled(info: ApplicationInfo?, enabled: Boolean): Throwable? {
+    if (info == null) return Exception(resources.getString(R.string.no_app_info_error))
+
     val pkg = info.packageName
     if (pkg == packageName) return Exception(resources.getString(R.string.self_disable_error))
 

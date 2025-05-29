@@ -45,7 +45,7 @@ fun AppItem(
     var showingComponentInfo by remember {
         mutableStateOf(false)
     }
-    var enabled by rememberSaveable(if (info is AppModel) info.info.packageName else null) {
+    var enabled by rememberSaveable(if (info is AppModel) info.pInfo.packageName else null) {
         mutableStateOf(true)
     }
 
@@ -68,9 +68,9 @@ fun AppItem(
     val receiversLoading by info.receiversLoading.collectAsState()
 
     if (info is AppModel) {
-        LaunchedEffect(info.info.packageName) {
+        LaunchedEffect(info.pInfo.packageName) {
             enabled = withContext(Dispatchers.IO) {
-                info.info.isActuallyEnabled(context)
+                info.info?.isActuallyEnabled(context) == true
             }
         }
     }
@@ -84,7 +84,7 @@ fun AppItem(
         ) {
             AppBar(
                 icon = remember(info is AppModel) {
-                    if (info is AppModel) info.info.getCoilData() else R.drawable.baseline_favorite_24
+                    if (info is AppModel) info.info?.getCoilData() else R.drawable.baseline_favorite_24
                 },
                 name = if (info is AppModel) info.label.toString() else stringResource(id = R.string.favorites),
                 showActions = !isForTasker && info is AppModel,
@@ -98,10 +98,10 @@ fun AppItem(
                             ComponentActionButton.ComponentInfoButton(info.pInfo) {
                                 showingComponentInfo = true
                             },
-                            ComponentActionButton.IntentDialogButton(info.info.packageName) {
+                            ComponentActionButton.IntentDialogButton(info.pInfo.packageName) {
                                 showingIntentDialog = true
                             },
-                            ComponentActionButton.AppInfoButton(info.info.packageName),
+                            ComponentActionButton.AppInfoButton(info.pInfo.packageName),
                             ComponentActionButton.SaveApkButton(info, extractCallback)
                         )
                     } else {
@@ -164,7 +164,7 @@ fun AppItem(
     if (info is AppModel) {
         ExtrasDialog(
             showing = showingIntentDialog,
-            componentKey = info.info.packageName
+            componentKey = info.pInfo.packageName,
         ) { showingIntentDialog = false }
 
         ComponentInfoDialog(

@@ -9,16 +9,16 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.ComponentInfo
 import android.content.pm.PackageItemInfo
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import androidx.core.net.toUri
 import tk.zwander.rootactivitylauncher.data.ExtraInfo
 import tk.zwander.rootactivitylauncher.data.prefs
 
 fun determineComponentNamePackage(componentName: String): String {
     val component = ComponentName.unflattenFromString(componentName)
 
-    return if (component != null) component.packageName else componentName
+    return component?.packageName ?: componentName
 }
 
 fun Context.findExtrasForComponent(componentName: String): List<ExtraInfo> {
@@ -86,7 +86,7 @@ fun constructComponentKey(packageName: String, componentName: String): String {
 
 fun Context.openAppInfo(packageName: String) {
     val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-    intent.data = Uri.parse("package:$packageName")
+    intent.data = "package:$packageName".toUri()
 
     try {
         startActivity(intent)
@@ -126,7 +126,7 @@ fun ComponentInfo.isActuallyEnabled(context: Context): Boolean {
             context.packageManager.getComponentEnabledSetting(safeComponentName),
             enabled
         )
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         enabled
     }
 }
@@ -137,7 +137,7 @@ fun ApplicationInfo.isActuallyEnabled(context: Context): Boolean {
             context.packageManager.getApplicationEnabledSetting(packageName),
             enabled
         )
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         enabled
     }
 }

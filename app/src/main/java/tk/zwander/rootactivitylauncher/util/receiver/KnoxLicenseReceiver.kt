@@ -7,10 +7,10 @@ import android.util.Log
 
 class KnoxLicenseReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent) {
-        Log.e("RootActivityLauncher", intent.action)
+        Log.e("RootActivityLauncher", "${intent.action}")
 
         intent.extras?.keySet()?.forEach {
-            Log.e("RootActivityLauncher", "$it : ${intent.extras[it]}")
+            Log.e("RootActivityLauncher", "$it : ${intent.extras?.get(it)}")
         }
     }
 }
