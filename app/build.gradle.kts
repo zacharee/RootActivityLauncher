@@ -58,7 +58,6 @@ dependencies {
     implementation(libs.compose.material)
     implementation(libs.activity.compose)
     implementation(libs.compose.theme.adapter3)
-    implementation(libs.accompanist.themeadapter.material3)
     implementation(libs.datastore.preferences)
 
     implementation(libs.coil)
