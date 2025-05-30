@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
@@ -128,7 +129,8 @@ fun ExtrasDialogContents(
             label = {
                 Text(text = stringResource(id = R.string.action))
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions.Default.copy(autoCorrectEnabled = false),
         )
 
         OutlinedTextField(
@@ -139,7 +141,8 @@ fun ExtrasDialogContents(
             label = {
                 Text(text = stringResource(id = R.string.data))
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions.Default.copy(autoCorrectEnabled = false),
         )
 
         LazyColumn(
@@ -252,7 +255,8 @@ private fun CategoryField(
         label = {
             Text(text = stringResource(id = R.string.category))
         },
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        keyboardOptions = KeyboardOptions.Default.copy(autoCorrectEnabled = false),
     )
 }
 
@@ -299,6 +303,7 @@ private fun ExtraItem(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
                     ),
+                    keyboardOptions = KeyboardOptions.Default.copy(autoCorrectEnabled = false),
                 )
 
                 HorizontalDivider(
@@ -325,6 +330,7 @@ private fun ExtraItem(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
                         ),
+                        keyboardOptions = KeyboardOptions.Default.copy(autoCorrectEnabled = false),
                     )
 
                     Box(
@@ -355,6 +361,7 @@ private fun ExtraItem(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
                 ),
+                keyboardOptions = KeyboardOptions.Default.copy(autoCorrectEnabled = false),
             )
         }
     }

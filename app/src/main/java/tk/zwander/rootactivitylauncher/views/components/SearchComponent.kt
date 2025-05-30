@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Close
@@ -92,7 +93,8 @@ fun SearchComponent(
                             )
                         )
                     }
-                }
+                },
+                keyboardOptions = KeyboardOptions.Default.copy(autoCorrectEnabled = false),
             )
         }
 

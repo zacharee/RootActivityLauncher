@@ -1,5 +1,6 @@
 package tk.zwander.rootactivitylauncher.views.dialogs
 
+import android.content.ClipData
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageInfo
 import android.content.pm.ServiceInfo
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,15 +26,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.util.applyQuery
@@ -44,11 +48,12 @@ import tk.zwander.rootactivitylauncher.util.processServiceInfo
 fun <T : Any> ComponentInfoDialog(
     info: T,
     showing: Boolean,
-    onDismissRequest: () -> Unit
+    onDismissRequest: () -> Unit,
 ) {
     if (showing) {
-        val clipboardManager = LocalClipboardManager.current
+        val clipboardManager = LocalClipboard.current
         val highlightColor = MaterialTheme.colorScheme.primary
+        val scope = rememberCoroutineScope()
 
         var query by remember {
             mutableStateOf("")
@@ -91,12 +96,12 @@ fun <T : Any> ComponentInfoDialog(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        clipboardManager.setText(
-                            buildAnnotatedString {
-                                append(dump.joinToString("\n"))
-                            }
-                        )
-                    }
+                        scope.launch {
+                            clipboardManager.setClipEntry(
+                                ClipEntry(ClipData.newPlainText(null, dump.joinToString("\n")))
+                            )
+                        }
+                    },
                 ) {
                     Text(text = stringResource(id = tk.zwander.patreonsupportersretrieval.R.string.copy))
                 }
@@ -143,7 +148,8 @@ private fun ComponentInfoContents(
                     modifier = Modifier.fillMaxWidth(),
                     label = {
                         Text(text = stringResource(id = R.string.search))
-                    }
+                    },
+                    keyboardOptions = KeyboardOptions.Default.copy(autoCorrectEnabled = false),
                 )
 
                 SelectionContainer {
