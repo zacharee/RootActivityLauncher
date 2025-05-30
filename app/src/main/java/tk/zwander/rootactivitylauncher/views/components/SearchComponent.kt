@@ -6,7 +6,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -17,14 +20,21 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import tk.zwander.rootactivitylauncher.R
@@ -37,11 +47,15 @@ fun SearchComponent(
     query: String,
     onExpandChange: (Boolean) -> Unit,
     onQueryChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var showingAdvancedUsage by remember {
         mutableStateOf(false)
     }
+
+    val focusRequester = remember { FocusRequester() }
+
+    val softwareKeyboardController = LocalSoftwareKeyboardController.current
 
     Box(
         modifier = modifier,
@@ -50,12 +64,18 @@ fun SearchComponent(
         AnimatedVisibility(
             visible = expanded,
             enter = fadeIn() + expandHorizontally(expandFrom = Alignment.End),
-            exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.End)
+            exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.End),
         ) {
+            LaunchedEffect(null) {
+                focusRequester.requestFocus()
+            }
+
             TextField(
                 value = query,
                 onValueChange = onQueryChange,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
+                    .clearFocusOnKeyboardDismiss()
+                    .focusRequester(focusRequester),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
@@ -78,6 +98,7 @@ fun SearchComponent(
                             if (query.isNotBlank()) {
                                 onQueryChange("")
                             } else {
+                                softwareKeyboardController?.hide()
                                 onExpandChange(false)
                             }
                         }
@@ -114,5 +135,30 @@ fun SearchComponent(
 
     AdvancedUsageDialog(showing = showingAdvancedUsage) {
         showingAdvancedUsage = false
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+fun Modifier.clearFocusOnKeyboardDismiss(): Modifier = composed {
+    var isFocused by remember { mutableStateOf(false) }
+    var keyboardAppearedSinceLastFocused by remember { mutableStateOf(false) }
+    if (isFocused) {
+        val imeIsVisible = WindowInsets.isImeVisible
+        val focusManager = LocalFocusManager.current
+        LaunchedEffect(imeIsVisible) {
+            if (imeIsVisible) {
+                keyboardAppearedSinceLastFocused = true
+            } else if (keyboardAppearedSinceLastFocused) {
+                focusManager.clearFocus()
+            }
+        }
+    }
+    onFocusEvent {
+        if (isFocused != it.isFocused) {
+            isFocused = it.isFocused
+            if (isFocused) {
+                keyboardAppearedSinceLastFocused = false
+            }
+        }
     }
 }
