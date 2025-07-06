@@ -166,7 +166,7 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
         override val descRes: Int = R.string.launch_strategy_root_desc
 
         override fun makeCommand(args: LaunchArgs): String {
-            return "am start -n ${args.intent.component?.flattenToString()}"
+            return "am start -n ${args.intent.toUri(0)}"
         }
     }
 }
@@ -213,7 +213,7 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
         override val descRes: Int = R.string.launch_strategy_root_desc
 
         override fun makeCommand(args: LaunchArgs): String {
-            return "am startservice ${args.intent.component?.flattenToString()}"
+            return "am startservice ${args.intent.toUri(0)}"
         }
     }
 }
@@ -250,7 +250,7 @@ sealed interface ReceiverLaunchStrategy : LaunchStrategy {
         override val descRes: Int = R.string.launch_strategy_root_desc
 
         override fun makeCommand(args: LaunchArgs): String {
-            return "am broadcast -n ${args.intent.component?.flattenToString()}"
+            return "am broadcast ${args.intent.toUri(0)}"
         }
     }
 }
