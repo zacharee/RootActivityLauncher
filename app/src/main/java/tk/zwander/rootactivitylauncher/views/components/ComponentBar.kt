@@ -10,6 +10,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -169,7 +171,7 @@ private fun ErrorDialog(error: String?, onDismissRequest: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
 private fun BarGuts(
     icon: Any?,
@@ -326,10 +328,10 @@ private fun BarGuts(
         }
 
         if (showActions) {
-            Row(
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 whichButtons.forEach { button ->
                     var showingTooltip by remember {
@@ -342,6 +344,7 @@ private fun BarGuts(
                         showingTooltip = showingTooltip,
                         onShowingTooltipChanged = { showingTooltip = it },
                         enabled = buttonEnabled,
+                        modifier = Modifier.weight(1f),
                     )
                 }
             }
@@ -366,7 +369,8 @@ private fun ComponentButton(
     val scope = rememberCoroutineScope()
 
     Box(
-        modifier = modifier.clip(CircleShape)
+        modifier = modifier.clip(CircleShape),
+        contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier = Modifier

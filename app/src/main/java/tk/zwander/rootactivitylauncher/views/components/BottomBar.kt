@@ -4,6 +4,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -32,6 +34,7 @@ import kotlinx.coroutines.launch
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.data.model.BaseInfoModel
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun BottomBar(
     isSearching: Boolean,
@@ -115,11 +118,11 @@ fun BottomBar(
                 }
             }
 
-            Row(
+            FlowRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 56.dp),
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.End,
             ) {
                 SearchComponent(
                     expanded = isSearching,
