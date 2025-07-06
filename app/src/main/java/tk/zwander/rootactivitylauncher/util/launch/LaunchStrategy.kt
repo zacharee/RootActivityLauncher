@@ -33,12 +33,6 @@ interface LaunchStrategy {
 
 interface CommandLaunchStrategy : LaunchStrategy {
     fun makeCommand(args: LaunchArgs): String
-
-    fun makeEscapedCommand(args: LaunchArgs): String {
-        val command = makeCommand(args)
-        return command
-            .replace("$", "\\$")
-    }
 }
 
 interface BinderWrapperLaunchStrategy : LaunchStrategy, BinderWrapper {
@@ -230,7 +224,7 @@ interface RootLaunchStrategy : CommandLaunchStrategy {
     }
 
     override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
-        val command = StringBuilder(makeEscapedCommand(args))
+        val command = StringBuilder(makeCommand(args))
         val errorOutput = mutableListOf<String>()
 
         args.addToCommand(command)
