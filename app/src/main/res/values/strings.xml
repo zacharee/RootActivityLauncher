@@ -134,4 +134,28 @@
     <string name="sort_ascending">Ascending</string>
 
     <string name="system_app">System App</string>
+
+    <string name="launch_strategy_normal">Normal</string>
+    <string name="launch_strategy_normal_desc">Attempt to launch this component how Android normally does.</string>
+
+    <string name="launch_strategy_iterative">Iterative</string>
+    <string name="launch_strategy_iterative_desc">Loop through all actions and data schemes the target app filters for. Only custom Intent extras are preserved.</string>
+
+    <string name="launch_strategy_samsung_exploit">Samsung Exploit</string>
+    <string name="launch_strategy_samsung_exploit_desc">Use a security loophole in some versions of One UI to launch.</string>
+
+    <string name="launch_strategy_shizuku_java">Shizuku</string>
+    <string name="launch_strategy_shizuku_java_desc">Use Shizuku to launch this component using shell or root permissions.</string>
+
+    <string name="launch_strategy_dhizuku_java">Dhizuku</string>
+    <string name="launch_strategy_dhizuku_java_desc">Use Dhizuku to launch this component using device admin permissions.</string>
+
+    <string name="launch_strategy_assistant">Voice Assistant</string>
+    <string name="launch_strategy_assistant_desc">Temporarily set this component as the system voice assistant and use the system to launch it. Only custom Intent extras are preserved.</string>
+
+    <string name="launch_strategy_knox">KNOX</string>
+    <string name="launch_strategy_knox_desc">Use KNOX to launch this component. No custom data is preserved.</string>
+
+    <string name="launch_strategy_root">Root</string>
+    <string name="launch_strategy_root_desc">Use root to launch this component.</string>
 </resources>

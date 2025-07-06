@@ -14,7 +14,18 @@ import tk.zwander.rootactivitylauncher.util.findCategoriesForComponent
 import tk.zwander.rootactivitylauncher.util.findDataForComponent
 import tk.zwander.rootactivitylauncher.util.getAllIntentFiltersCompat
 
-private fun Context.createLaunchArgs(extras: List<ExtraInfo>, componentKey: String): LaunchArgs {
+val launchStrategiesMap by lazy {
+    mapOf(
+        ComponentType.ACTIVITY to ActivityLaunchStrategy::class.sealedSubclasses
+            .mapNotNull { it.objectInstance?.let { obj -> obj to it } },
+        ComponentType.SERVICE to ServiceLaunchStrategy::class.sealedSubclasses
+            .mapNotNull { it.objectInstance?.let { obj -> obj to it } },
+        ComponentType.RECEIVER to ReceiverLaunchStrategy::class.sealedSubclasses
+            .mapNotNull { it.objectInstance?.let { obj -> obj to it } },
+    )
+}
+
+fun Context.createLaunchArgs(extras: List<ExtraInfo>, componentKey: String): LaunchArgs {
     val intent = Intent(prefs.findActionForComponent(componentKey))
     intent.component = ComponentName.unflattenFromString(componentKey)
     intent.data = prefs.findDataForComponent(componentKey)?.toUri()
@@ -34,27 +45,31 @@ private fun Context.createLaunchArgs(extras: List<ExtraInfo>, componentKey: Stri
     return LaunchArgs(intent, extras, filters)
 }
 
-private suspend inline fun <reified T : LaunchStrategy> Context.performLaunch(args: LaunchArgs): List<Pair<String, Throwable>> {
+private suspend inline fun Context.performLaunch(args: LaunchArgs, type: ComponentType, strategy: LaunchStrategy? = null): List<Pair<String, Throwable>> {
     val errors = mutableListOf<Pair<String, Throwable>>()
 
-    T::class.sealedSubclasses
-        .mapNotNull { it.objectInstance?.let { obj -> obj to it } }
-        .sortedByDescending { (obj, _) -> obj.priority }
-        .forEach { (obj, clazz) ->
-            with (obj) {
-                if (canRun(args)) {
-                    val latestResult = tryLaunch(args)
+    val strategies = if (strategy != null) {
+        listOf(strategy to strategy::class)
+    } else {
+        launchStrategiesMap[type]
+            ?.sortedByDescending { (obj, _) -> obj.priority }
+    }
 
-                    Log.e("RootActivityLauncher", "$clazz $latestResult")
+    strategies?.forEach { (obj, clazz) ->
+        with (obj) {
+            if (canRun(args)) {
+                val latestResult = tryLaunch(args)
 
-                    if (latestResult.isEmpty()) {
-                        return listOf()
-                    } else {
-                        errors.addAll(latestResult.map { r -> clazz.simpleName!! to r })
-                    }
+                Log.e("RootActivityLauncher", "$clazz $latestResult")
+
+                if (latestResult.isEmpty()) {
+                    return listOf()
+                } else {
+                    errors.addAll(latestResult.map { r -> resources.getString(obj.labelRes) to r })
                 }
             }
         }
+    }
 
     return errors.ifEmpty {
         listOf(
@@ -71,13 +86,9 @@ private suspend inline fun <reified T : LaunchStrategy> Context.performLaunch(ar
 suspend fun Context.launch(
     type: ComponentType,
     extras: List<ExtraInfo>,
-    componentKey: String
+    componentKey: String,
+    strategy: LaunchStrategy? = null,
+    launchArgs: LaunchArgs = createLaunchArgs(extras, componentKey),
 ): List<Pair<String, Throwable>> {
-    val args = createLaunchArgs(extras, componentKey)
-
-    return when (type) {
-        ComponentType.ACTIVITY -> performLaunch<ActivityLaunchStrategy>(args)
-        ComponentType.SERVICE -> performLaunch<ServiceLaunchStrategy>(args)
-        ComponentType.RECEIVER -> performLaunch<ReceiverLaunchStrategy>(args)
-    }
+    return performLaunch(launchArgs, type, strategy)
 }

@@ -3,26 +3,45 @@ package tk.zwander.rootactivitylauncher.data
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.drawable.toBitmap
 import coil.imageLoader
 import coil.request.ImageRequest
 import coil.size.Dimension
 import coil.size.Size
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.activities.ShortcutLaunchActivity
 import tk.zwander.rootactivitylauncher.data.component.ActivityInfo
@@ -32,7 +51,9 @@ import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
 import tk.zwander.rootactivitylauncher.util.getCoilData
+import tk.zwander.rootactivitylauncher.util.launch.createLaunchArgs
 import tk.zwander.rootactivitylauncher.util.launch.launch
+import tk.zwander.rootactivitylauncher.util.launch.launchStrategiesMap
 import tk.zwander.rootactivitylauncher.util.openAppInfo
 
 sealed class ComponentActionButton<T>(protected val data: T) {
@@ -43,6 +64,10 @@ sealed class ComponentActionButton<T>(protected val data: T) {
     abstract fun getLabel(): String
 
     abstract suspend fun onClick(context: Context)
+
+    open suspend fun onLongClick(context: Context): Boolean {
+        return false
+    }
 
     override fun equals(other: Any?): Boolean {
         return other != null &&
@@ -126,7 +151,7 @@ sealed class ComponentActionButton<T>(protected val data: T) {
                             .size(Size(Dimension(256), Dimension.Undefined))
                             .build()
                     ).drawable?.toBitmap()?.let { IconCompat.createWithBitmap(it) }
-                } catch (e: IllegalArgumentException) {
+                } catch (_: IllegalArgumentException) {
                     null
                 },
                 componentKey = data.component.flattenToString(),
@@ -156,6 +181,82 @@ sealed class ComponentActionButton<T>(protected val data: T) {
             Log.e("RootActivityLauncher", "$result")
 
             errorCallback(result)
+        }
+
+        override suspend fun onLongClick(context: Context): Boolean {
+            val componentKey = data.component.flattenToString()
+            val type = data.type()
+
+            val extras = context.findExtrasForComponent(data.component.packageName) +
+                    context.findExtrasForComponent(componentKey)
+            val launchArgs = context.createLaunchArgs(extras, componentKey)
+
+            val strategies = launchStrategiesMap[type]?.map {
+                it to with (it.first) {
+                    context.canRun(launchArgs)
+                }
+            }?.sortedBy {
+                context.resources.getString(it.first.first.labelRes)
+            } ?: listOf()
+
+            MaterialAlertDialogBuilder(context)
+                .setTitle(R.string.launch)
+                .setView(ComposeView(context).apply {
+                    setContent {
+                        val scope = rememberCoroutineScope()
+
+                        LazyColumn(
+                            modifier = Modifier.fillMaxWidth()
+                                .padding(top = 16.dp),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            items(items = strategies, key = { it.first.first.labelRes }) { strategy ->
+                                Card(
+                                    onClick = {
+                                        scope.launch {
+                                            errorCallback(
+                                                context.launch(
+                                                    type = type,
+                                                    extras = extras,
+                                                    componentKey = componentKey,
+                                                    strategy = strategy.first.first,
+                                                    launchArgs = launchArgs,
+                                                )
+                                            )
+                                        }
+                                    },
+                                    enabled = strategy.second,
+                                ) {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth()
+                                            .heightIn(min = 48.dp)
+                                            .padding(8.dp),
+                                        contentAlignment = Alignment.CenterStart,
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalAlignment = Alignment.Start,
+                                        ) {
+                                            Text(
+                                                text = stringResource(strategy.first.first.labelRes),
+                                                style = MaterialTheme.typography.titleMedium,
+                                            )
+
+                                            Text(text = stringResource(strategy.first.first.descRes))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })
+                .setPositiveButton(android.R.string.cancel) { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .show()
+
+            return true
         }
     }
 

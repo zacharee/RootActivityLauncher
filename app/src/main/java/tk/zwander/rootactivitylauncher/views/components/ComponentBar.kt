@@ -386,7 +386,11 @@ private fun ComponentButton(
                     },
                     enabled = true,
                     onLongClick = {
-                        onShowingTooltipChanged(true)
+                        scope.launch(Dispatchers.Main) {
+                            if (!enabled || !button.onLongClick(context)) {
+                                onShowingTooltipChanged(true)
+                            }
+                        }
                     },
                     onClick = {
                         if (enabled) {
@@ -394,7 +398,7 @@ private fun ComponentButton(
                                 button.onClick(context)
                             }
                         }
-                    }
+                    },
                 )
         ) {
             Icon(

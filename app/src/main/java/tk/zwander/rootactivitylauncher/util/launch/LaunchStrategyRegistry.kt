@@ -20,6 +20,7 @@ import androidx.core.os.bundleOf
 import kotlinx.coroutines.delay
 import rikka.shizuku.Shizuku
 import rikka.shizuku.SystemServiceHelper
+import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.util.hasShizukuPermission
 import tk.zwander.rootactivitylauncher.util.isTouchWiz
 import tk.zwander.rootactivitylauncher.util.receiver.AdminReceiver
@@ -28,6 +29,9 @@ import tk.zwander.rootactivitylauncher.util.requestShizukuPermission
 sealed interface ActivityLaunchStrategy : LaunchStrategy {
     data object Normal : ActivityLaunchStrategy {
         override val priority: Int = 100
+
+        override val labelRes: Int = R.string.launch_strategy_normal
+        override val descRes: Int = R.string.launch_strategy_normal_desc
 
         override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
             return try {
@@ -44,6 +48,9 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
     data object Iterative : ActivityLaunchStrategy, IterativeLaunchStrategy {
         override val priority: Int = 10
 
+        override val labelRes: Int = R.string.launch_strategy_iterative
+        override val descRes: Int = R.string.launch_strategy_iterative_desc
+
         override fun extraFlags(): Int {
             return Intent.FLAG_ACTIVITY_NEW_TASK
         }
@@ -54,6 +61,9 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
     }
     data object SamsungExploit : ActivityLaunchStrategy {
         override val priority: Int = 1
+
+        override val labelRes: Int = R.string.launch_strategy_samsung_exploit
+        override val descRes: Int = R.string.launch_strategy_samsung_exploit_desc
 
         override suspend fun Context.canRun(args: LaunchArgs): Boolean {
             return Build.VERSION.SDK_INT > Build.VERSION_CODES.P && isTouchWiz
@@ -72,10 +82,19 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
             }
         }
     }
-    data object ShizukuJava : ActivityLaunchStrategy, BinderActivityLaunchStrategy, ShizukuLaunchStrategy
-    data object DhizukuJava : ActivityLaunchStrategy, BinderActivityLaunchStrategy, DhizukuLaunchStrategy
+    data object ShizukuJava : ActivityLaunchStrategy, BinderActivityLaunchStrategy, ShizukuLaunchStrategy {
+        override val labelRes: Int = R.string.launch_strategy_shizuku_java
+        override val descRes: Int = R.string.launch_strategy_shizuku_java_desc
+    }
+    data object DhizukuJava : ActivityLaunchStrategy, BinderActivityLaunchStrategy, DhizukuLaunchStrategy {
+        override val labelRes: Int = R.string.launch_strategy_dhizuku_java
+        override val descRes: Int = R.string.launch_strategy_dhizuku_java_desc
+    }
     data object AssistantJava : ActivityLaunchStrategy, ShizukuLaunchStrategy {
         override val priority: Int = 0
+
+        override val labelRes: Int = R.string.launch_strategy_assistant
+        override val descRes: Int = R.string.launch_strategy_assistant_desc
 
         private fun Context.hasWss(): Boolean = checkCallingOrSelfPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED
 
@@ -109,6 +128,9 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
         }
     }
     data object KNOX : ActivityLaunchStrategy {
+        override val labelRes: Int = R.string.launch_strategy_knox
+        override val descRes: Int = R.string.launch_strategy_knox_desc
+
         override suspend fun Context.canRun(args: LaunchArgs): Boolean {
             val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
 
@@ -140,6 +162,9 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
     data object Root : ActivityLaunchStrategy, RootLaunchStrategy {
         override val priority: Int = 1
 
+        override val labelRes: Int = R.string.launch_strategy_root
+        override val descRes: Int = R.string.launch_strategy_root_desc
+
         override fun makeCommand(args: LaunchArgs): String {
             return "am start -n ${args.intent.component?.flattenToString()}"
         }
@@ -149,6 +174,9 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
 sealed interface ServiceLaunchStrategy : LaunchStrategy {
     data object Normal : ServiceLaunchStrategy {
         override val priority: Int = 100
+
+        override val labelRes: Int = R.string.launch_strategy_normal
+        override val descRes: Int = R.string.launch_strategy_normal_desc
 
         override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
             return try {
@@ -163,14 +191,26 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
     data object Iterative : ServiceLaunchStrategy, IterativeLaunchStrategy {
         override val priority: Int = 20
 
+        override val labelRes: Int = R.string.launch_strategy_iterative
+        override val descRes: Int = R.string.launch_strategy_iterative_desc
+
         override suspend fun Context.performLaunch(args: LaunchArgs, intent: Intent) {
             startService(intent)
         }
     }
-    data object ShizukuJava : ServiceLaunchStrategy, BinderServiceLaunchStrategy, ShizukuLaunchStrategy
-    data object DhizukuJava : ServiceLaunchStrategy, BinderServiceLaunchStrategy, DhizukuLaunchStrategy
+    data object ShizukuJava : ServiceLaunchStrategy, BinderServiceLaunchStrategy, ShizukuLaunchStrategy {
+        override val labelRes: Int = R.string.launch_strategy_shizuku_java
+        override val descRes: Int = R.string.launch_strategy_shizuku_java_desc
+    }
+    data object DhizukuJava : ServiceLaunchStrategy, BinderServiceLaunchStrategy, DhizukuLaunchStrategy {
+        override val labelRes: Int = R.string.launch_strategy_dhizuku_java
+        override val descRes: Int = R.string.launch_strategy_dhizuku_java_desc
+    }
     data object Root : ServiceLaunchStrategy, RootLaunchStrategy {
         override val priority: Int = 1
+
+        override val labelRes: Int = R.string.launch_strategy_root
+        override val descRes: Int = R.string.launch_strategy_root_desc
 
         override fun makeCommand(args: LaunchArgs): String {
             return "am startservice ${args.intent.component?.flattenToString()}"
@@ -182,6 +222,9 @@ sealed interface ReceiverLaunchStrategy : LaunchStrategy {
     data object Normal : ReceiverLaunchStrategy {
         override val priority: Int = 100
 
+        override val labelRes: Int = R.string.launch_strategy_normal
+        override val descRes: Int = R.string.launch_strategy_normal_desc
+
         override suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable> {
             return try {
                 sendBroadcast(args.intent)
@@ -192,10 +235,19 @@ sealed interface ReceiverLaunchStrategy : LaunchStrategy {
             }
         }
     }
-    data object ShizukuJava : ReceiverLaunchStrategy, BinderReceiverLaunchStrategy, ShizukuLaunchStrategy
-    data object DhizukuJava : ReceiverLaunchStrategy, BinderReceiverLaunchStrategy, DhizukuLaunchStrategy
+    data object ShizukuJava : ReceiverLaunchStrategy, BinderReceiverLaunchStrategy, ShizukuLaunchStrategy {
+        override val labelRes: Int = R.string.launch_strategy_shizuku_java
+        override val descRes: Int = R.string.launch_strategy_shizuku_java_desc
+    }
+    data object DhizukuJava : ReceiverLaunchStrategy, BinderReceiverLaunchStrategy, DhizukuLaunchStrategy {
+        override val labelRes: Int = R.string.launch_strategy_dhizuku_java
+        override val descRes: Int = R.string.launch_strategy_dhizuku_java_desc
+    }
     data object Root : ReceiverLaunchStrategy, RootLaunchStrategy {
         override val priority: Int = 1
+
+        override val labelRes: Int = R.string.launch_strategy_root
+        override val descRes: Int = R.string.launch_strategy_root_desc
 
         override fun makeCommand(args: LaunchArgs): String {
             return "am broadcast -n ${args.intent.component?.flattenToString()}"

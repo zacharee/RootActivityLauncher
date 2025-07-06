@@ -24,6 +24,9 @@ interface LaunchStrategy {
     val priority: Int
         get() = 0
 
+    val labelRes: Int
+    val descRes: Int
+
     suspend fun Context.canRun(args: LaunchArgs): Boolean = true
     suspend fun Context.tryLaunch(args: LaunchArgs): List<Throwable>
 }
