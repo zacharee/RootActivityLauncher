@@ -5,13 +5,13 @@ import android.content.pm.ActivityInfo
 import android.content.pm.PackageInfo
 import android.content.pm.ServiceInfo
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -137,27 +137,31 @@ private fun ComponentInfoContents(
                 CircularProgressIndicator()
             }
         } else {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                OutlinedTextField(
-                    value = query,
-                    onValueChange = onQueryChanged,
+            SelectionContainer {
+                LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
-                    label = {
-                        Text(text = stringResource(id = R.string.search))
-                    },
-                    keyboardOptions = KeyboardOptions.Default.copy(autoCorrectEnabled = false),
-                )
-
-                SelectionContainer {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        itemsIndexed(items = content, key = { index, item -> item.toString() + index }) { _, item ->
-                            Text(text = item)
+                ) {
+                    item {
+                        DisableSelection {
+                            OutlinedTextField(
+                                value = query,
+                                onValueChange = onQueryChanged,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 8.dp),
+                                label = {
+                                    Text(text = stringResource(id = R.string.search))
+                                },
+                                keyboardOptions = KeyboardOptions.Default.copy(autoCorrectEnabled = false),
+                            )
                         }
+                    }
+
+                    itemsIndexed(
+                        items = content,
+                        key = { index, item -> item.toString() + index },
+                    ) { _, item ->
+                        Text(text = item)
                     }
                 }
             }

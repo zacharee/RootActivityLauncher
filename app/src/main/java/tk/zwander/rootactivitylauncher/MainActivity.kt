@@ -186,7 +186,7 @@ open class MainActivity : ComponentActivity(), CoroutineScope by MainScope(),
                         onRefresh = {
                             currentDataJob?.cancel()
                             currentDataJob = loadDataAsync()
-                        }
+                        },
                     )
                 }
             }
