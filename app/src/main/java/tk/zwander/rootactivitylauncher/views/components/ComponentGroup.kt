@@ -129,6 +129,7 @@ fun ComponentGroup(
                                     start = 32.dp,
                                     end = 8.dp,
                                 )
+                                .animateItem(),
                         )
                     }
                 }
