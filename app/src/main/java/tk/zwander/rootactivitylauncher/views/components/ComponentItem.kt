@@ -135,16 +135,16 @@ fun ComponentItem(
                 }
 
                 Column {
-                    Text(
-                        text = stringResource(id = R.string.unable_to_launch_template)
-                    )
-
-                    Spacer(modifier = Modifier.size(16.dp))
-
                     LazyColumn(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
+                        item {
+                            Text(
+                                text = stringResource(id = R.string.unable_to_launch_template),
+                            )
+                        }
+
                         items(launchErrors.size, { it }) {
                             val item = launchErrors[it]
                             val rotation by animateFloatAsState(targetValue = if (expanded[it] == true) 180f else 0f)

@@ -9,12 +9,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -117,128 +115,124 @@ fun ExtrasDialogContents(
     val categories by model.categories.collectAsState()
     val extras by model.extras.collectAsState()
 
-    Column(
+    LazyColumn(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        OutlinedTextField(
-            value = action,
-            onValueChange = {
-                model.action.value = it
-            },
-            label = {
-                Text(text = stringResource(id = R.string.action))
-            },
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions.Default.copy(autoCorrectEnabled = false),
-        )
-
-        OutlinedTextField(
-            value = data ?: "",
-            onValueChange = {
-                model.data.value = it.ifBlank { null }
-            },
-            label = {
-                Text(text = stringResource(id = R.string.data))
-            },
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions.Default.copy(autoCorrectEnabled = false),
-        )
-
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            itemsIndexed(items = categories, key = { _, item -> item.first }) { index, cat ->
-                CategoryField(
-                    value = cat.second ?: "",
-                    onValueChange = { newValue ->
-                        val isLast = categories.lastIndex == index
-                        val id = cat.first
-
-                        val copy = ArrayList(categories)
-
-                        when {
-                            newValue.isBlank() -> {
-                                if (!isLast) {
-                                    val next = categories[index + 1]
-
-                                    if (next.second.isNullOrBlank()) {
-                                        copy[index] = id to newValue
-                                        copy.removeAll { it.first == next.first }
-                                    } else {
-                                        copy.removeAt(index)
-                                    }
-                                } else {
-                                    copy[index] = id to newValue
-                                }
-                            }
-
-                            else -> {
-                                copy[index] = id to newValue
-
-                                if (isLast) {
-                                    copy.add(UUID.randomUUID() to "")
-                                }
-                            }
-                        }
-
-                        model.categories.value = copy
-                    }
-                )
-            }
+        item {
+            OutlinedTextField(
+                value = action,
+                onValueChange = {
+                    model.action.value = it
+                },
+                label = {
+                    Text(text = stringResource(id = R.string.action))
+                },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions.Default.copy(autoCorrectEnabled = false),
+            )
         }
 
-        Spacer(Modifier.size(8.dp))
-        Text(text = stringResource(id = R.string.extras))
+        item {
+            OutlinedTextField(
+                value = data ?: "",
+                onValueChange = {
+                    model.data.value = it.ifBlank { null }
+                },
+                label = {
+                    Text(text = stringResource(id = R.string.data))
+                },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions.Default.copy(autoCorrectEnabled = false),
+            )
+        }
 
-        LazyColumn(
-            modifier = Modifier,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            itemsIndexed(items = extras, key = { _, item -> item.first }) { index, item ->
-                ExtraItem(
-                    extraInfo = item.second
-                ) { newKey, newType, newValue ->
-                    val id = item.first
-                    val copy = ArrayList(extras)
-                    val isLast = extras.lastIndex == index
+        itemsIndexed(items = categories, key = { _, item -> item.first }) { index, cat ->
+            CategoryField(
+                value = cat.second ?: "",
+                onValueChange = { newValue ->
+                    val isLast = categories.lastIndex == index
+                    val id = cat.first
 
-                    fun replace() {
-                        val old = copy[index]
-                        copy[index] = id to ExtraInfo(
-                            key = newKey ?: old.second.key,
-                            value = newValue ?: old.second.value,
-                            type = newType ?: old.second.type
-                        )
-                    }
+                    val copy = ArrayList(categories)
 
                     when {
-                        (newKey.isNullOrBlank() && newValue.isNullOrBlank() && newType == null) -> {
+                        newValue.isBlank() -> {
                             if (!isLast) {
-                                val next = copy[index + 1]
+                                val next = categories[index + 1]
 
-                                if (next.second.run { key.isBlank() && value.isBlank() }) {
-                                    replace()
+                                if (next.second.isNullOrBlank()) {
+                                    copy[index] = id to newValue
                                     copy.removeAll { it.first == next.first }
                                 } else {
                                     copy.removeAt(index)
                                 }
                             } else {
-                                replace()
+                                copy[index] = id to newValue
                             }
                         }
 
                         else -> {
-                            replace()
+                            copy[index] = id to newValue
 
-                            if (isLast && !newKey.isNullOrBlank()) {
-                                copy.add(UUID.randomUUID() to ExtraInfo("", ""))
+                            if (isLast) {
+                                copy.add(UUID.randomUUID() to "")
                             }
                         }
                     }
 
-                    model.extras.value = copy
+                    model.categories.value = copy
                 }
+            )
+        }
+
+        item {
+            Text(text = stringResource(id = R.string.extras))
+        }
+
+        itemsIndexed(items = extras, key = { _, item -> item.first }) { index, item ->
+            ExtraItem(
+                extraInfo = item.second
+            ) { newKey, newType, newValue ->
+                val id = item.first
+                val copy = ArrayList(extras)
+                val isLast = extras.lastIndex == index
+
+                fun replace() {
+                    val old = copy[index]
+                    copy[index] = id to ExtraInfo(
+                        key = newKey ?: old.second.key,
+                        value = newValue ?: old.second.value,
+                        type = newType ?: old.second.type
+                    )
+                }
+
+                when {
+                    (newKey.isNullOrBlank() && newValue.isNullOrBlank() && newType == null) -> {
+                        if (!isLast) {
+                            val next = copy[index + 1]
+
+                            if (next.second.run { key.isBlank() && value.isBlank() }) {
+                                replace()
+                                copy.removeAll { it.first == next.first }
+                            } else {
+                                copy.removeAt(index)
+                            }
+                        } else {
+                            replace()
+                        }
+                    }
+
+                    else -> {
+                        replace()
+
+                        if (isLast && !newKey.isNullOrBlank()) {
+                            copy.add(UUID.randomUUID() to ExtraInfo("", ""))
+                        }
+                    }
+                }
+
+                model.extras.value = copy
             }
         }
     }
