@@ -2,7 +2,6 @@ package tk.zwander.rootactivitylauncher.views.components
 
 import android.content.pm.ActivityInfo
 import android.content.pm.ServiceInfo
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -14,17 +13,13 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -334,94 +329,14 @@ private fun BarGuts(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 whichButtons.forEach { button ->
-                    var showingTooltip by remember {
-                        mutableStateOf(false)
-                    }
                     val buttonEnabled = button !is ComponentActionButton.LaunchButton || enabled
 
-                    ComponentButton(
-                        button = button,
-                        showingTooltip = showingTooltip,
-                        onShowingTooltipChanged = { showingTooltip = it },
+                    button.Render(
                         enabled = buttonEnabled,
                         modifier = Modifier.weight(1f),
                     )
                 }
             }
         }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun ComponentButton(
-    button: ComponentActionButton<*>,
-    showingTooltip: Boolean,
-    onShowingTooltipChanged: (Boolean) -> Unit,
-    enabled: Boolean,
-    modifier: Modifier = Modifier
-) {
-    val context = LocalContext.current
-    val animatedAlpha by animateFloatAsState(
-        targetValue = if (!enabled) 0.5f else 1.0f,
-        label = "ComponentButtonAnimation_${button.getLabel()}",
-    )
-    val scope = rememberCoroutineScope()
-
-    Box(
-        modifier = modifier.clip(CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(
-            modifier = Modifier
-                .padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 8.dp)
-                .combinedClickable(
-                    interactionSource = remember {
-                        MutableInteractionSource()
-                    },
-                    indication = if (enabled) {
-                        ripple(bounded = false)
-                    } else {
-                        null
-                    },
-                    enabled = true,
-                    onLongClick = {
-                        scope.launch(Dispatchers.Main) {
-                            if (!enabled || !button.onLongClick(context)) {
-                                onShowingTooltipChanged(true)
-                            }
-                        }
-                    },
-                    onClick = {
-                        if (enabled) {
-                            scope.launch(Dispatchers.Main) {
-                                button.onClick(context)
-                            }
-                        }
-                    },
-                )
-        ) {
-            Icon(
-                painter = button.getIcon(),
-                contentDescription = button.getLabel(),
-                tint = LocalContentColor.current.copy(alpha = animatedAlpha)
-            )
-
-            if (showingTooltip) {
-                Tooltip(
-                    anchorEdge = AnchorEdge.Top,
-                    onDismissRequest = { onShowingTooltipChanged(false) },
-                    tooltipStyle = rememberTooltipStyle(
-                        color = MaterialTheme.colorScheme.surface,
-                        tipHeight = 0.dp,
-                        tipWidth = 0.dp,
-                    ),
-                ) {
-                    Text(text = button.getLabel())
-                }
-            }
-        }
-
-        button.RenderExtraContent()
     }
 }

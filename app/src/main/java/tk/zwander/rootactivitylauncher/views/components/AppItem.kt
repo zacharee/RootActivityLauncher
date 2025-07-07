@@ -27,8 +27,6 @@ import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.data.model.BaseInfoModel
 import tk.zwander.rootactivitylauncher.util.getCoilData
 import tk.zwander.rootactivitylauncher.util.isActuallyEnabled
-import tk.zwander.rootactivitylauncher.views.dialogs.ComponentInfoDialog
-import tk.zwander.rootactivitylauncher.views.dialogs.ExtrasDialog
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
@@ -39,12 +37,6 @@ fun AppItem(
     extractCallback: (AppModel) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var showingIntentDialog by remember {
-        mutableStateOf(false)
-    }
-    var showingComponentInfo by remember {
-        mutableStateOf(false)
-    }
     var enabled by rememberSaveable(if (info is AppModel) info.pInfo.packageName else null) {
         mutableStateOf(true)
     }
@@ -95,12 +87,8 @@ fun AppItem(
                 whichButtons = remember(info is AppModel) {
                     if (info is AppModel) {
                         listOf(
-                            ComponentActionButton.ComponentInfoButton(info.pInfo) {
-                                showingComponentInfo = true
-                            },
-                            ComponentActionButton.IntentDialogButton(info.pInfo.packageName) {
-                                showingIntentDialog = true
-                            },
+                            ComponentActionButton.ComponentInfoButton(info.pInfo),
+                            ComponentActionButton.IntentDialogButton(info.pInfo.packageName),
                             ComponentActionButton.AppInfoButton(info.pInfo.packageName),
                             ComponentActionButton.SaveApkButton(info, extractCallback)
                         )
@@ -159,17 +147,5 @@ fun AppItem(
                 count = receiversCount
             )
         }
-    }
-
-    if (info is AppModel) {
-        ExtrasDialog(
-            showing = showingIntentDialog,
-            componentKey = info.pInfo.packageName,
-        ) { showingIntentDialog = false }
-
-        ComponentInfoDialog(
-            info = info.pInfo,
-            showing = showingComponentInfo
-        ) { showingComponentInfo = false }
     }
 }
