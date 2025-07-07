@@ -9,16 +9,23 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.IPackageManager
 import android.content.pm.PackageManager
+import android.hardware.input.IInputManager
 import android.os.Build
 import android.os.IBinder
+import android.os.InputEventInjectionSync
 import android.os.Process
+import android.os.ServiceManager
+import android.os.SystemClock
 import android.os.UserHandle
 import android.provider.Settings
 import android.util.Log
+import android.view.KeyEvent
+import android.view.MotionEvent
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import kotlinx.coroutines.delay
 import rikka.shizuku.Shizuku
+import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
 import tk.zwander.rootactivitylauncher.R
 import tk.zwander.rootactivitylauncher.util.hasShizukuPermission
@@ -109,14 +116,47 @@ sealed interface ActivityLaunchStrategy : LaunchStrategy {
                 pm.grantRuntimePermission(packageName, android.Manifest.permission.WRITE_SECURE_SETTINGS, UserHandle.USER_SYSTEM)
             }
 
-            val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
 
             val currentAssistant = Settings.Secure.getString(contentResolver, Settings.Secure.ASSISTANT)
             val replacedAssistant = intent.component?.flattenToString()
 
             try {
                 Settings.Secure.putString(contentResolver, Settings.Secure.ASSISTANT, replacedAssistant)
-                searchManager.launchAssist(intent.extras ?: bundleOf())
+
+                try {
+                    val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
+                    searchManager.launchAssist(intent.extras ?: bundleOf())
+                } catch (_: Throwable) {
+                    if (Shizuku.pingBinder() && (hasShizukuPermission || requestShizukuPermission())) {
+                        IInputManager.Stub.asInterface(ShizukuBinderWrapper(ServiceManager.getServiceOrThrow(Context.INPUT_SERVICE)))
+                            .apply {
+                                injectInputEvent(
+                                    KeyEvent(
+                                        SystemClock.uptimeMillis(),
+                                        SystemClock.uptimeMillis(),
+                                        MotionEvent.ACTION_DOWN,
+                                        KeyEvent.KEYCODE_ASSIST,
+                                        0,
+                                    ),
+                                    InputEventInjectionSync.WAIT_FOR_FINISHED,
+                                )
+
+                                injectInputEvent(
+                                    KeyEvent(
+                                        SystemClock.uptimeMillis(),
+                                        SystemClock.uptimeMillis(),
+                                        MotionEvent.ACTION_UP,
+                                        KeyEvent.KEYCODE_ASSIST,
+                                        0,
+                                    ),
+                                    InputEventInjectionSync.WAIT_FOR_FINISHED,
+                                )
+                            }
+                    } else {
+                        throw IllegalStateException("Shizuku was unavailable for injecting key events.")
+                    }
+                }
+
                 delay(500)
             } finally {
                 try {
