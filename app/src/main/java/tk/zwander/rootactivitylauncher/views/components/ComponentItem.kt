@@ -15,7 +15,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -45,6 +44,7 @@ import tk.zwander.rootactivitylauncher.data.ComponentActionButton
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.util.getCoilData
 import tk.zwander.rootactivitylauncher.util.isActuallyEnabled
+import tk.zwander.rootactivitylauncher.views.dialogs.BaseAlertDialog
 import tk.zwander.rootactivitylauncher.views.dialogs.ComponentInfoDialog
 import tk.zwander.rootactivitylauncher.views.dialogs.ExtrasDialog
 
@@ -122,7 +122,7 @@ fun ComponentItem(
     ) { showingComponentInfo = false }
 
     if (launchErrors.isNotEmpty()) {
-        AlertDialog(
+        BaseAlertDialog(
             onDismissRequest = {
                 launchErrors.clear()
             },
@@ -202,7 +202,6 @@ fun ComponentItem(
                 }
             },
             properties = DialogProperties(
-                usePlatformDefaultWidth = false,
                 dismissOnClickOutside = false,
                 dismissOnBackPress = false
             ),

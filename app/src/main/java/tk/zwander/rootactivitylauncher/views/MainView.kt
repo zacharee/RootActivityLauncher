@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -49,6 +48,7 @@ import tk.zwander.rootactivitylauncher.util.LocalMainModel
 import tk.zwander.rootactivitylauncher.util.extractApk
 import tk.zwander.rootactivitylauncher.views.components.AppList
 import tk.zwander.rootactivitylauncher.views.components.BottomBar
+import tk.zwander.rootactivitylauncher.views.dialogs.BaseAlertDialog
 import tk.zwander.rootactivitylauncher.views.dialogs.FilterDialog
 import tk.zwander.rootactivitylauncher.views.dialogs.SortDialog
 
@@ -221,7 +221,7 @@ fun MainView(
     )
 
     if (extractErrors.isNotEmpty()) {
-        AlertDialog(
+        BaseAlertDialog(
             onDismissRequest = {
                 extractErrors.clear()
             },
@@ -271,7 +271,6 @@ fun MainView(
                 }
             },
             properties = DialogProperties(
-                usePlatformDefaultWidth = false,
                 dismissOnClickOutside = false,
                 dismissOnBackPress = false
             ),

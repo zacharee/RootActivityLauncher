@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -58,6 +57,7 @@ import tk.zwander.rootactivitylauncher.data.model.BaseInfoModel
 import tk.zwander.rootactivitylauncher.util.isSystemAppCompat
 import tk.zwander.rootactivitylauncher.util.setComponentEnabled
 import tk.zwander.rootactivitylauncher.util.setPackageEnabled
+import tk.zwander.rootactivitylauncher.views.dialogs.BaseAlertDialog
 
 @Composable
 fun AppBar(
@@ -154,7 +154,7 @@ fun ComponentBar(
 @Composable
 private fun ErrorDialog(error: String?, onDismissRequest: () -> Unit) {
     if (error != null) {
-        AlertDialog(
+        BaseAlertDialog(
             onDismissRequest = onDismissRequest,
             title = {
                 Text(text = stringResource(id = R.string.state_change_error))
