@@ -8,12 +8,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -229,35 +227,34 @@ fun MainView(
                 Text(text = stringResource(id = R.string.extraction_failed_title))
             },
             text = {
-                Column {
-                    Text(
-                        text = stringResource(id = R.string.extraction_failed_desc)
-                    )
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item {
+                        Text(
+                            text = stringResource(id = R.string.extraction_failed_desc),
+                            modifier = Modifier.padding(bottom = 8.dp),
+                        )
+                    }
 
-                    Spacer(modifier = Modifier.size(16.dp))
+                    items(extractErrors.size, { it }) {
+                        val item = extractErrors[it]
 
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(extractErrors.size, { it }) {
-                            val item = extractErrors[it]
-
-                            Card(
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        ) {
+                            Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .heightIn(min = 48.dp)
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.CenterStart
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .heightIn(min = 48.dp)
-                                        .padding(8.dp),
-                                    contentAlignment = Alignment.CenterStart
-                                ) {
-                                    Column {
-                                        SelectionContainer {
-                                            Text(text = item.message ?: "")
-                                        }
+                                Column {
+                                    SelectionContainer {
+                                        Text(text = item.message ?: "")
                                     }
                                 }
                             }

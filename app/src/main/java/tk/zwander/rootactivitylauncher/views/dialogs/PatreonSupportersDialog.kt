@@ -1,12 +1,11 @@
 package tk.zwander.rootactivitylauncher.views.dialogs
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
@@ -60,10 +59,6 @@ fun PatreonSupportersDialog(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(text = stringResource(id = tk.zwander.patreonsupportersretrieval.R.string.supporters_desc))
-
-                    Spacer(modifier = Modifier.size(8.dp))
-
                     Crossfade(targetState = supporters.isEmpty()) { empty ->
                         if (empty) {
                             Box(
@@ -74,8 +69,13 @@ fun PatreonSupportersDialog(
                             }
                         } else {
                             LazyColumn(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
+                                item {
+                                    Text(text = stringResource(id = tk.zwander.patreonsupportersretrieval.R.string.supporters_desc))
+                                }
+
                                 items(items = supporters, key = { it }) {
                                     OutlinedCard(
                                         onClick = {
