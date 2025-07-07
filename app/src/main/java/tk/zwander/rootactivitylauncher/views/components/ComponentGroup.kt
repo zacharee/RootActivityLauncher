@@ -109,7 +109,7 @@ fun ComponentGroup(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(
                         top = 8.dp,
-                        bottom = 8.dp
+                        bottom = 8.dp,
                     )
                 ) {
                     items(items = items, key = { it.hashCode() }) {

@@ -1,6 +1,5 @@
 package tk.zwander.rootactivitylauncher.views.dialogs
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -96,9 +95,7 @@ fun ExtrasDialog(
             text = {
                 ExtrasDialogContents(
                     model = model,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .animateContentSize()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         )

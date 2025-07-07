@@ -5,7 +5,6 @@ import android.content.pm.ActivityInfo
 import android.content.pm.PackageInfo
 import android.content.pm.ServiceInfo
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -111,9 +110,9 @@ fun <T : Any> ComponentInfoDialog(
                     query = query,
                     onQueryChanged = { query = it },
                     content = dump,
-                    modifier = Modifier.animateContentSize()
+                    modifier = Modifier,
                 )
-            }
+            },
         )
     }
 }
@@ -124,23 +123,23 @@ private fun ComponentInfoContents(
     query: String,
     onQueryChanged: (String) -> Unit,
     content: List<AnnotatedString>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Crossfade(
         targetState = content.isEmpty(),
-        modifier = modifier
+        modifier = modifier,
     ) {
         if (it) {
             Box(
                 modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator()
             }
         } else {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 OutlinedTextField(
                     value = query,
@@ -154,7 +153,7 @@ private fun ComponentInfoContents(
 
                 SelectionContainer {
                     LazyColumn(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         itemsIndexed(items = content, key = { index, item -> item.toString() + index }) { _, item ->
                             Text(text = item)
