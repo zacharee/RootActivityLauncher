@@ -11,21 +11,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import tk.zwander.rootactivitylauncher.R
-import tk.zwander.rootactivitylauncher.data.ComponentActionButton
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.data.model.BaseInfoModel
-import tk.zwander.rootactivitylauncher.util.getCoilData
 import tk.zwander.rootactivitylauncher.util.isActuallyEnabled
 
 @SuppressLint("StateFlowValueCalledInComposition")
@@ -35,7 +31,7 @@ fun AppItem(
     isForTasker: Boolean,
     selectionCallback: (BaseComponentInfo) -> Unit,
     extractCallback: (AppModel) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var enabled by rememberSaveable(if (info is AppModel) info.pInfo.packageName else null) {
         mutableStateOf(true)
@@ -75,31 +71,16 @@ fun AppItem(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             AppBar(
-                icon = remember(info is AppModel) {
-                    if (info is AppModel) info.info?.getCoilData() else R.drawable.baseline_favorite_24
-                },
-                name = if (info is AppModel) info.label.toString() else stringResource(id = R.string.favorites),
                 showActions = !isForTasker && info is AppModel,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 8.dp),
                 app = info,
-                whichButtons = remember(info is AppModel) {
-                    if (info is AppModel) {
-                        listOf(
-                            ComponentActionButton.ComponentInfoButton(info.pInfo),
-                            ComponentActionButton.IntentDialogButton(info.pInfo.packageName),
-                            ComponentActionButton.AppInfoButton(info.pInfo.packageName),
-                            ComponentActionButton.SaveApkButton(info, extractCallback)
-                        )
-                    } else {
-                        listOf()
-                    }
-                },
+                extractCallback = extractCallback,
                 enabled = enabled,
                 onEnabledChanged = {
                     enabled = it
-                }
+                },
             )
 
             ComponentGroup(
@@ -114,7 +95,7 @@ fun AppItem(
                 },
                 onItemSelected = selectionCallback,
                 modifier = Modifier.fillMaxWidth(),
-                count = activityCount
+                count = activityCount,
             )
 
             ComponentGroup(
@@ -129,7 +110,7 @@ fun AppItem(
                 },
                 onItemSelected = selectionCallback,
                 modifier = Modifier.fillMaxWidth(),
-                count = servicesCount
+                count = servicesCount,
             )
 
             ComponentGroup(
@@ -144,7 +125,7 @@ fun AppItem(
                 },
                 onItemSelected = selectionCallback,
                 modifier = Modifier.fillMaxWidth(),
-                count = receiversCount
+                count = receiversCount,
             )
         }
     }

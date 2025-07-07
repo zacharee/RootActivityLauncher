@@ -49,6 +49,7 @@ import tk.zwander.rootactivitylauncher.data.component.Availability
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
 import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.data.model.BaseInfoModel
+import tk.zwander.rootactivitylauncher.util.getCoilData
 import tk.zwander.rootactivitylauncher.util.isSystemAppCompat
 import tk.zwander.rootactivitylauncher.util.setComponentEnabled
 import tk.zwander.rootactivitylauncher.util.setPackageEnabled
@@ -56,16 +57,32 @@ import tk.zwander.rootactivitylauncher.views.dialogs.BaseAlertDialog
 
 @Composable
 fun AppBar(
-    icon: Any?,
-    name: String,
     app: BaseInfoModel,
     enabled: Boolean,
     onEnabledChanged: (Boolean) -> Unit,
-    whichButtons: List<ComponentActionButton<*>>,
+    extractCallback: (AppModel) -> Unit,
     modifier: Modifier = Modifier,
     showActions: Boolean = true,
 ) {
     val context = LocalContext.current
+
+    val icon = remember(app is AppModel) {
+        if (app is AppModel) app.info?.getCoilData() else R.drawable.baseline_favorite_24
+    }
+    val name = if (app is AppModel) app.label.toString() else stringResource(id = R.string.favorites)
+
+    val whichButtons = remember(app is AppModel) {
+        if (app is AppModel) {
+            listOf(
+                ComponentActionButton.ComponentInfoButton(app.pInfo),
+                ComponentActionButton.IntentDialogButton(app.pInfo.packageName),
+                ComponentActionButton.AppInfoButton(app.pInfo.packageName),
+                ComponentActionButton.SaveApkButton(app, extractCallback),
+            )
+        } else {
+            listOf()
+        }
+    }
 
     var appStateError by rememberSaveable {
         mutableStateOf<String?>(null)
@@ -100,10 +117,7 @@ fun AppBar(
 
 @Composable
 fun ComponentBar(
-    icon: Any?,
-    name: String,
     component: BaseComponentInfo,
-    whichButtons: List<ComponentActionButton<*>>,
     enabled: Boolean,
     onEnabledChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
@@ -111,13 +125,26 @@ fun ComponentBar(
 ) {
     val context = LocalContext.current
 
+    val icon = rememberSaveable(component.component.flattenToString()) {
+        component.getCoilData()
+    }
+    val whichButtons = remember(component.component.flattenToString()) {
+        arrayListOf(
+            ComponentActionButton.FavoriteButton(component),
+            ComponentActionButton.ComponentInfoButton(component.info),
+            ComponentActionButton.IntentDialogButton(component.component.flattenToString()),
+            ComponentActionButton.CreateShortcutButton(component),
+            ComponentActionButton.LaunchButton(component),
+        )
+    }
+
     var componentStateError by rememberSaveable {
         mutableStateOf<String?>(null)
     }
 
     BarGuts(
         icon = icon,
-        name = name,
+        name = component.label.toString(),
         subLabel = component.component.flattenToString(),
         enabled = enabled,
         onEnabledChanged = {

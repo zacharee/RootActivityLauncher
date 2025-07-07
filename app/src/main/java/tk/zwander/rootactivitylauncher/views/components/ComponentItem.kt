@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -14,9 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import tk.zwander.rootactivitylauncher.data.ComponentActionButton
 import tk.zwander.rootactivitylauncher.data.component.BaseComponentInfo
-import tk.zwander.rootactivitylauncher.util.getCoilData
 import tk.zwander.rootactivitylauncher.util.isActuallyEnabled
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,20 +41,7 @@ fun ComponentItem(
         contentAlignment = Alignment.CenterStart,
     ) {
         ComponentBar(
-            icon = rememberSaveable {
-                component.getCoilData()
-            },
-            name = component.label.toString(),
             component = component,
-            whichButtons = remember(component.component.flattenToString()) {
-                arrayListOf(
-                    ComponentActionButton.FavoriteButton(component),
-                    ComponentActionButton.ComponentInfoButton(component.info),
-                    ComponentActionButton.IntentDialogButton(component.component.flattenToString()),
-                    ComponentActionButton.CreateShortcutButton(component),
-                    ComponentActionButton.LaunchButton(component),
-                )
-            },
             enabled = enabled && appEnabled,
             onEnabledChanged = {
                 enabled = it
