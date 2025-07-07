@@ -421,5 +421,7 @@ private fun ComponentButton(
                 }
             }
         }
+
+        button.RenderExtraContent()
     }
 }

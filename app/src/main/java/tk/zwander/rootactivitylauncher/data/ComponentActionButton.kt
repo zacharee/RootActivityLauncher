@@ -6,7 +6,6 @@ import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -19,15 +18,19 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -38,8 +41,8 @@ import coil.imageLoader
 import coil.request.ImageRequest
 import coil.size.Dimension
 import coil.size.Size
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import tk.zwander.rootactivitylauncher.R
@@ -51,10 +54,13 @@ import tk.zwander.rootactivitylauncher.data.component.ServiceInfo
 import tk.zwander.rootactivitylauncher.data.model.AppModel
 import tk.zwander.rootactivitylauncher.util.findExtrasForComponent
 import tk.zwander.rootactivitylauncher.util.getCoilData
+import tk.zwander.rootactivitylauncher.util.launch.LaunchStrategy
 import tk.zwander.rootactivitylauncher.util.launch.createLaunchArgs
 import tk.zwander.rootactivitylauncher.util.launch.launch
 import tk.zwander.rootactivitylauncher.util.launch.launchStrategiesMap
 import tk.zwander.rootactivitylauncher.util.openAppInfo
+import tk.zwander.rootactivitylauncher.views.dialogs.BaseAlertDialog
+import kotlin.reflect.KClass
 
 sealed class ComponentActionButton<T>(protected val data: T) {
     @Composable
@@ -68,6 +74,9 @@ sealed class ComponentActionButton<T>(protected val data: T) {
     open suspend fun onLongClick(context: Context): Boolean {
         return false
     }
+
+    @Composable
+    open fun RenderExtraContent() {}
 
     override fun equals(other: Any?): Boolean {
         return other != null &&
@@ -164,6 +173,8 @@ sealed class ComponentActionButton<T>(protected val data: T) {
         data: BaseComponentInfo,
         private val errorCallback: (error: List<Pair<String, Throwable>>) -> Unit
     ) : ComponentActionButton<BaseComponentInfo>(data) {
+        private val showingDialogState = MutableStateFlow(false)
+
         @Composable
         override fun getIcon() = painterResource(R.drawable.ic_baseline_open_in_new_24)
 
@@ -184,31 +195,65 @@ sealed class ComponentActionButton<T>(protected val data: T) {
         }
 
         override suspend fun onLongClick(context: Context): Boolean {
-            val componentKey = data.component.flattenToString()
-            val type = data.type()
+            showingDialogState.value = true
 
-            val extras = context.findExtrasForComponent(data.component.packageName) +
-                    context.findExtrasForComponent(componentKey)
-            val launchArgs = context.createLaunchArgs(extras, componentKey)
+            return true
+        }
 
-            val strategies = launchStrategiesMap[type]?.map {
-                it to with (it.first) {
-                    context.canRun(launchArgs)
+        @Composable
+        override fun RenderExtraContent() {
+            val context = LocalContext.current
+            val showingDialog by showingDialogState.collectAsState()
+
+            if (showingDialog) {
+                val componentKey = remember {
+                    data.component.flattenToString()
                 }
-            }?.sortedBy {
-                context.resources.getString(it.first.first.labelRes)
-            } ?: listOf()
+                val type = remember {
+                    data.type()
+                }
+                val extras = remember {
+                    context.findExtrasForComponent(data.component.packageName) +
+                            context.findExtrasForComponent(componentKey)
+                }
+                val launchArgs = remember {
+                    context.createLaunchArgs(extras, componentKey)
+                }
+                var strategies by remember {
+                    mutableStateOf<List<Pair<Pair<LaunchStrategy, KClass<out LaunchStrategy>>, Boolean>>>(listOf())
+                }
 
-            MaterialAlertDialogBuilder(context)
-                .setTitle(R.string.launch)
-                .setView(ComposeView(context).apply {
-                    setContent {
+                LaunchedEffect(null) {
+                    strategies = launchStrategiesMap[type]?.map {
+                        it to with (it.first) {
+                            context.canRun(launchArgs)
+                        }
+                    }?.sortedBy {
+                        context.resources.getString(it.first.first.labelRes)
+                    } ?: listOf()
+                }
+
+                BaseAlertDialog(
+                    onDismissRequest = {
+                        showingDialogState.value = false
+                    },
+                    title = {
+                        Text(text = stringResource(R.string.launch))
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                showingDialogState.value = false
+                            },
+                        ) {
+                            Text(text = stringResource(android.R.string.cancel))
+                        }
+                    },
+                    text = {
                         val scope = rememberCoroutineScope()
 
                         LazyColumn(
-                            modifier = Modifier.fillMaxWidth()
-                                .padding(top = 16.dp),
-                            contentPadding = PaddingValues(16.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             items(items = strategies, key = { it.first.first.labelRes }) { strategy ->
@@ -249,14 +294,9 @@ sealed class ComponentActionButton<T>(protected val data: T) {
                                 }
                             }
                         }
-                    }
-                })
-                .setPositiveButton(android.R.string.cancel) { dialog, _ ->
-                    dialog.dismiss()
-                }
-                .show()
-
-            return true
+                    },
+                )
+            }
         }
     }
 
