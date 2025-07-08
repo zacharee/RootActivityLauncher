@@ -239,15 +239,19 @@ sealed interface ServiceLaunchStrategy : LaunchStrategy {
         }
     }
     data object ShizukuJava : ServiceLaunchStrategy, BinderServiceLaunchStrategy, ShizukuLaunchStrategy {
+        override val priority: Int = 104
+
         override val labelRes: Int = R.string.launch_strategy_shizuku_java
         override val descRes: Int = R.string.launch_strategy_shizuku_java_desc
     }
     data object DhizukuJava : ServiceLaunchStrategy, BinderServiceLaunchStrategy, DhizukuLaunchStrategy {
+        override val priority: Int = 104
+
         override val labelRes: Int = R.string.launch_strategy_dhizuku_java
         override val descRes: Int = R.string.launch_strategy_dhizuku_java_desc
     }
     data object Root : ServiceLaunchStrategy, RootLaunchStrategy {
-        override val priority: Int = 1
+        override val priority: Int = 105
 
         override val labelRes: Int = R.string.launch_strategy_root
         override val descRes: Int = R.string.launch_strategy_root_desc
