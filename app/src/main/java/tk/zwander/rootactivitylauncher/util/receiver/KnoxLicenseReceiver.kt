@@ -10,6 +10,7 @@ class KnoxLicenseReceiver : BroadcastReceiver() {
         Log.e("RootActivityLauncher", "${intent.action}")
 
         intent.extras?.keySet()?.forEach {
+            @Suppress("DEPRECATION")
             Log.e("RootActivityLauncher", "$it : ${intent.extras?.get(it)}")
         }
     }
